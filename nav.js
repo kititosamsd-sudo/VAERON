@@ -141,15 +141,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // En pantallas ≤1280px el topbar pasa a dos filas: título arriba,
   // botones de acción (Seleccionar/Importar/Exportar/Agregar) abajo.
   // Esa fila de botones le resta espacio de lectura a la lista de
-  // abajo. Mientras el usuario scrollea activamente, se ocultan esos
-  // botones (queda solo el buscador); apenas el scroll se detiene
-  // (sin evento "scroll" nuevo durante SCROLL_IDLE_MS), reaparecen
-  // solos. El listener va en el document con "capture" porque el
-  // evento "scroll" no burbujea — así se captura sin importar qué
-  // vista (.page-content) esté montada en cada momento.
-  const SCROLL_IDLE_MS = 500;
+  // abajo. Apenas el usuario se aleja del tope de la lista, se ocultan
+  // esos botones (queda solo el buscador) — y a diferencia de antes,
+  // NO vuelven solos tras una pausa: se quedan ocultos hasta que el
+  // usuario scrollea de vuelta arriba del todo (a pedido: reaparecer
+  // solos al pausar se sentía como que la pantalla "parpadeaba"). El
+  // listener va en el document con "capture" porque el evento
+  // "scroll" no burbujea — así se captura sin importar qué vista
+  // (.page-content) esté montada en cada momento.
+  const SCROLL_TOP_THRESHOLD = 4; // px — "está arriba del todo" con algo de margen
   const isCompactTopbarViewport = () => window.matchMedia('(max-width: 1280px)').matches;
-  let scrollIdleTimer = null;
 
   document.addEventListener('scroll', e => {
     const target = e.target;
@@ -161,9 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // campo visible — eso dispara un evento "scroll" real aunque el
     // usuario no haya deslizado nada. Sin este chequeo, ese scroll
     // "fantasma" activaba topbar-scrolling y escondía de golpe los
-    // botones (incluido "Nuevo cliente"), que volvían a aparecer solos
-    // 500ms después: se sentía como que la pantalla "se buguea" o
-    // "sube y baja" mientras se escribe. Si hay un campo de texto
+    // botones (incluido "Nuevo cliente"). Si hay un campo de texto
     // enfocado, no es un scroll intencional del usuario — se ignora.
     const active = document.activeElement;
     if (active && active.matches(FIELD_SELECTOR)) return;
@@ -174,18 +173,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // se queda visible como referencia. Pero en vistas sin buscador en
     // el topbar (Nueva Nota: solo el N° de nota + "Volver"; Registros:
     // solo "Nuevo vendedor") no queda NADA visible — se ocultaba
-    // literalmente todo, incluido "Volver", y volvía a aparecer solo
-    // 500ms después: se veía como que esa barra "desaparecía y
-    // volvía sola" al hacer scroll. Si no hay buscador que sirva de
-    // referencia, no tiene sentido ocultar nada: se deja el topbar
-    // siempre visible en esas vistas.
+    // literalmente todo, incluido "Volver". Si no hay buscador que
+    // sirva de referencia, no tiene sentido ocultar nada: se deja el
+    // topbar siempre visible en esas vistas.
     if (!document.querySelector('.topbar-actions .search-wrap')) return;
 
-    document.body.classList.add('topbar-scrolling');
-    clearTimeout(scrollIdleTimer);
-    scrollIdleTimer = setTimeout(() => {
-      document.body.classList.remove('topbar-scrolling');
-    }, SCROLL_IDLE_MS);
+    document.body.classList.toggle('topbar-scrolling', target.scrollTop > SCROLL_TOP_THRESHOLD);
   }, true);
 });
 

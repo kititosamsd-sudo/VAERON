@@ -996,7 +996,7 @@ td { padding: 13px 18px; vertical-align: middle; }
      borde, así que el botón final (ej. "Confirmar pedido") quedaba
      inalcanzable por scroll — parecía que el scroll se cortaba antes
      de llegar, cuando en realidad nunca hubo espacio para mostrarlo. */
-  .page-content { padding: 18px 20px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+  .page-content { padding: 18px 20px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
 }
 
 /* =========================================================
@@ -1046,7 +1046,7 @@ td { padding: 13px 18px; vertical-align: middle; }
        navegador/WebView hacía su "rebote" nativo (y en Chrome podía
        llegar a interpretarse como un gesto de pull-to-refresh) — se
        sentía como que la pantalla parpadeaba o se recargaba sola. */
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none;
   }
 
   /* ── Form ── */
