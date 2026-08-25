@@ -215,41 +215,26 @@ function productCardHtml(p) {
     : `<div class="pc-img-thumb pc-img-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
   return `
     <div class="product-card${isChecked ? ' selected' : ''}" data-code="${escapeHtml(code)}">
-      <div class="pc-top">
-        <div class="pc-check-wrap">
-          <input type="checkbox" class="row-checkbox stock-check-card" data-code="${escapeHtml(code)}" ${isChecked}
-            onchange="onStockCheckToggle(this)" onclick="event.stopPropagation()">
-        </div>
-        ${imgCellHtml}
-        <div class="pc-code-wrap">
-          <span class="pc-lbl">Código:</span>
-          <span class="pc-code">${escapeHtml(displayProductCode(code))}</span>
-        </div>
-        <button class="btn-icon-edit" title="Editar"
-          onclick="${editOnclick}">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-        </button>
+      <div class="pc-check-wrap">
+        <input type="checkbox" class="row-checkbox stock-check-card" data-code="${escapeHtml(code)}" ${isChecked}
+          onchange="onStockCheckToggle(this)" onclick="event.stopPropagation()">
       </div>
-      <div class="pc-mid">
-        <div class="pc-name-wrap">
-          <span class="pc-lbl">Prdto:</span>
-          <span class="pc-name">${escapeHtml(name)}</span>
-        </div>
+      ${imgCellHtml}
+      <div class="pc-info">
+        <div class="pc-name">${escapeHtml(name)}</div>
+        <div class="pc-code">${escapeHtml(displayProductCode(code))}</div>
       </div>
-      <div class="pc-bot">
-        <div class="pc-bot-item">
-          <span class="pc-lbl">Cant:</span>
-          <span class="pc-price"${stockBajo ? ' style="color:var(--red)"' : ''}>${stock}</span>
-        </div>
-        <div class="pc-bot-item">
-          <span class="pc-lbl">Precio:</span>
-          <span class="pc-price">${fmtMoney(price, currency)}${precioMayorHtml}</span>
-        </div>
+      <div class="pc-meta">
+        <span class="pc-qty-badge ${stockBajo ? 'stock-low' : 'stock-ok'}">${stock} und</span>
+        <span class="pc-price">${fmtMoney(price, currency)}${precioMayorHtml}</span>
       </div>
+      <button class="btn-icon-edit" title="Editar" onclick="event.stopPropagation();${editOnclick}">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
     </div>
   `;
 }
@@ -608,6 +593,10 @@ function outsideClose(e, id) {
 
 /* ── Editar ── */
 let editingCode = '';
+// Almacén que estaba activo cuando se abrió el modal: '' = "Todos los
+// almacenes" (se edita el stock total), o un id de almacén puntual
+// (se edita SOLO ese almacén, ver saveStock).
+let editingStockWarehouse = '';
 
 function openEditStock(code) {
   const p = productsCache.find(x => x.code === code) || {};
@@ -616,6 +605,13 @@ function openEditStock(code) {
   const price = p.price !== undefined ? p.price : 0;
   const desc  = p.desc || '';
   editingCode = code; // clave real de Firebase (con "⁄" si el código lleva "/")
+  editingStockWarehouse = currentWarehouse;
+  const stockLabel = document.getElementById('editStockLabel');
+  if (stockLabel) {
+    stockLabel.textContent = currentWarehouse
+      ? `Cantidad — ${WAREHOUSE_LABELS[currentWarehouse] || ''}`
+      : 'Cantidad (todos los almacenes)';
+  }
   document.getElementById('editModalTitle').textContent = name;
   // Se muestra siempre con "/" real, nunca con "⁄": si no se
   // convierte aquí, el campo editable queda con el mismo caracter
@@ -662,6 +658,9 @@ function saveStock() {
   if (!name) return alert('El nombre no puede estar vacío.');
   if (!newCode) return alert('El código no puede estar vacío.');
 
+  const stockInput = parseInt(document.getElementById('editStock').value, 10);
+  if (isNaN(stockInput) || stockInput < 0) return alert('La cantidad no puede estar vacía ni ser negativa.');
+
   const codeChanged = newCode !== editingCode;
   if (codeChanged && productsCache.some(p => p.code === newCode)) {
     return alert(`Ya existe un producto con el código ${newCode}.`);
@@ -673,27 +672,31 @@ function saveStock() {
   // que ya tenía el producto (pendingImageData.edit solo se llena
   // cuando el usuario elige un archivo).
   const image = pendingImageData.edit || existing.image || '';
-  // Cantidad desactivada temporalmente en este modal: se conserva el
-  // stock que ya tenía el producto, sin leer el input oculto.
-  const stock = existing.stock || 0;
+  // Si el modal se abrió parado en "Todos los almacenes", la Cantidad
+  // edita el stock TOTAL directo (con la concurrencia optimista de
+  // saveProduct, ver comentario ahí). Si se abrió parado en un
+  // almacén puntual, la Cantidad edita SOLO ese almacén — el total se
+  // ajusta aparte, después, con updateWarehouseStock (mismo mecanismo
+  // que usa el modal dedicado "editar cantidad de almacén"), así que
+  // acá NO se manda "stock" para no pisarlo con un valor viejo.
+  const editingSpecificWarehouse = !!editingStockWarehouse;
 
-  const doSave = () => saveProduct(finalCode, {
-    name,
-    desc,
-    price,
-    costo,
-    precioMayor,
-    stock,
-    currency,
-    image,
-    category: existing.category || 'general'
-  }, existing.stock);
+  const payload = { name, desc, price, costo, precioMayor, currency, image, category: existing.category || 'general' };
+  if (!editingSpecificWarehouse) payload.stock = stockInput;
+
+  const doSave = () => saveProduct(finalCode, payload, existing.stock);
 
   const chain = codeChanged
     ? renameProductCode(editingCode, newCode).then(doSave)
     : doSave();
 
   chain
+    .then(() => {
+      if (editingSpecificWarehouse) {
+        const before = (existing.almacenes && existing.almacenes[editingStockWarehouse]) || 0;
+        return updateWarehouseStock(finalCode, editingStockWarehouse, stockInput, before);
+      }
+    })
     .then(() => {
       editingCode = finalCode;
       pendingImageData.edit = '';

@@ -54,12 +54,20 @@
         Exportar
       </button>
 
-      <button class="btn btn-primary btn-new-item" onclick="openAddModal()">
+      <button class="btn btn-primary btn-new-item" id="btnAddProductTop" onclick="openAddModal()">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Agregar producto
       </button>
     </div>
   </div>
+
+  <!-- Botón flotante "+" — reemplaza a "Agregar producto" solo en
+       móvil (ver @media max-width:768px en base.css), donde ese
+       botón fijo le comía espacio al encabezado. En escritorio
+       queda oculto y se usa el botón de arriba, sin cambios. -->
+  <button class="fab-add" id="fabAddProduct" onclick="openAddModal()" title="Agregar producto">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
 
   <!-- Pestañas de almacén: "Todos" y Almacén 1 son fijas (alm1 nunca
        se puede desactivar). De alm2 en adelante (hasta 6, según plan)
@@ -171,21 +179,18 @@
           </div>
         </div>
       </div>
-      <!-- Cantidad desactivada temporalmente (a pedido) — el stock se
-           administra por almacén en otra pantalla. El input sigue en
-           el DOM, oculto, para reactivarlo fácil: solo hay que quitar
-           el style="display:none" de este form-group y devolver
-           "Moneda" al form-row de arriba. -->
-      <div class="form-group" style="display:none">
-        <label class="form-label">Cantidad</label>
-        <input class="form-input text-mono" id="editStock" type="number" min="0">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Moneda</label>
-        <select class="form-input" id="editCurrency">
-          <option value="PEN">Soles (S/)</option>
-          <option value="USD">Dólares ($)</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="editStockLabel">Cantidad</label>
+          <input class="form-input text-mono" id="editStock" type="number" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Moneda</label>
+          <select class="form-input" id="editCurrency">
+            <option value="PEN">Soles (S/)</option>
+            <option value="USD">Dólares ($)</option>
+          </select>
+        </div>
       </div>
       <div class="form-group" id="editCostoGroup" style="display:none">
         <label class="form-label">Costo</label>

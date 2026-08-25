@@ -340,12 +340,12 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
 
 /* ─── Miniatura de imagen en la tarjeta de Stock (vista mobile) ── */
 .pc-img-thumb {
-  width: 34px; height: 34px; border-radius: var(--r-sm); flex-shrink: 0;
+  width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
   background: var(--surface-2); overflow: hidden;
   display: flex; align-items: center; justify-content: center;
 }
 .pc-img-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.pc-img-thumb.pc-img-empty svg { width: 15px; height: 15px; color: var(--text-3); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.pc-img-thumb.pc-img-empty svg { width: 16px; height: 16px; color: var(--text-3); fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* =========================================================
    Catálogo (galería de imágenes) — separado de Stock: acá solo
@@ -996,7 +996,7 @@ td { padding: 13px 18px; vertical-align: middle; }
      borde, así que el botón final (ej. "Confirmar pedido") quedaba
      inalcanzable por scroll — parecía que el scroll se cortaba antes
      de llegar, cuando en realidad nunca hubo espacio para mostrarlo. */
-  .page-content { padding: 18px 20px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .page-content { padding: 18px 20px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
 }
 
 /* =========================================================
@@ -1006,7 +1006,7 @@ td { padding: 13px 18px; vertical-align: middle; }
    desde 1024px)
    ========================================================= */
 @media (max-width: 768px) {
-  html, body { overflow-x: hidden; }
+  html, body { overflow-x: hidden; overscroll-behavior-y: none; }
   body { font-size: 13px; }
 
   /* ── Topbar ── */
@@ -1042,6 +1042,11 @@ td { padding: 13px 18px; vertical-align: middle; }
     padding: 14px 12px 80px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    /* Sin esto, al llegar al final (o al principio) de la lista, el
+       navegador/WebView hacía su "rebote" nativo (y en Chrome podía
+       llegar a interpretarse como un gesto de pull-to-refresh) — se
+       sentía como que la pantalla parpadeaba o se recargaba sola. */
+    overscroll-behavior-y: contain;
   }
 
   /* ── Form ── */
@@ -1347,6 +1352,28 @@ td { padding: 13px 18px; vertical-align: middle; }
   .dash-profit-summary { grid-template-columns: 1fr; }
 }
 
+/* ── Botón flotante "+" de Stock (solo móvil, ver .fab-add más abajo) ── */
+.fab-add { display: none; }
+@media (max-width: 768px) {
+  #btnAddProductTop { display: none; }
+  .fab-add {
+    display: flex; align-items: center; justify-content: center;
+    position: fixed; right: 16px; bottom: 80px;
+    width: 48px; height: 48px; border-radius: 24px;
+    background: var(--ink, #14171D); border: none;
+    box-shadow: 0 4px 12px rgba(20,23,29,0.35);
+    color: #fff; cursor: pointer;
+    z-index: 90; /* debajo de la barra inferior (100), encima del contenido */
+    transition: transform .12s ease;
+  }
+  .fab-add:active { transform: scale(0.94); }
+  .fab-add svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; }
+  /* La barra inferior se oculta con el teclado abierto (ver base.css,
+     body.keyboard-open aside.sidebar) — el FAB la acompaña para no
+     quedar flotando solo, tapando el teclado. */
+  body.keyboard-open .fab-add { transform: translateY(100px); opacity: 0; pointer-events: none; }
+}
+
 /* =========================================================
    Stock — pestañas de almacén
    ========================================================= */
@@ -1376,6 +1403,27 @@ td { padding: 13px 18px; vertical-align: middle; }
 }
 @media (max-width: 640px) {
   .warehouse-tabs { padding: 0 14px 10px; }
+}
+@media (max-width: 768px) {
+  /* Estilo "subrayado" en vez de píldora — ocupa menos alto arriba
+     y es el patrón que se usa en la referencia de diseño mobile. */
+  .warehouse-tabs {
+    gap: 18px;
+    padding: 0 16px;
+    background: var(--surface);
+  }
+  .warehouse-tab {
+    padding: 9px 0;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    font-size: 12.5px;
+  }
+  .warehouse-tab:hover { background: none; color: var(--accent); }
+  .warehouse-tab.active {
+    background: none; color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
 }
 
 /* =========================================================
