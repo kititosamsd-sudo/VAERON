@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Borrar todas las cuentas</title>
+<link rel="icon" href="favicon.png" type="image/png">
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0a1f;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+  }
+  .card {
+    background: #fff;
+    color: #111;
+    border-radius: 20px;
+    padding: 36px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  p { font-size: 14px; color: #555; line-height: 1.5; }
+  button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 18px;
+  }
+  #btnBorrar { background: #dc2626; color: #fff; }
+  #btnBorrar:hover { background: #b91c1c; }
+  #btnVolver { background: #f3f4f6; color: #111; }
+  #resultado {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    display: none;
+  }
+  #resultado.ok { background: #dcfce7; color: #166534; display: block; }
+  #resultado.info { background: #dbeafe; color: #1e40af; display: block; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Borrar todas las cuentas</h1>
+    <p>
+      Esto elimina <b>todas</b> las cuentas guardadas en la base de datos local
+      (admins y vendedores, de todas las tiendas) y cierra cualquier sesión
+      activa. El stock y los clientes <b>no se tocan</b>.
+    </p>
+    <p style="color:#b91c1c"><b>No se puede deshacer.</b></p>
+    <button id="btnBorrar">Borrar todas las cuentas</button>
+    <button id="btnVolver">Volver al login</button>
+    <div id="resultado"></div>
+  </div>
+
+<script>
+  const DB_KEY = 'adonay_mock_db_v1';
+  const USERS_KEY = 'adonay_mock_users_v1';
+
+  document.getElementById('btnBorrar').addEventListener('click', () => {
+    if (!confirm('¿Seguro que quieres borrar TODAS las cuentas? Esto no se puede deshacer.')) return;
+
+    // 1) Credenciales de login (email/usuario -> password/uid)
+    localStorage.removeItem(USERS_KEY);
+
+    // 2) Sesión activa (si alguien quedó logueado en este navegador)
+    localStorage.removeItem('adonay_mock_session');
+    sessionStorage.removeItem('adonay_mock_session');
+
+    // 3) Dentro del árbol de datos: el mapa raíz "cuentas" (uid -> rol/tienda)
+    //    y el subnodo "usuarios" de cada tienda (perfiles: nombre, rol, activo...).
+    //    El resto de cada tienda (productos, clientes, pedidos) queda intacto.
+    let borradas = 0;
+    try {
+      const raw = localStorage.getItem(DB_KEY);
+      const db = raw ? JSON.parse(raw) : {};
+
+      if (db.cuentas) {
+        borradas = Object.keys(db.cuentas).length;
+        delete db.cuentas;
+      }
+
+      if (db.tiendas) {
+        Object.keys(db.tiendas).forEach(tiendaId => {
+          if (db.tiendas[tiendaId] && db.tiendas[tiendaId].usuarios) {
+            delete db.tiendas[tiendaId].usuarios;
+          }
+        });
+      }
+
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+    } catch (e) {
+      // si el JSON estaba corrupto, de todos modos ya se limpiaron
+      // USERS_KEY y la sesión arriba — lo principal quedó resuelto.
+    }
+
+    const el = document.getElementById('resultado');
+    el.className = 'ok';
+    el.textContent = 'Listo — se borraron todas las cuentas' + (borradas ? ' (' + borradas + ')' : '') + '. Ya puedes crear cuentas nuevas desde cero.';
+  });
+
+  document.getElementById('btnVolver').addEventListener('click', () => {
+    window.location.href = 'login.html';
+  });
+</script>
+</body>
+</html>

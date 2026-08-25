@@ -1,0 +1,124 @@
+<!-- ── Main: Dashboard ── -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">
+      <h1>Dashboard</h1>
+      <p>Resumen general del negocio</p>
+    </div>
+    <!-- Plan de la tienda (Básico/Medio/Premium) — lo pinta
+         renderPlanBadge() en dashboard-logic.js con nombrePlan() de
+         plan-limits.js. Vacío hasta que Dashboard.init() corre, para
+         no mostrar un plan incorrecto ni por un instante. -->
+    <span class="dash-plan-tag" id="dashPlanTag" style="display:none"></span>
+  </div>
+
+  <div class="page-content">
+
+    <div class="dash-stats">
+      <div class="stat-card dash-stat-card">
+        <div class="dash-stat-icon dash-ic-teal">
+          <svg viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        </div>
+        <div class="stat-label">Valor de inventario</div>
+        <div class="stat-value" id="dashStockValue">—</div>
+      </div>
+      <div class="stat-card dash-stat-card">
+        <div class="dash-stat-icon dash-ic-copper">
+          <svg viewBox="0 0 24 24"><path d="M20.5 7.3 12 12l-8.5-4.7M12 12v9M3.5 7.3v9.4L12 21l8.5-4.3V7.3L12 3z"/></svg>
+        </div>
+        <div class="stat-label">Productos registrados</div>
+        <div class="stat-value" id="dashProductCount">—</div>
+      </div>
+      <div class="stat-card dash-stat-card">
+        <div class="dash-stat-icon dash-ic-red">
+          <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="stat-label">Stock bajo</div>
+        <div class="stat-value" style="color:var(--red)" id="dashLowStock">—</div>
+      </div>
+      <!-- Clientes: solo tiene sentido en planes con Pedidos habilitado
+           (Medio/Premium — ver limitePlan('pedidosDisponible') en
+           plan-limits.js). Básico no gestiona clientes en ningún lado
+           de la app (Pedidos/Registros ya están ocultos en su sidebar,
+           ver index.html), así que esta tarjeta tampoco se le muestra.
+           dashboard-logic.js la oculta/muestra en init(). -->
+      <div class="stat-card dash-stat-card" id="dashClientCard">
+        <div class="dash-stat-icon dash-ic-amber">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="stat-label">Clientes registrados</div>
+        <div class="stat-value" id="dashClientCount">—</div>
+      </div>
+    </div>
+
+    <div class="dash-charts">
+
+      <div class="dash-panel dash-panel-chart">
+        <div class="dash-panel-header">
+          <h2>Stock por almacén</h2>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chartWarehouses"></canvas>
+        </div>
+      </div>
+
+      <div class="dash-panel dash-panel-chart">
+        <div class="dash-panel-header">
+          <h2>Stock por categoría</h2>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chartCategories"></canvas>
+        </div>
+        <div id="chartCategoriesLegend" class="dash-legend"></div>
+      </div>
+
+    </div>
+
+    <div class="dash-grid">
+
+      <div class="dash-panel">
+        <div class="dash-panel-header">
+          <h2>Stock bajo</h2>
+          <a href="#stock" class="dash-panel-link">Ver inventario</a>
+        </div>
+        <div id="dashLowStockList" class="dash-list">
+          <p class="dash-empty">Cargando…</p>
+        </div>
+      </div>
+
+      <!-- Rentabilidad: solo planes Medio/Premium (los que ven costo en
+           Stock — mismo limitePlan('campoCosto') de plan-limits.js, no
+           un flag nuevo). Básico no ve costo en ningún lado de la app,
+           así que este panel ni siquiera existe para él: queda oculto
+           por defecto y dashboard-logic.js lo muestra solo si aplica. -->
+      <div class="dash-panel" id="dashProfitPanel" style="display:none">
+        <div class="dash-panel-header">
+          <h2>Rentabilidad de inventario</h2>
+          <span class="dash-plan-badge">Medio · Premium</span>
+        </div>
+        <div class="dash-profit-summary">
+          <div class="dash-profit-item">
+            <div class="dash-profit-label">Costo total</div>
+            <div class="dash-profit-value" id="dashCostTotal">—</div>
+          </div>
+          <div class="dash-profit-item">
+            <div class="dash-profit-label">Margen estimado</div>
+            <div class="dash-profit-value" id="dashMarginTotal">—</div>
+          </div>
+          <div class="dash-profit-item">
+            <div class="dash-profit-label">Margen</div>
+            <div class="dash-profit-value" id="dashMarginPct">—</div>
+          </div>
+        </div>
+        <div class="dash-panel-header" style="margin-top:14px">
+          <h2 style="font-size:12.5px;color:var(--text-3)">Mayor margen unitario</h2>
+        </div>
+        <div id="dashTopMarginList" class="dash-list">
+          <p class="dash-empty">Cargando…</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>

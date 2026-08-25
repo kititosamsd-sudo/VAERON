@@ -1,0 +1,95 @@
+<!-- ── Main: Perfil ── -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">
+      <h1>Perfil</h1>
+      <p>Ver y editar tu cuenta</p>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="profile-header">
+      <div class="profile-card">
+        <div class="profile-avatar" id="profileAvatar">--</div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">Cargando…</div>
+          <div class="profile-meta">
+            <span class="profile-email" id="profileEmail"></span>
+            <span class="profile-role-badge" id="profileRoleBadge">—</span>
+          </div>
+          <div id="profileSince" class="profile-since"></div>
+        </div>
+      </div>
+
+      <div class="profile-actions-panel">
+        <button class="btn btn-ghost" id="btnSwitchAccountProfile" onclick="switchAccount()">
+          <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Cambiar de cuenta
+        </button>
+        <button class="btn btn-ghost" id="btnLogoutProfile" style="color:var(--red);border-color:#FECACA" onclick="logout()">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+      <div class="settings-card" id="configCardNombre">
+        <div class="settings-card-head">
+          <div class="settings-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="settings-card-head-text">
+            <h3>Nombre para mostrar</h3>
+            <p>Así apareces en el sistema y en el registro de actividad.</p>
+          </div>
+        </div>
+        <div class="settings-card-control">
+          <div class="settings-field">
+            <div style="display:flex;gap:8px;width:100%">
+              <input class="form-input" id="editNombreInput" type="text" maxlength="40" style="flex:1" oninput="actualizarContadorNombre()">
+              <button class="btn btn-primary btn-sm" id="btnGuardarNombre" onclick="guardarNombrePerfil()">Guardar</button>
+            </div>
+            <span class="settings-field-hint" id="nombreContador"></span>
+          </div>
+        </div>
+        <div class="settings-card-footer">
+          <p id="nombreMsg" class="settings-msg"></p>
+        </div>
+      </div>
+
+      <div class="settings-card settings-copper" id="configCardPassword">
+        <div class="settings-card-head">
+          <div class="settings-card-icon ic-copper">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="settings-card-head-text">
+            <h3>Cambiar contraseña</h3>
+            <p>Necesitas tu contraseña actual para confirmar el cambio.</p>
+          </div>
+        </div>
+        <div class="settings-card-control" style="display:flex;flex-direction:column;gap:10px">
+          <div class="form-group" style="width:100%;margin-bottom:0">
+            <label class="form-label">Contraseña actual</label>
+            <input class="form-input" id="pwActual" type="password" autocomplete="current-password">
+          </div>
+          <div class="settings-field">
+            <label class="form-label">Nueva contraseña</label>
+            <input class="form-input" id="pwNueva" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" oninput="evaluarFuerzaPassword()">
+            <div class="pw-strength-track"><div class="pw-strength-fill" id="pwStrengthFill"></div></div>
+            <span class="settings-field-hint" id="pwStrengthLabel"></span>
+          </div>
+          <div class="settings-field">
+            <label class="form-label">Confirmar nueva contraseña</label>
+            <input class="form-input" id="pwConfirmar" type="password" autocomplete="new-password" oninput="evaluarFuerzaPassword()">
+            <span class="settings-field-hint" id="pwMatchHint"></span>
+          </div>
+        </div>
+        <div class="settings-card-footer">
+          <p id="pwMsg" class="settings-msg"></p>
+          <button class="btn btn-primary btn-sm" id="btnCambiarPassword" onclick="cambiarPasswordPerfil()">Cambiar contraseña</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

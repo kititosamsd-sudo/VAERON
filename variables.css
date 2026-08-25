@@ -1,0 +1,83 @@
+/* =========================================================
+   VAERON — Design Tokens
+   =========================================================
+   Paleta tomada directamente del monograma VR (acero cepillado +
+   azul eléctrico con caída a azul marino profundo). Se abandona el
+   azul plano tipo "SaaS corporativo" anterior (#1B4B91 sobre gris
+   plano) por un acero grafito con temperatura cálida y un azul con
+   más carácter (más marino en reposo, más eléctrico en foco/hover),
+   que es literalmente el degradado del logo. El fondo de la app ya
+   no es gris neutro sino un gris con un ligerísimo tinte acero, para
+   que combine con el metal del logo en vez de competir con él.
+   ========================================================= */
+
+:root {
+  /* Brand — azul del logo: marino profundo en reposo, eléctrico en
+     interacción (así se ve en el propio monograma: el brazo de la R
+     pasa de #002286 a #0048FC). */
+  --accent:        #1A46C4;
+  --accent-hover:  #123A9E;
+  --accent-bright: #2F7DFF;   /* eco del filo eléctrico del logo — solo focus/hover puntuales */
+  --accent-soft:   rgba(26, 70, 196, 0.09);
+  --accent-border: rgba(26, 70, 196, 0.28);
+
+  /* Ink — grafito cálido (no azul-negro genérico), para acciones
+     primarias y texto de mayor peso. El acero queda para bordes y
+     detalles metálicos, no para botones. */
+  --ink:        #14171D;
+  --ink-hover:  #21252D;
+  --ink-soft:   rgba(20, 23, 29, 0.06);
+  --copper:     #A9682E;      /* cobre — templa el azul, se usa en detalles puntuales */
+  --copper-bg:  rgba(169, 104, 46, 0.10);
+
+  /* Sidebar — el mismo grafito cálido del logo (fondo negro real de
+     la pieza), no un azul-marino de stock. */
+  --sb-bg:          #0A0C10;
+  --sb-surface:     #0F1218;
+  --sb-hover:       #171B23;
+  --sb-active:      #1C2C52;
+  --sb-text:        #838C9B;
+  --sb-text-hi:     #F2F4F7;
+  --sb-border:      rgba(255,255,255,0.06);
+
+  /* Surface — acero muy claro en vez de gris plano de plantilla */
+  --bg:             #F1F3F7;
+  --surface:        #FFFFFF;
+  --surface-2:      #F7F8FB;
+  --border:         #E3E6ED;
+  --border-strong:  #CBD1DC;
+
+  /* Text */
+  --text-1:  #14171D;
+  --text-2:  #4A5160;
+  --text-3:  #8991A0;
+
+  /* Status — se templan hacia el acero/cobre en vez de verdes y
+     rojos de semáforo genérico */
+  --green:   #146B4C;
+  --green-bg:#E6F3EC;
+  --amber:   #A9690F;
+  --amber-bg:#F7EEE0;
+  --red:     #B23A2C;
+  --red-bg:  #FAEAE7;
+
+  /* Radius */
+  --r:    8px;
+  --r-sm: 6px;
+  --r-lg: 12px;
+
+  /* Shadow — tinte grafito cálido, no negro puro */
+  --shadow-sm: 0 1px 3px rgba(20,23,29,0.08), 0 1px 2px rgba(20,23,29,0.04);
+  --shadow:    0 4px 12px rgba(20,23,29,0.10), 0 1px 3px rgba(20,23,29,0.05);
+  --shadow-lg: 0 20px 48px rgba(10,12,16,0.22), 0 4px 14px rgba(10,12,16,0.10);
+
+  /* Fonts — Inter para UI (legible en tablas densas de stock),
+     JetBrains Mono reservado para códigos, cantidades y estados del
+     sistema: es lo que hace que un dato de inventario "se sienta"
+     como un dato real y no como texto genérico. */
+  --font-ui:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* Transitions */
+  --t: 0.09s ease;
+}

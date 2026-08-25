@@ -1,0 +1,142 @@
+<!-- ── Main: Tiendas (solo súper-admin) ── -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">
+      <h1>Tiendas</h1>
+      <p>Cuentas del sistema — una por cliente</p>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-primary btn-new-item" onclick="openModal('tiendaModal')">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nueva tienda
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <div class="stock-stats" id="tiendaStatsRow">
+      <div class="stat-card">
+        <div class="stat-label">Tiendas registradas</div>
+        <div class="stat-value" id="statTiendaTotal">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Activas</div>
+        <div class="stat-value" style="color:#047857" id="statTiendaActivas">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Suspendidas</div>
+        <div class="stat-value" style="color:var(--red)" id="statTiendaSuspendidas">—</div>
+      </div>
+    </div>
+
+    <div class="product-table-wrap simple-table-wrap">
+      <table class="product-table">
+        <thead>
+          <tr>
+            <th>Tienda</th>
+            <th>Contacto</th>
+            <th>Usuarios</th>
+            <th>Alta</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tiendaTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" id="tiendaEmptyState" style="display:none">
+      <svg class="empty-state-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <p>Todavía no registraste ninguna tienda.</p>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── Modal: Nueva tienda ── -->
+<div class="modal-overlay" id="tiendaModal" onclick="outsideClose(event,'tiendaModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2>Nueva tienda</h2>
+        <p style="font-size:12px;color:var(--text-3);margin-top:2px">Crea la cuenta y su primer usuario admin</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('tiendaModal')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre de la tienda / empresa</label>
+        <input class="form-input" id="tiendaNombre" type="text" placeholder="Ej: Guitarrería Central">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre del administrador</label>
+        <input class="form-input" id="tiendaAdminNombre" type="text" placeholder="Ej: Carlos Pérez">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correo del administrador</label>
+        <input class="form-input" id="tiendaAdminCorreo" type="email" placeholder="carlos@guitarreriacentral.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña inicial</label>
+        <input class="form-input text-mono" id="tiendaAdminPassword" type="text" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div id="tiendaError" style="display:none;margin-top:4px;padding:10px 14px;background:var(--red-bg);border:1px solid #FECACA;border-radius:var(--r-sm);font-size:12.5px;color:var(--red)"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('tiendaModal')">Cancelar</button>
+      <button class="btn btn-primary" id="btnCrearTienda" onclick="crearTiendaDesdeForm()">Crear tienda</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Editar tienda ── -->
+<div class="modal-overlay" id="tiendaEditModal" onclick="outsideClose(event,'tiendaEditModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2>Editar tienda</h2>
+        <p style="font-size:12px;color:var(--text-3);margin-top:2px">Datos de contacto y del administrador</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('tiendaEditModal')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre de la tienda / empresa</label>
+        <input class="form-input" id="editTiendaNombre" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono</label>
+        <input class="form-input" id="editTiendaTelefono" type="text" placeholder="Ej: 987 654 321">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ciudad</label>
+        <input class="form-input" id="editTiendaCiudad" type="text" placeholder="Ej: Lima">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dirección</label>
+        <input class="form-input" id="editTiendaDireccion" type="text" placeholder="Ej: Av. Los Músicos 123">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre del administrador</label>
+        <input class="form-input" id="editTiendaAdminNombre" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correo del administrador</label>
+        <input class="form-input" id="editTiendaAdminCorreo" type="email" disabled style="opacity:.6;cursor:not-allowed">
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:4px">
+          El correo de acceso no se puede cambiar desde acá — Firebase solo permite que el propio dueño de la cuenta lo cambie. Si necesita otro correo, hay que crear la cuenta de nuevo.
+        </p>
+      </div>
+      <div id="tiendaEditError" style="display:none;margin-top:4px;padding:10px 14px;background:var(--red-bg);border:1px solid #FECACA;border-radius:var(--r-sm);font-size:12.5px;color:var(--red)"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('tiendaEditModal')">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarEdicionTienda" onclick="guardarEdicionTienda()">Guardar cambios</button>
+    </div>
+  </div>
+</div>

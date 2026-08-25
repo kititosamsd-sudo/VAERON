@@ -1,0 +1,14 @@
+{
+  "name": "adonay",
+  "version": "1.0.0",
+  "description": "Sistema de inventario y pedidos — Adonay",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "check-views": "node scripts/check-views-sync.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.3"
+  },
+  "license": "UNLICENSED"
+}

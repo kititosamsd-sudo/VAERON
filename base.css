@@ -1,0 +1,1419 @@
+/* =========================================================
+   VAERON — Base & Layout  (Responsive Mejorado)
+   ========================================================= */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html { height: 100%; }
+
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text-1);
+  /* 100dvh (con 100vh como respaldo para navegadores que no lo
+     soportan) en vez de 100vh a secas: 100vh es el alto de pantalla
+     COMPLETO ignorando el teclado virtual y, según el navegador, la
+     barra de direcciones — cuando esa barra se oculta/aparece o el
+     teclado sale, algunos navegadores recalculan 100vh y otros no,
+     y esa inconsistencia entre elementos es la que se siente como
+     que la app "salta" o "se sube/baja" sola. 100dvh (dynamic
+     viewport height) se actualiza siempre de forma consistente al
+     tamaño real visible. */
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ─── App shell ─────────────────────────────────── */
+.app { display: flex; height: 100vh; height: 100dvh; width: 100%; overflow: hidden; }
+
+/* #viewRoot es donde el router inyecta cada vista (Stock, Pedidos,
+   Historial...). Sin flex:1 no ocupa el espacio restante junto al
+   sidebar, y queda un margen en blanco a la derecha. */
+#viewRoot { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ─── Sidebar ───────────────────────────────────── */
+aside.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--sb-bg);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  border-right: 1px solid rgba(255,255,255,0.04);
+}
+
+.sidebar-top {
+  padding: 22px 16px 18px;
+  border-bottom: 1px solid var(--sb-border);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; }
+
+.brand-icon {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(159,179,214,0.28);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(47,125,255,0.22);
+}
+.brand-icon svg { width: 17px; height: 17px; fill: white; }
+.brand-icon img { display: block; }
+
+.brand-name {
+  font-family: var(--font-mono);
+  font-size: 13px; font-weight: 700;
+  color: #fff; letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+.brand-sub {
+  font-size: 10.5px; color: var(--sb-text);
+  margin-top: 2px; display: flex; align-items: center; gap: 5px;
+}
+
+.status-dot {
+  width: 5px; height: 5px;
+  background: #34C77B;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 2px rgba(52,199,123,0.28);
+}
+
+/* ─── Nav ───────────────────────────────────────── */
+nav.sidebar-nav { flex: 1; padding: 14px 10px; overflow-y: auto; }
+
+.nav-section-label {
+  font-size: 10px; font-weight: 600; color: #2E4560;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 0 8px; margin-bottom: 4px; margin-top: 20px;
+}
+.nav-section-label:first-child { margin-top: 0; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: var(--r-sm);
+  cursor: pointer; color: var(--sb-text);
+  font-size: 13px; font-weight: 500;
+  transition: background var(--t), color var(--t);
+  margin-bottom: 2px; user-select: none;
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-item:hover {
+  background: var(--sb-hover);
+  color: var(--sb-text-hi);
+}
+.nav-item:active {
+  background: var(--sb-active);
+  opacity: 0.75;
+}
+.nav-item.active {
+  background: var(--sb-active);
+  color: #fff;
+}
+.nav-item svg {
+  width: 15px; height: 15px; flex-shrink: 0;
+  stroke: currentColor; fill: none;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--accent);
+  color: white;
+  font-size: 10px; font-weight: 600;
+  padding: 1px 6px; border-radius: 20px;
+  min-width: 18px; text-align: center;
+  font-family: var(--font-mono);
+}
+
+/* ─── Sidebar footer ────────────────────────────── */
+.sidebar-footer {
+  padding: 10px;
+  border-top: 1px solid var(--sb-border);
+}
+
+.user-card-wrap { position: relative; }
+
+.user-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--r-sm);
+  cursor: pointer; transition: background var(--t);
+}
+.user-card:hover { background: var(--sb-hover); }
+
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(150deg, #2F4562 0%, #12151B 100%);
+  border: 1.5px solid rgba(159,179,214,0.24);
+  color: #fff; font-size: 11px; font-weight: 600;
+  font-family: var(--font-mono);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* El correo completo no se muestra (desbordaba el ancho del
+   sidebar) — la tarjeta de usuario solo muestra avatar + rol. */
+.user-name { display: none; }
+.user-role { font-size: 11.5px; color: var(--sb-text); font-weight: 500; }
+
+/* ─── Botón que abre el menú (cambiar de cuenta / cerrar sesión) ── */
+.user-menu-toggle {
+  margin-left: auto;
+  width: 26px; height: 26px;
+  border: none; background: transparent;
+  color: var(--sb-text);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--t), color var(--t);
+}
+.user-menu-toggle:hover { background: rgba(255,255,255,0.08); color: var(--sb-text-hi); }
+.user-menu-toggle svg {
+  width: 13px; height: 13px;
+  stroke: currentColor; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  transition: transform var(--t);
+}
+.user-card.menu-open .user-menu-toggle svg { transform: rotate(180deg); }
+
+/* ─── Menú desplegable: cambiar de cuenta / cerrar sesión ── */
+.user-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0; right: 0;
+  background: #161F30;
+  border: 1px solid var(--sb-border);
+  border-radius: var(--r-sm);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.4);
+  overflow: hidden;
+  z-index: 40;
+}
+.user-menu-item {
+  width: 100%;
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 12px;
+  background: transparent; border: none;
+  cursor: pointer; text-align: left;
+  color: var(--sb-text-hi); font-size: 12.5px; font-weight: 500;
+  font-family: var(--font-ui);
+}
+.user-menu-item:hover { background: var(--sb-hover); }
+.user-menu-item svg {
+  width: 14px; height: 14px; flex-shrink: 0;
+  stroke: currentColor; fill: none;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.user-menu-item.danger { color: #F87171; }
+.user-menu-item.danger:hover { background: rgba(239,68,68,0.12); }
+
+/* Ítem de logout en la nav — solo se muestra en móvil (barra inferior);
+   en escritorio ya existe el botón dedicado en la tarjeta de usuario. */
+.nav-item-logout { display: none; }
+
+/* ─── Main area ─────────────────────────────────── */
+main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 13px 26px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-shrink: 0;
+  height: 60px;
+}
+
+.topbar-title h1 {
+  font-size: 15px; font-weight: 700;
+  color: var(--text-1); letter-spacing: -0.02em;
+}
+.topbar-title p {
+  font-size: 11px; color: var(--text-3); margin-top: 1px;
+}
+
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ─── Search ────────────────────────────────────── */
+.search-wrap {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 0 11px; height: 34px; width: 240px;
+  transition: border-color var(--t), box-shadow var(--t), background var(--t);
+}
+.search-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: var(--surface);
+}
+.search-wrap svg {
+  width: 13px; height: 13px; stroke: var(--text-3); fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
+}
+.search-wrap input {
+  background: transparent; border: none; outline: none;
+  font-size: 13px; color: var(--text-1); font-family: var(--font-ui); width: 100%;
+}
+.search-wrap input::placeholder { color: var(--text-3); }
+
+/* ─── Buttons ────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: var(--r-sm); padding: 0 13px; height: 34px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: var(--font-ui);
+  transition: background var(--t), border-color var(--t), color var(--t), transform 0.1s;
+  border: 1px solid transparent; white-space: nowrap;
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn svg {
+  width: 13px; height: 13px;
+  stroke: currentColor; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.btn-primary {
+  background: var(--ink); color: white;
+  box-shadow: 0 1px 4px rgba(22,24,29,0.28);
+}
+.btn-primary:hover { background: var(--ink-hover); }
+
+.btn-ghost {
+  background: var(--surface); color: var(--text-2);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.btn-ghost:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text-1); }
+
+.btn-sm { padding: 6px 12px; font-size: 12px; border-radius: var(--r-sm); }
+
+/* ─── Selector de imagen de producto (Catálogo) ───────────────── */
+.product-image-picker {
+  display: flex; align-items: center; gap: 14px;
+}
+.product-image-preview {
+  width: 64px; height: 64px; border-radius: var(--r-sm);
+  background: var(--surface-2); border: 1px dashed var(--border-strong);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+}
+.product-image-preview svg {
+  width: 24px; height: 24px; color: var(--text-3);
+  fill: none; stroke: currentColor; stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.product-image-preview img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.pt-price-alt {
+  display: block; font-size: 11px; color: var(--text-3); font-weight: 400;
+}
+
+/* ─── Columna "Img" (primera) de la tabla de Stock ────────────── */
+.col-img { width: 44px; }
+.pt-img-thumb {
+  width: 34px; height: 34px; border-radius: var(--r-sm);
+  background: var(--surface-2); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.pt-img-thumb img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+.pt-img-thumb.pt-img-empty svg { width: 15px; height: 15px; color: var(--text-3); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ─── Miniatura de imagen en la tarjeta de Stock (vista mobile) ── */
+.pc-img-thumb {
+  width: 34px; height: 34px; border-radius: var(--r-sm); flex-shrink: 0;
+  background: var(--surface-2); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.pc-img-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pc-img-thumb.pc-img-empty svg { width: 15px; height: 15px; color: var(--text-3); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* =========================================================
+   Catálogo (galería de imágenes) — separado de Stock: acá solo
+   viven las fotos, en grilla de 4 columnas (menos en pantallas
+   chicas). Reutiliza openImageView() de stock.js para ampliar/
+   descargar, así que catalogo-view.html trae su propia copia del
+   modal #imageViewModal (cada vista de la SPA es autocontenida,
+   ver router.js — solo una vive en el DOM a la vez).
+   ========================================================= */
+.catalogo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .catalogo-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 620px) {
+  .catalogo-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 380px) {
+  .catalogo-grid { grid-template-columns: 1fr; }
+}
+
+.catalogo-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.catalogo-thumb-wrap {
+  aspect-ratio: 1 / 1;
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+.catalogo-thumb-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform var(--t);
+}
+.catalogo-thumb-wrap:hover img { transform: scale(1.04); }
+.catalogo-thumb-empty {
+  font-size: 11.5px; color: var(--text-3); text-align: center; padding: 0 8px;
+  cursor: default;
+}
+.catalogo-item-body { padding: 9px 10px 11px; }
+.catalogo-item-code {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+}
+.catalogo-item-name {
+  font-size: 12.5px; font-weight: 600; color: var(--text-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* ─── Perfil ("ver cuenta") ────────────────────────────────────── */
+.profile-header {
+  display: flex; align-items: stretch; gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.profile-card {
+  display: flex; align-items: center; gap: 18px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--ink);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+  padding: 22px 26px; flex: 1; min-width: 300px;
+  position: relative; overflow: hidden;
+}
+/* Marca de esquina discreta — eco del monograma, no decoración suelta */
+.profile-card::after {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, transparent 50%, var(--accent-soft) 50%);
+  pointer-events: none;
+}
+.profile-avatar {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: linear-gradient(150deg, #2F4562 0%, #12151B 100%);
+  border: 1.5px solid rgba(159,179,214,0.24);
+  color: #fff; font-size: 19px; font-weight: 700;
+  font-family: var(--font-mono);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; z-index: 1;
+}
+.profile-name { font-size: 17px; font-weight: 700; color: var(--text-1); letter-spacing: -0.01em; }
+.profile-meta {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px;
+  margin-top: 3px;
+}
+.profile-email {
+  font-size: 12px; color: var(--text-3); font-family: var(--font-mono);
+}
+.profile-role-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: var(--r-sm);
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 10.5px; font-weight: 700; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.profile-role-badge::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-3); flex-shrink: 0;
+}
+.profile-role-badge.role-superadmin { background: var(--ink-soft); color: var(--ink); }
+.profile-role-badge.role-superadmin::before { background: var(--ink); }
+.profile-role-badge.role-admin { background: var(--accent-soft); color: var(--accent); }
+.profile-role-badge.role-admin::before { background: var(--accent); }
+.profile-role-badge.role-vendedor { background: var(--copper-bg); color: var(--copper); }
+.profile-role-badge.role-vendedor::before { background: var(--copper); }
+.profile-since {
+  font-size: 11px; color: var(--text-3); font-family: var(--font-mono);
+  margin-top: 6px;
+}
+.profile-actions-panel {
+  display: flex; flex-direction: column; gap: 8px;
+  justify-content: center;
+  min-width: 210px;
+}
+.profile-actions-panel .btn { width: 100%; }
+@media (max-width: 640px) {
+  .profile-actions-panel { flex-direction: row; min-width: 0; width: 100%; }
+}
+
+.profile-grid, .settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .profile-grid, .settings-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── Settings card — usada en Perfil y Configuración ──────────
+   Reemplaza el bloque genérico de icono+título+botón suelto por
+   una tarjeta con jerarquía clara: cabecera, separador, control,
+   y pie con mensaje + acción — consistente en ambas pantallas. ─── */
+.settings-card {
+  display: flex; flex-direction: column; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+  padding: 20px 22px; width: 100%;
+}
+.settings-card.settings-amber { border-left-color: var(--amber); }
+.settings-card.settings-copper { border-left-color: var(--copper); }
+.settings-card-head { display: flex; gap: 13px; align-items: flex-start; }
+.settings-card-icon {
+  width: 32px; height: 32px; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; background: var(--accent-soft); color: var(--accent);
+}
+.settings-card-icon.ic-amber  { background: rgba(196,138,26,0.12); color: var(--amber); }
+.settings-card-icon.ic-copper { background: var(--copper-bg); color: var(--copper); }
+.settings-card-icon svg {
+  width: 16px; height: 16px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.settings-card-head-text h3 { font-size: 14px; font-weight: 700; color: var(--text-1); margin: 0 0 3px; }
+.settings-card-head-text p { font-size: 12.5px; color: var(--text-3); margin: 0; line-height: 1.4; }
+.settings-card-control { padding-top: 14px; border-top: 1px solid var(--border); }
+.settings-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.settings-row-label { font-size: 12.5px; color: var(--text-2); white-space: nowrap; }
+.settings-row-input { max-width: 110px; text-align: center; }
+.settings-preview {
+  margin: 10px 0 0; font-size: 11.5px; color: var(--text-2);
+  font-family: var(--font-mono); min-height: 15px;
+}
+.settings-card-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.settings-msg { font-size: 11.5px; color: var(--text-3); margin: 0; flex: 1; }
+
+.settings-field { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+.settings-field-hint { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); min-height: 14px; }
+.settings-field-hint.warn { color: var(--amber); }
+.settings-field-hint.ok   { color: var(--green); }
+.settings-field-hint.bad  { color: var(--red); }
+
+.pw-strength-track {
+  height: 4px; border-radius: 3px; background: var(--surface-2);
+  overflow: hidden; margin-top: 6px;
+}
+.pw-strength-fill {
+  height: 100%; width: 0%; border-radius: 3px;
+  background: var(--red); transition: width var(--t), background var(--t);
+}
+
+/* ─── Configuración súper-admin (algunas secciones viven en la Configuración de cada tienda) ──── */
+.config-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.config-card {
+  display: flex; flex-direction: column; gap: 10px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+  padding: 18px; position: relative;
+}
+.config-card-icon {
+  width: 36px; height: 36px; border-radius: var(--r-sm);
+  background: var(--surface-2); display: flex; align-items: center; justify-content: center;
+}
+.config-card-icon svg {
+  width: 18px; height: 18px; color: var(--text-2);
+  fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.config-card-body h3 { font-size: 14px; font-weight: 700; color: var(--text-1); margin: 0 0 3px; }
+.config-card-body p { font-size: 12.5px; color: var(--text-3); margin: 0; line-height: 1.4; }
+.config-soon {
+  align-self: flex-start;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 10.5px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: .03em;
+}
+.config-existe {
+  align-self: flex-start;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--green-bg); border: 1px solid transparent;
+  font-size: 10.5px; font-weight: 600; color: var(--green);
+  text-transform: uppercase; letter-spacing: .03em;
+}
+
+/* ─── Panel Tiendas (súper-admin) ──────────────────────────────── */
+.badge-estado-activa, .badge-estado-suspendida {
+  display: inline-block; padding: 3px 10px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 600;
+}
+.badge-estado-activa { background: var(--green-bg); color: var(--green); }
+.badge-estado-suspendida { background: var(--red-bg); color: var(--red); }
+
+.badge-proyecto {
+  display: inline-block; margin-top: 3px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--text-3); text-transform: uppercase;
+}
+
+.btn-icon {
+  width: 34px; padding: 0; justify-content: center;
+  background: var(--surface); color: var(--text-2);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.btn-icon:hover { background: var(--surface-2); color: var(--text-1); }
+
+/* ─── Page content ───────────────────────────────── */
+.page-content {
+  flex: 1; overflow-y: auto;
+  padding: 22px 26px;
+  background: var(--bg);
+}
+
+/* ─── Cards ──────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Badges ─────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 500;
+  font-family: var(--font-mono);
+}
+.badge-blue   { background: var(--accent-soft);   color: var(--accent); }
+.badge-green  { background: var(--green-bg);       color: var(--green); }
+.badge-amber  { background: var(--amber-bg);       color: var(--amber); }
+.badge-red    { background: var(--red-bg);         color: var(--red); }
+
+/* ─── Modal backdrop ─────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(11,17,32,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.modal-overlay.open {
+  opacity: 1; pointer-events: all;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  transform: translateY(10px);
+  transition: transform 0.2s ease;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-header {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px;
+}
+.modal-header h2 { font-size: 16px; font-weight: 700; color: var(--text-1); letter-spacing: -0.02em; }
+.modal-header p { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+.modal-close {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background var(--t); flex-shrink: 0;
+}
+.modal-close:hover { background: var(--border); }
+.modal-close svg { width: 14px; height: 14px; stroke: var(--text-2); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+.modal-body { padding: 22px 24px; }
+
+.modal-footer {
+  padding: 16px 24px 22px;
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── Modal: elegir qué hacer con el stock al eliminar ───
+   Antes esto eran botones .btn con una oración entera adentro; como
+   .btn tiene white-space:nowrap y altura fija (pensado para textos
+   cortos tipo "Guardar"), en pantallas angostas el texto se cortaba
+   en vez de bajar de línea. Ahora son tarjetas propias (título +
+   descripción corta) que sí envuelven el texto normalmente. */
+.delete-choice-modal { padding: 22px 24px 20px; }
+
+.dcm-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+.dcm-icon-wrap {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  background: var(--red-bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.dcm-icon-wrap svg { width: 18px; height: 18px; stroke: var(--red); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dcm-header-text { min-width: 0; padding-top: 2px; }
+.dcm-title { margin: 0; font-size: 15.5px; font-weight: 700; color: var(--text-1); letter-spacing: -0.01em; }
+.dcm-subtitle { margin: 4px 0 0; font-size: 12.5px; color: var(--text-3); line-height: 1.45; }
+
+.dcm-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.dcm-option {
+  display: flex; align-items: flex-start; gap: 11px;
+  width: 100%; text-align: left;
+  padding: 12px 13px; height: auto;
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface); cursor: pointer;
+  font-family: var(--font-ui); white-space: normal;
+  transition: border-color var(--t), background var(--t);
+}
+.dcm-option:hover { border-color: var(--border-strong); background: var(--surface-2); }
+.dcm-option:active { transform: scale(0.99); }
+
+.dcm-option-icon {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.dcm-option-icon svg { width: 15px; height: 15px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dcm-option-icon--restore { background: var(--green-bg); }
+.dcm-option-icon--restore svg { stroke: var(--green); }
+.dcm-option-icon--keep { background: var(--accent-soft); }
+.dcm-option-icon--keep svg { stroke: var(--accent); }
+
+.dcm-option-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dcm-option-title { font-size: 13.5px; font-weight: 600; color: var(--text-1); }
+.dcm-option-desc { font-size: 12px; color: var(--text-3); line-height: 1.4; white-space: normal; }
+
+.dcm-cancel {
+  width: 100%; margin-top: 2px;
+  padding: 11px 13px; height: auto;
+  border-radius: var(--r); border: none; background: transparent;
+  font-family: var(--font-ui); font-size: 13px; font-weight: 500; color: var(--text-3);
+  cursor: pointer; white-space: normal;
+}
+.dcm-cancel:hover { color: var(--text-1); background: var(--surface-2); }
+
+@media (max-width: 768px) {
+  .delete-choice-modal { padding: 20px 18px 22px; }
+  .dcm-option { padding: 11px 12px; }
+}
+
+/* ─── Form fields ─────────────────────────────────── */
+.form-group { margin-bottom: 16px; }
+.form-group:last-child { margin-bottom: 0; }
+
+.form-label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--text-2); margin-bottom: 6px; letter-spacing: -0.01em;
+}
+
+.form-input {
+  width: 100%; height: 36px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 0 11px;
+  font-size: 13px; color: var(--text-1); font-family: var(--font-ui);
+  outline: none; transition: border-color var(--t), box-shadow var(--t);
+}
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.form-input::placeholder { color: var(--text-3); }
+
+.form-select {
+  width: 100%; height: 36px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 0 11px;
+  font-size: 13px; color: var(--text-1); font-family: var(--font-ui);
+  outline: none; cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238B97B2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  transition: border-color var(--t), box-shadow var(--t);
+}
+.form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ─── Data table ─────────────────────────────────── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+table { width: 100%; border-collapse: collapse; }
+
+thead th {
+  text-align: left; padding: 10px 18px;
+  font-size: 10.5px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  background: var(--surface-2); border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+/* "Cantidad — [nombre del almacén]" puede ser largo si le pusieron
+   un nombre propio (ej. "AV UNIÓN") — trunca con "…" en vez de
+   encimarse con la columna de al lado. El título completo queda
+   disponible al pasar el mouse (title, puesto en switchWarehouse). */
+#colStockHeader {
+  max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--t);
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #F7F9FF; }
+
+td { padding: 13px 18px; vertical-align: middle; }
+
+.table-footer {
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.table-footer-text { font-size: 12px; color: var(--text-3); }
+
+/* Variante usada en Notas de Pedido: el contador va arriba de la
+   tabla en vez de abajo, así que el borde se invierte para separar
+   visualmente hacia abajo, no hacia arriba. */
+.table-footer-top {
+  border-top: none;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── Empty state ─────────────────────────────────── */
+.empty-state {
+  padding: 56px 24px; text-align: center;
+  display: none;
+}
+.empty-state-icon {
+  width: 40px; height: 40px;
+  margin: 0 auto 12px;
+  stroke: #C9D3E6; fill: none;
+  stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+  display: block;
+}
+.empty-state p { font-size: 13px; color: var(--text-3); }
+
+/* ─── Divider ────────────────────────────────────── */
+.divider {
+  height: 1px; background: var(--border);
+  margin: 20px 0;
+}
+
+/* ─── Utility ─────────────────────────────────────── */
+.text-mono  { font-family: var(--font-mono); }
+.text-sm    { font-size: 12px; }
+.text-muted { color: var(--text-3); }
+.text-right { text-align: right; }
+.fw-600     { font-weight: 600; }
+
+/* =========================================================
+   RESPONSIVE — Tablet y móvil (≤ 1280px)
+   Sidebar → barra inferior fija
+   (En tablet las tablas se mantienen como tablas — ver el
+   switch cards/tabla en stock-card.css, que ahora corta en
+   600px — solo cambia la navegación, no el contenido)
+   ========================================================= */
+@media (max-width: 1280px) {
+  /* ── Shell ── */
+  .app { flex-direction: column; }
+
+  /* ── Bottom nav ── */
+  aside.sidebar {
+    order: 2;
+    width: 100%;
+    min-width: 0;
+    height: 64px;
+    flex-direction: row;
+    align-items: center;
+    border-right: none;
+    border-top: 1px solid var(--sb-border);
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+
+  /* Oculta la barra inferior mientras el teclado está abierto
+     (clase añadida por nav.js al enfocar un input/select/textarea) */
+  body.keyboard-open aside.sidebar {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sidebar-top, .sidebar-footer { display: none; }
+
+  nav.sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 0;
+    overflow: visible;
+    height: 100%;
+  }
+
+  .nav-section-label { display: none; }
+
+  .nav-item {
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 16px;
+    margin-bottom: 0;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 10px;
+    min-width: 60px;
+    position: relative;
+    color: var(--sb-text);
+    letter-spacing: 0.01em;
+  }
+  /* El texto del nav item SÍ se muestra (a diferencia del sidebar
+     lateral de escritorio, acá siempre hay lugar para el label) */
+  .nav-item svg {
+    width: 20px; height: 20px;
+  }
+  .nav-item.active {
+    background: var(--sb-active);
+    color: #fff;
+  }
+  .nav-badge {
+    position: absolute;
+    top: 2px; right: 8px;
+    margin-left: 0;
+    font-size: 9px; padding: 1px 4px; min-width: 14px;
+  }
+
+  .nav-item-logout {
+    display: flex;
+    color: #F87171;
+  }
+  .nav-item-logout:active { background: rgba(239,68,68,0.15); }
+
+  /* ── Main ── */
+  main.main {
+    order: 1;
+    height: calc(100dvh - 64px);
+    overflow: hidden;
+  }
+
+  /* ── Topbar ──
+     Antes esto solo pasaba a partir de 768px (móvil). En el rango
+     de tablet (769–1280px) el topbar seguía en una sola fila sin
+     wrap, con el buscador a 240px fijos + varios botones ("Seleccionar",
+     "Importar", "Exportar todo (508)", "+ Agregar producto") — no
+     entraban, y como main.main tiene overflow:hidden, en vez de verse
+     un scroll horizontal quedaban directamente CORTADOS a la mitad
+     ("+A", "+ Nue"). Ahora el topbar puede pasar a dos filas (título
+     arriba, acciones abajo) y dentro de "acciones" los botones se
+     acomodan en la fila que corresponda, con su tamaño natural (no
+     estirados a 100% como en móvil — eso lo hace el breakpoint de
+     768px más abajo, que es más angosto y sí lo necesita). */
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    row-gap: 10px;
+  }
+  .topbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  /* ── Ocultar acciones del topbar mientras se scrollea ──
+     La fila de botones (Seleccionar/Importar/Exportar/Agregar) le
+     come pantalla a la lista en tablet/móvil. Mientras el usuario
+     está scrolleando activamente, nav.js le agrega esta clase al
+     body y solo queda visible el buscador; al detenerse el scroll,
+     nav.js la quita y todo vuelve a su estado normal. */
+  .topbar-actions > *:not(.search-wrap) {
+    transition: opacity 0.15s ease;
+  }
+  body.topbar-scrolling .topbar-actions > *:not(.search-wrap) {
+    display: none;
+  }
+}
+
+@media (max-width: 1280px) and (min-width: 601px) {
+  /* El padding inferior extra (80px) ya lo tenía el breakpoint de
+     ≤768px para que el último elemento de la página no quede tapado
+     por la barra de navegación inferior (fixed, 64px de alto). Acá
+     faltaba: en tablets (601-1280px) el contenido llegaba justo al
+     borde, así que el botón final (ej. "Confirmar pedido") quedaba
+     inalcanzable por scroll — parecía que el scroll se cortaba antes
+     de llegar, cuando en realidad nunca hubo espacio para mostrarlo. */
+  .page-content { padding: 18px 20px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* =========================================================
+   RESPONSIVE — Móvil (≤ 768px)
+   Tablas → tarjetas verticales, ajustes de topbar/modal
+   (el cambio de sidebar → barra inferior ya se aplicó arriba,
+   desde 1024px)
+   ========================================================= */
+@media (max-width: 768px) {
+  html, body { overflow-x: hidden; }
+  body { font-size: 13px; }
+
+  /* ── Topbar ── */
+  .topbar {
+    padding: 10px 14px;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .topbar-title h1 { font-size: 15px; }
+  .topbar-title p  { font-size: 11px; color: var(--text-3); }
+
+  .topbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .search-wrap {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  /* Botones de acción ocupa ancho disponible */
+  .topbar-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  /* ── Content ── */
+  .page-content {
+    padding: 14px 12px 80px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── Form ── */
+  .form-row { grid-template-columns: 1fr; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    max-width: 100% !important;
+    width: 100%;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    max-height: 92dvh;
+    transform: translateY(20px);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header { padding: 18px 18px 14px; }
+  .modal-body   { padding: 16px 18px; }
+  .modal-footer { padding: 12px 18px 20px; gap: 8px; flex-wrap: wrap; }
+  .modal-footer .btn { flex: 1; justify-content: center; }
+
+  /* Botón "Eliminar" del footer: en móvil pasa a ocupar toda la
+     fila y se ubica DEBAJO de Cancelar/Guardar. */
+  .modal-footer[style*="space-between"] {
+    flex-direction: column;
+  }
+  .modal-footer[style*="space-between"] > [id^="btnDelete"] {
+    width: 100%;
+    flex: 0 0 auto;
+    order: 2;
+  }
+  .modal-footer[style*="space-between"] > div {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    order: 1;
+  }
+
+  /* ── Tablas → Tarjetas ── */
+  .table-wrap {
+    overflow-x: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .table-wrap table,
+  .table-wrap thead, .table-wrap tbody,
+  .table-wrap tr, .table-wrap td, .table-wrap th {
+    display: block; width: 100%;
+  }
+  .table-wrap table  { min-width: 0; }
+  .table-wrap thead  { display: none; }
+
+  .table-wrap tbody tr {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: var(--shadow-sm);
+    padding: 7px 14px;
+    margin-bottom: 8px;
+    transition: box-shadow var(--t);
+  }
+  .table-wrap tbody tr:hover { box-shadow: var(--shadow); }
+  .table-wrap tbody tr:last-child { margin-bottom: 0; }
+
+  .table-wrap td {
+    padding: 2px 0;
+    border-bottom: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    text-align: right;
+  }
+  .table-wrap td:empty { display: none; }
+
+  /* Etiqueta izquierda desde data-label */
+  .table-wrap td[data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    text-align: left;
+    padding-top: 1px;
+    min-width: 70px;
+  }
+
+  /* Celda de acciones sin etiqueta */
+  .table-wrap td[data-label=""] {
+    justify-content: flex-end;
+    padding-top: 7px;
+    margin-top: 2px;
+    border-top: 1px solid var(--border);
+  }
+
+  .table-wrap td[data-label=""] .actions-cell,
+  .table-wrap td[data-label=""] > div {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .table-wrap td[data-label=""] .btn {
+    flex: 1;
+    justify-content: center;
+    height: 34px !important;
+    font-size: 13px !important;
+    padding: 0 12px !important;
+  }
+
+  .table-footer {
+    background: transparent;
+    border-top: none;
+    padding: 6px 2px 0;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — Móvil pequeño (≤ 390px)
+   ========================================================= */
+@media (max-width: 390px) {
+  .page-content { padding: 10px 10px 80px; }
+
+  .nav-item { padding: 6px 10px; min-width: 50px; font-size: 9.5px; }
+  .nav-item svg { width: 19px; height: 19px; }
+
+  .stock-stats { grid-template-columns: 1fr 1fr !important; }
+  .hist-stats  { grid-template-columns: 1fr 1fr !important; }
+
+  .topbar-title h1 { font-size: 14px; }
+}
+/* ─── Registros: switch de activo/inactivo por cuenta ─── */
+.status-toggle {
+  position: relative; display: inline-block;
+  width: 40px; height: 22px; flex-shrink: 0;
+}
+.status-toggle input { opacity: 0; width: 0; height: 0; }
+.status-toggle-track {
+  position: absolute; inset: 0; cursor: pointer;
+  background: var(--border-strong); border-radius: 999px;
+  transition: background var(--t);
+}
+.status-toggle-track::before {
+  content: ''; position: absolute; left: 3px; top: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: transform var(--t);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.status-toggle input:checked + .status-toggle-track { background: var(--green); }
+.status-toggle input:checked + .status-toggle-track::before { transform: translateX(18px); }
+.status-toggle input:disabled + .status-toggle-track { opacity: 0.5; cursor: not-allowed; }
+
+.reg-status-cell { display: flex; align-items: center; gap: 8px; }
+.reg-status-label { font-size: 12px; font-weight: 600; }
+.reg-status-label.activo   { color: var(--green); }
+.reg-status-label.inactivo { color: var(--text-3); }
+
+.reg-role-badge {
+  display: inline-block; padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+  background: var(--accent-soft); color: var(--accent);
+}
+.reg-role-badge.admin { background: var(--red-bg); color: var(--red); }
+
+.btn-reg-delete {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0;
+  background: none; border: 1px solid var(--border); border-radius: var(--r-sm);
+  color: var(--text-3); cursor: pointer; transition: background var(--t), color var(--t), border-color var(--t);
+}
+.btn-reg-delete:hover { background: var(--red-bg); color: var(--red); border-color: #FECACA; }
+.btn-reg-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── Nav: "Registros" (gestión de cuentas) es exclusivo de admin ─── */
+.role-vendedor .nav-admin-only { display: none !important; }
+
+/* ─── Nav: elementos exclusivos de plan Medio/Premium (no Básico) ─── */
+.plan-basico .nav-plan-pago { display: none !important; }
+
+/* ─── Multi-cuenta: el súper-admin solo ve "Tiendas"; las cuentas
+   de una tienda (admin/vendedor) ven el catálogo y su cuenta ──── */
+.nav-superadmin-only { display: none; }
+.role-superadmin .nav-superadmin-only.nav-item { display: flex; }
+.role-superadmin .nav-superadmin-only.nav-section-label { display: block; }
+.role-superadmin .nav-tienda-only { display: none !important; }
+
+/* =========================================================
+   Dashboard
+   ========================================================= */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+@media (max-width: 1024px) {
+  .dash-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .dash-stats { grid-template-columns: 1fr; }
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 780px) {
+  .dash-grid { grid-template-columns: 1fr; }
+}
+
+.dash-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 18px 8px;
+}
+.dash-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.dash-panel-header h2 {
+  font-size: 14.5px; font-weight: 700; color: var(--text-1); margin: 0;
+}
+.dash-panel-link {
+  font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: none;
+}
+.dash-panel-link:hover { text-decoration: underline; }
+
+.dash-list { display: flex; flex-direction: column; }
+.dash-empty { padding: 20px 4px; color: var(--text-3); font-size: 13px; text-align: center; }
+
+.dash-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.dash-row:last-child { border-bottom: none; }
+.dash-row-main { min-width: 0; }
+.dash-row-title {
+  font-size: 13.5px; font-weight: 600; color: var(--text-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dash-row-meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.dash-row-value {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  color: var(--text-1); white-space: nowrap; flex-shrink: 0;
+}
+.dash-row-value.low { color: var(--red); }
+
+/* Panel de Rentabilidad (Medio/Premium, ver dashboard-logic.js) */
+.dash-plan-badge {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
+  color: var(--green); background: var(--green-bg);
+  padding: 3px 8px; border-radius: 999px;
+}
+
+/* Etiqueta de plan en el topbar del Dashboard (ver dashPlanTag en
+   dashboard-logic.js). Misma idea que .dash-plan-badge pero un
+   color distinto por plan — no es un semáforo de estado (ese uso ya
+   lo tienen --green/--amber/--red en Stock/Dashboard), es solo una
+   escalera de "cuánto plan" de menos a más: gris acero (Básico) →
+   cobre (Medio) → azul de marca (Premium), el mismo cobre-templa-
+   al-azul del resto de la paleta (ver variables.css). */
+.dash-plan-tag {
+  font-size: 11.5px; font-weight: 700; letter-spacing: .02em;
+  padding: 5px 12px; border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.dash-plan-tag.plan-tag-basico {
+  color: var(--text-2); background: var(--surface-2); border-color: var(--border-strong);
+}
+.dash-plan-tag.plan-tag-medio {
+  color: var(--copper); background: var(--copper-bg);
+}
+.dash-plan-tag.plan-tag-premium {
+  color: var(--accent); background: var(--accent-soft); border-color: var(--accent-border);
+}
+.dash-profit-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.dash-profit-item { min-width: 0; }
+.dash-profit-label { font-size: 11.5px; color: var(--text-3); margin-bottom: 3px; }
+.dash-profit-value {
+  font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--text-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 420px) {
+  .dash-profit-summary { grid-template-columns: 1fr; }
+}
+
+/* =========================================================
+   Stock — pestañas de almacén
+   ========================================================= */
+.warehouse-tabs {
+  display: flex; gap: 4px;
+  padding: 0 24px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  overflow-x: auto;
+}
+.warehouse-tab {
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: none;
+  font-family: var(--font-ui);
+  font-size: 13px; font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--t), color var(--t), border-color var(--t);
+}
+.warehouse-tab:hover { background: var(--accent-soft); color: var(--accent); }
+.warehouse-tab.active {
+  background: var(--accent); color: #fff;
+  border-color: var(--accent);
+}
+@media (max-width: 640px) {
+  .warehouse-tabs { padding: 0 14px 10px; }
+}
+
+/* =========================================================
+   Dashboard — íconos de las tarjetas y panel de gráficos
+   ========================================================= */
+.dash-stat-card { position: relative; padding-top: 44px; }
+.dash-stat-icon {
+  position: absolute; top: 14px; right: 14px;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.dash-stat-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dash-ic-teal   { background: var(--accent-soft); color: var(--accent); }
+.dash-ic-copper { background: var(--copper-bg);   color: var(--copper); }
+.dash-ic-amber  { background: rgba(196,138,26,0.12); color: var(--amber); }
+.dash-ic-red    { background: var(--red-bg);      color: var(--red); }
+
+.dash-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 780px) {
+  .dash-charts { grid-template-columns: 1fr; }
+}
+
+.dash-panel-chart { padding-bottom: 16px; }
+.dash-chart-wrap { position: relative; height: 220px; }
+
+.dash-legend {
+  display: flex; flex-wrap: wrap; gap: 8px 14px;
+  margin-top: 12px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.dash-legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-2);
+}
+.dash-legend-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }

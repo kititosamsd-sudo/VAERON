@@ -1,0 +1,39 @@
+<!-- ── Main: Auditoría (solo súper-admin) ── -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">
+      <h1>Auditoría</h1>
+      <p>Registro de acciones administrativas — quién hizo qué y cuándo</p>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="Auditoria.init()">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <div class="product-table-wrap simple-table-wrap">
+      <table class="product-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Evento</th>
+            <th>Detalle</th>
+            <th>Tienda</th>
+            <th>Realizado por</th>
+          </tr>
+        </thead>
+        <tbody id="auditoriaTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" id="auditoriaEmptyState" style="display:none">
+      <svg class="empty-state-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <p>Todavía no hay eventos registrados.</p>
+    </div>
+
+  </div>
+</main>
