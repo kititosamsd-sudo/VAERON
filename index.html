@@ -3,189 +3,510 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VAERON</title>
+<title>VAERON — Sistema de gestión empresarial</title>
 <link rel="icon" href="favicon.png" type="image/png">
-<!-- BLOQUEANTE A PROPÓSITO (sin defer/async): oculta la página de
-     inmediato, antes de que el navegador pinte NADA. Esto es lo que
-     realmente evita el "flash" de contenido sin sesión — depender
-     solo de auth-guard.js (que es defer) no lo garantiza, porque
-     ese script puede ejecutarse después de que el navegador ya
-     pintó algo. Esta línea SIEMPRE corre primero. -->
-<script>document.documentElement.style.visibility = 'hidden';</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="variables.css">
-<link rel="stylesheet" href="base.css">
-<link rel="stylesheet" href="stock-card.css">
-<link rel="stylesheet" href="import.css">
-<!-- SDK real de Firebase (compat) — conectado a los proyectos reales
-     configurados en firebase-projects.js. mock-sdk.js queda guardado
-     en el proyecto por si algún día hace falta volver a modo demo,
-     pero ya no se carga acá.
-     "defer" acá es la pieza que realmente acelera la carga: sin esto,
-     el navegador para de parsear el resto de la página hasta bajar
-     estos 3 archivos de gstatic.com UNO POR UNO, antes de poder
-     empezar a pedir nada más (ni siquiera firebase.js). Con defer,
-     los 3 se descargan EN PARALELO con todo lo demás, y solo se
-     ejecutan en orden (éste, luego firebase-projects.js, luego
-     firebase.js...) una vez que el HTML ya terminó de parsearse —
-     mismo orden de ejecución de siempre, pero sin bloquear la carga
-     mientras tanto. -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0B1220;
+    --blue: #2563EB;
+    --blue-soft: #3B82F6;
+    --text-primary: #111827;
+    --text-secondary: #64748B;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+    --border: #E2E8F0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { width: 100%; }
+  body { font-family: 'Inter', sans-serif; color: var(--text-primary); background: var(--white); line-height: 1.5; }
+  a { text-decoration: none; color: inherit; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 0; border-bottom: 1px solid var(--border);
+  }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; letter-spacing: 0.5px; }
+  .logo svg { display: block; flex-shrink: 0; }
+  nav.main-nav { display: flex; gap: 32px; }
+  nav.main-nav a { font-size: 14px; font-weight: 500; color: var(--text-primary); padding-bottom: 4px; }
+  nav.main-nav a.active { color: var(--blue); border-bottom: 2px solid var(--blue); }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-right a.login { font-size: 14px; font-weight: 500; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: background 0.15s ease; white-space: nowrap; }
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:hover { background: var(--blue); }
+  .btn-secondary { background: #fff; color: var(--text-primary); border-color: var(--border); }
+  .btn-secondary:hover { border-color: var(--text-secondary); }
+
+  .hero { padding: 64px 0; }
+  .hero-grid { display: flex; gap: 40px; align-items: center; }
+  .hero-grid > div { flex: 1; min-width: 0; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; color: var(--blue); margin-bottom: 16px; }
+  h1 { font-size: 44px; font-weight: 700; line-height: 1.15; margin-bottom: 20px; letter-spacing: -0.5px; }
+  h1 .accent { color: var(--blue); }
+  .hero-desc { font-size: 16px; color: var(--text-secondary); max-width: 460px; margin-bottom: 28px; }
+  .hero-actions { display: flex; gap: 12px; margin-bottom: 40px; }
+
+  .benefits-row { display: flex; gap: 32px; }
+  .benefit { display: flex; align-items: flex-start; gap: 10px; }
+  .benefit-icon { width: 20px; height: 20px; flex-shrink: 0; color: var(--navy); margin-top: 2px; }
+  .benefit-title { font-size: 14px; font-weight: 600; }
+  .benefit-desc { font-size: 12px; color: var(--text-secondary); max-width: 140px; }
+
+  .hero-visual { display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .hero-visual svg { display: block; }
+  .hero-tagline { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--blue); text-align: center; margin-top: 12px; }
+
+  .stats-bar { background: var(--navy); padding: 32px 0; }
+  .stats-grid { display: flex; gap: 24px; }
+  .stat { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+  .stat-icon { width: 22px; height: 22px; color: var(--blue-soft); flex-shrink: 0; }
+  .stat-value { font-size: 22px; font-weight: 700; color: #fff; }
+  .stat-label { font-size: 12px; color: #94A3B8; }
+
+  .section { padding: 64px 0; }
+  .section-title { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 40px; }
+  .features-grid { display: flex; gap: 20px; }
+  .feature-card { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 12px; padding: 24px; background: var(--white); }
+  .feature-icon { width: 24px; height: 24px; color: var(--navy); margin-bottom: 16px; }
+  .feature-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .feature-desc { font-size: 13px; color: var(--text-secondary); }
+
+  .plans-grid { display: flex; gap: 20px; align-items: stretch; }
+  .plan-card { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 14px; padding: 28px 24px; background: var(--white); display: flex; flex-direction: column; position: relative; }
+  .plan-card.featured { border-color: var(--blue); box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12); }
+  .plan-badge { position: absolute; top: -12px; left: 24px; background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; letter-spacing: 0.3px; }
+  .plan-name { font-size: 15px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .plan-price { font-size: 32px; font-weight: 700; margin-bottom: 20px; }
+  .plan-price span { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+  .plan-features { list-style: none; margin-bottom: 24px; flex: 1; }
+  .plan-features li { font-size: 14px; color: var(--text-secondary); padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .plan-cta { width: 100%; justify-content: center; }
+
+  .about-grid { display: flex; gap: 48px; align-items: flex-start; }
+  .about-text { flex: 1.2; min-width: 0; }
+  .about-text p { color: var(--text-secondary); font-size: 15px; margin-bottom: 16px; }
+  .about-values { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  .value-card { border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; background: var(--white); }
+  .value-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .value-desc { font-size: 13px; color: var(--text-secondary); }
+
+  .contact-grid { display: flex; gap: 48px; align-items: flex-start; }
+  .contact-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+  .contact-item { display: flex; gap: 14px; align-items: flex-start; }
+  .contact-item svg { width: 20px; height: 20px; color: var(--navy); flex-shrink: 0; margin-top: 2px; }
+  .contact-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 2px; }
+  .contact-item p:last-child { font-size: 15px; font-weight: 600; }
+  .contact-form { flex: 1.2; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .contact-form input, .contact-form textarea { font-family: inherit; font-size: 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); resize: vertical; }
+  .contact-form input:focus, .contact-form textarea:focus { outline: none; border-color: var(--blue); }
+  .contact-success { display: none; font-size: 14px; color: #16A34A; font-weight: 600; }
+  .contact-form.sent input, .contact-form.sent textarea, .contact-form.sent button { display: none; }
+  .contact-form.sent .contact-success { display: block; }
+
+  .cta-banner { background: var(--navy); padding: 56px 0; text-align: center; }
+  .cta-banner h2 { color: #fff; font-size: 26px; font-weight: 700; margin-bottom: 10px; }
+  .cta-banner p { color: #94A3B8; font-size: 15px; margin-bottom: 24px; }
+
+  footer { padding: 28px 0; text-align: center; font-size: 13px; color: var(--text-secondary); border-top: 1px solid var(--border); }
+
+  .mobile-menu-btn { display: none; }
+  .mobile-header-actions { display: none; }
+  .mobile-menu { display: none; }
+
+  @media (max-width: 900px) {
+    .container { padding: 0 20px; }
+    nav.main-nav, .nav-right { display: none; }
+    .mobile-header-actions { display: flex; align-items: center; gap: 14px; }
+    .mobile-menu-btn { display: block; background: none; border: none; cursor: pointer; padding: 4px; }
+    .mobile-menu-btn svg { display: block; width: 26px; height: 26px; }
+    .login-mobile { font-size: 14px; font-weight: 600; color: var(--blue); }
+
+    header { position: relative; }
+    .mobile-menu {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--white); border-bottom: 1px solid var(--border);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+      flex-direction: column; padding: 8px 20px 20px; gap: 4px; z-index: 50;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a { padding: 12px 4px; font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border); }
+    .mobile-menu a.active { color: var(--blue); }
+    .mobile-menu .btn { margin-top: 12px; }
+    .mobile-menu .login { border-bottom: none; font-weight: 600; }
+
+    .hero { padding: 28px 0 40px; }
+    .hero-grid { flex-direction: column; }
+    .hero-visual { display: none; }
+    h1 { font-size: 28px; }
+    .hero-desc { max-width: none; }
+    .benefits-row { flex-wrap: nowrap; gap: 14px; justify-content: space-between; }
+    .benefit { align-items: center; gap: 6px; flex: 1; min-width: 0; }
+    .benefit-icon { width: 18px; height: 18px; margin-top: 0; }
+    .benefit-title { font-size: 13px; }
+    .benefit-desc { display: none; }
+    .stats-bar { padding: 40px 0; background: transparent; }
+    .stats-bar .container { background: var(--navy); border-radius: 16px; padding: 24px 20px; }
+    .stats-grid { flex-wrap: wrap; row-gap: 20px; }
+    .stat { flex: 1 1 45%; }
+    .section { padding: 40px 0; }
+    .section-title { font-size: 22px; margin-bottom: 28px; }
+    .features-grid { flex-direction: column; gap: 14px; }
+    .plans-grid { flex-direction: column; }
+    .plan-badge { top: -12px; }
+    .about-grid { flex-direction: column; gap: 32px; }
+    .contact-grid { flex-direction: column; gap: 32px; }
+    .cta-banner { padding: 40px 0; }
+    .cta-banner h2 { font-size: 20px; }
+    .cta-banner .btn { display: inline-flex; width: auto; }
+    .hero-actions { flex-direction: column; }
+    .btn { width: 100%; justify-content: center; }
+  }
+</style>
 </head>
 <body>
-<div class="app">
 
-  <!-- ── Sidebar: fijo, nunca se recarga ── -->
-  <aside class="sidebar">
-    <div class="sidebar-top">
-      <div class="brand">
-        <div class="brand-icon">
-          <img id="brandIconImg" src="logo-vaeron-icon.png" alt="Logo" style="width:24px;height:auto;object-fit:contain">
-        </div>
-        <div>
-          <div class="brand-name">VAERON</div>
-          <div class="brand-sub"><span class="status-dot"></span>Sistema activo</div>
-        </div>
-      </div>
-      <!-- El botón de cerrar sesión de arriba se quitó: ya existe
-           "Cerrar sesión" (junto con "Cambiar de cuenta") en el menú
-           de la tarjeta de usuario, abajo del sidebar. -->
-
+<div class="container">
+  <header>
+    <div class="logo">
+      <svg width="28" height="28" viewBox="0 0 630 412" xmlns="http://www.w3.org/2000/svg">
+<g transform="translate(0.000000,412.000000) scale(0.100000,-0.100000)"
+fill="#0b1220" stroke="none">
+<path d="M3216 4053 c-859 -3 -957 -5 -952 -19 5 -12 142 -251 291 -504 18
+-30 54 -93 82 -140 l49 -85 645 5 c354 3 889 5 1189 5 l545 0 78 -37 c136 -65
+247 -195 283 -331 30 -114 14 -259 -43 -372 -31 -60 -132 -168 -191 -202 -110
+-65 -124 -67 -422 -73 l-274 -5 -96 -125 c-52 -69 -148 -197 -212 -284 l-117
+-159 116 -171 c64 -94 312 -463 551 -821 239 -357 445 -660 458 -672 l23 -21
+496 2 c273 2 498 6 501 9 6 6 -169 268 -357 533 -254 359 -495 703 -671 959
+l-69 100 103 18 c523 92 918 485 1004 999 24 144 15 366 -19 498 -119 446
+-457 766 -922 873 -84 19 -124 20 -600 21 -280 1 -941 1 -1469 -1z M60 4045
+c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
+98 -176 509 -889 622 -1080 26 -44 76 -129 110 -190 35 -60 82 -141 105 -180
+61 -102 454 -777 630 -1080 44 -76 56 -90 78 -90 23 0 119 141 921 1344 493
+739 896 1345 896 1347 0 2 -251 4 -558 4 l-559 0 -63 -107 c-35 -60 -116 -196
+-180 -303 -64 -107 -176 -297 -250 -422 -74 -125 -137 -228 -140 -228 -3 0
+-17 22 -31 48 -44 81 -569 1023 -724 1297 -37 66 -94 167 -125 225 -32 58
+-146 258 -253 445 l-195 340 -526 3 c-289 1 -526 0 -526 -3z"/>
+</g>
+      </svg>
+      VAERON
     </div>
-    <nav class="sidebar-nav">
-      <div class="nav-section-label nav-superadmin-only">Sistema</div>
-      <a class="nav-item nav-superadmin-only" data-page="tiendas" href="#tiendas">
-        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-        Tiendas
-      </a>
-      <a class="nav-item nav-superadmin-only" data-page="facturacion" href="#facturacion">
-        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-        Facturación
-      </a>
-      <a class="nav-item nav-superadmin-only" data-page="auditoria" href="#auditoria">
-        <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        Auditoría
-      </a>
-      <a class="nav-item nav-superadmin-only" data-page="config-sistema" href="#config-sistema">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Configuración
-      </a>
-      <div class="nav-section-label nav-tienda-only">Gestión</div>
-      <a class="nav-item nav-tienda-only" data-page="dashboard" href="#dashboard">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-        Dashboard
-      </a>
-      <a class="nav-item nav-tienda-only" data-page="stock" href="#stock">
-        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="9" y="3" width="13" height="2" rx="1"/><rect x="9" y="7" width="8" height="2" rx="1"/><rect x="2" y="11" width="6" height="6" rx="1"/><rect x="9" y="11" width="13" height="2" rx="1"/><rect x="9" y="15" width="8" height="2" rx="1"/></svg>
-        Stock
-      </a>
-      <a class="nav-item nav-tienda-only nav-plan-pago" data-page="catalogo" href="#catalogo">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        Catálogo
-      </a>
-      <a class="nav-item nav-tienda-only nav-plan-pago" data-page="pedidos" href="#pedidos">
-        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        Notas de Pedido
-      </a>
-      <a class="nav-item nav-tienda-only nav-plan-pago" data-page="foro" href="#foro">
-        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Foro
-      </a>
-      <a class="nav-item nav-tienda-only nav-admin-only nav-plan-pago" data-page="registros" href="#registros">
-        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Registros
-      </a>
-      <div class="nav-section-label nav-tienda-only">Cuenta</div>
-      <a class="nav-item nav-tienda-only" data-page="configuracion" href="#configuracion">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Configuración
-      </a>
-      <a class="nav-item" data-page="perfil" href="#perfil">
-        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Perfil
-      </a>
-      <a class="nav-item nav-item-logout" id="logoutNavItem" href="#">
-        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Salir
-      </a>
+    <nav class="main-nav">
+      <a href="#inicio" class="nav-link active" data-section="inicio">Inicio</a>
+      <a href="#funciones" class="nav-link" data-section="funciones">Funciones</a>
+      <a href="#planes" class="nav-link" data-section="planes">Planes</a>
+      <a href="#nosotros" class="nav-link" data-section="nosotros">Nosotros</a>
+      <a href="#contacto" class="nav-link" data-section="contacto">Contacto</a>
     </nav>
-    <div class="sidebar-footer">
-      <div class="user-card-wrap">
-        <div class="user-card" id="userCard">
-          <div class="avatar">AD</div>
-          <div>
-            <div class="user-name">Cargando…</div>
-            <div class="user-role"></div>
-          </div>
-          <button class="user-menu-toggle" id="userMenuToggle" type="button" title="Opciones de cuenta" aria-label="Opciones de cuenta">
-            <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
-          </button>
+    <div class="nav-right">
+      <a href="login.html" class="login">Iniciar sesión</a>
+      <a href="#contacto" class="btn btn-primary">Solicitar demo</a>
+    </div>
+    <div class="mobile-header-actions">
+      <a href="login.html" class="login login-mobile">Iniciar sesión</a>
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú" aria-expanded="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B1220" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+
+    <nav class="mobile-menu" id="mobileMenu">
+      <a href="#inicio" class="nav-link active" data-section="inicio">Inicio</a>
+      <a href="#funciones" class="nav-link" data-section="funciones">Funciones</a>
+      <a href="#planes" class="nav-link" data-section="planes">Planes</a>
+      <a href="#nosotros" class="nav-link" data-section="nosotros">Nosotros</a>
+      <a href="#contacto" class="nav-link" data-section="contacto">Contacto</a>
+      <a href="#contacto" class="btn btn-primary">Solicitar demo</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="inicio">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">SISTEMA DE GESTIÓN EMPRESARIAL</p>
+        <h1>Control total.<br>Decisiones <span class="accent">inteligentes.</span></h1>
+        <p class="hero-desc">VAERON centraliza tus operaciones, inventario, ventas y clientes en un solo sistema fácil de usar.</p>
+        <div class="hero-actions">
+          <a href="#contacto" class="btn btn-primary">Empieza gratis →</a>
+          <a href="#funciones" class="btn btn-secondary">Ver funciones</a>
         </div>
-        <div class="user-menu" id="userMenu" style="display:none">
-          <button type="button" class="user-menu-item" id="switchAccountBtn">
-            <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-            Cambiar de cuenta
-          </button>
-          <button type="button" class="user-menu-item danger" id="logoutBtn">
-            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Cerrar sesión
-          </button>
+        <div class="benefits-row">
+          <div class="benefit">
+            <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/></svg>
+            <div><p class="benefit-title">Seguro</p><p class="benefit-desc">Tus datos siempre protegidos.</p></div>
+          </div>
+          <div class="benefit">
+            <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+            <div><p class="benefit-title">Eficiente</p><p class="benefit-desc">Todo tu negocio en un solo lugar.</p></div>
+          </div>
+          <div class="benefit">
+            <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+            <div><p class="benefit-title">Simple</p><p class="benefit-desc">Diseñado para ser fácil e intuitivo.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <svg width="100%" style="max-width:280px" viewBox="0 0 630 412" xmlns="http://www.w3.org/2000/svg">
+<g transform="translate(0.000000,412.000000) scale(0.100000,-0.100000)"
+fill="#0b1220" stroke="none">
+<path d="M3216 4053 c-859 -3 -957 -5 -952 -19 5 -12 142 -251 291 -504 18
+-30 54 -93 82 -140 l49 -85 645 5 c354 3 889 5 1189 5 l545 0 78 -37 c136 -65
+247 -195 283 -331 30 -114 14 -259 -43 -372 -31 -60 -132 -168 -191 -202 -110
+-65 -124 -67 -422 -73 l-274 -5 -96 -125 c-52 -69 -148 -197 -212 -284 l-117
+-159 116 -171 c64 -94 312 -463 551 -821 239 -357 445 -660 458 -672 l23 -21
+496 2 c273 2 498 6 501 9 6 6 -169 268 -357 533 -254 359 -495 703 -671 959
+l-69 100 103 18 c523 92 918 485 1004 999 24 144 15 366 -19 498 -119 446
+-457 766 -922 873 -84 19 -124 20 -600 21 -280 1 -941 1 -1469 -1z M60 4045
+c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
+98 -176 509 -889 622 -1080 26 -44 76 -129 110 -190 35 -60 82 -141 105 -180
+61 -102 454 -777 630 -1080 44 -76 56 -90 78 -90 23 0 119 141 921 1344 493
+739 896 1345 896 1347 0 2 -251 4 -558 4 l-559 0 -63 -107 c-35 -60 -116 -196
+-180 -303 -64 -107 -176 -297 -250 -422 -74 -125 -137 -228 -140 -228 -3 0
+-17 22 -31 48 -44 81 -569 1023 -724 1297 -37 66 -94 167 -125 225 -32 58
+-146 258 -253 445 l-195 340 -526 3 c-289 1 -526 0 -526 -3z"/>
+</g>
+        </svg>
+        <svg width="100%" style="max-width:360px;margin-top:20px" viewBox="0 0 1073 133" xmlns="http://www.w3.org/2000/svg">
+<g transform="translate(0.000000,133.000000) scale(0.100000,-0.100000)"
+fill="#0b1220" stroke="none">
+<path d="M9143 1253 c-20 -4 -22 -11 -25 -101 -2 -53 -2 -316 0 -585 l3 -487
+119 0 120 0 2 446 3 446 155 -143 c230 -212 400 -361 775 -683 l100 -86 140 3
+140 2 3 588 2 587 -125 0 -125 0 1 -437 c1 -241 1 -446 0 -456 -1 -17 -2 -17
+-28 2 -84 60 -880 757 -928 811 -11 13 -42 40 -68 61 l-49 39 -96 -1 c-54 -1
+-107 -4 -119 -6z M2275 1239 c-20 -10 -70 -86 -390 -594 -83 -132 -187 -296
+-231 -365 -44 -69 -91 -142 -103 -162 l-23 -38 144 0 143 0 123 197 c68 109
+186 297 263 418 77 121 150 237 161 258 12 20 24 37 28 37 7 0 333 -546 495
+-827 l47 -83 134 0 c74 0 134 3 134 8 0 4 -37 70 -82 147 -44 77 -105 181
+-133 230 -98 170 -186 318 -377 633 -97 160 -79 147 -205 149 -59 2 -117 -2
+-128 -8z M156 1058 c58 -101 159 -273 224 -383 65 -110 169 -286 231 -392 75
+-128 120 -194 133 -197 27 -7 195 -7 222 0 13 3 84 108 212 312 106 169 236
+377 290 462 197 312 232 369 232 374 0 4 -62 6 -139 6 l-139 0 -119 -187
+c-142 -224 -255 -403 -360 -572 -43 -69 -82 -125 -88 -124 -5 0 -34 42 -64 94
+-29 52 -74 128 -99 169 -24 41 -72 122 -105 180 -33 58 -104 180 -159 273
+l-99 167 -139 0 -139 0 105 -182z M3460 1146 c0 -89 1 -94 23 -100 12 -3 311
+-6 663 -6 l642 0 7 79 c4 44 4 89 0 100 l-6 21 -665 0 -664 0 0 -94z M5250
+1146 l0 -93 173 -6 c94 -3 317 -7 495 -7 362 -1 395 -6 451 -64 79 -81 56
+-207 -47 -258 l-47 -23 -512 -3 -513 -3 0 -304 0 -305 120 0 120 0 2 203 3
+202 271 3 270 2 185 -204 184 -205 148 0 c81 -1 147 1 147 4 0 3 -79 94 -175
+202 -96 107 -175 199 -175 203 0 4 21 13 46 19 190 48 296 218 264 424 -18
+118 -80 206 -182 258 -93 48 -110 49 -685 49 l-543 0 0 -94z M7394 1221 c-83
+-24 -139 -59 -202 -125 -97 -102 -122 -193 -122 -435 0 -239 28 -334 126 -441
+59 -63 151 -112 243 -130 68 -13 871 -13 937 -1 179 34 303 138 356 299 18 55
+22 97 26 229 4 192 -8 283 -50 375 -36 80 -122 168 -195 200 -105 46 -123 48
+-603 47 -402 0 -462 -2 -516 -18z m921 -202 c53 -16 78 -31 116 -69 70 -70 82
+-120 77 -314 -4 -133 -7 -157 -27 -199 -28 -58 -78 -100 -151 -129 -51 -20
+-76 -22 -358 -26 -336 -4 -435 4 -511 42 -111 57 -145 140 -143 346 1 190 30
+258 129 317 83 48 114 52 469 52 309 1 337 0 399 -20z M3467 763 c-4 -3 -7
+-159 -7 -345 l0 -338 670 0 670 0 0 100 0 100 -550 0 -550 0 0 140 c0 104 3
+140 13 142 6 1 219 2 472 2 l460 1 0 100 0 100 -586 3 c-322 1 -589 -1 -592
+-5z M2344 451 c-60 -26 -83 -114 -44 -164 63 -80 190 -37 190 65 0 71 -82 126
+-146 99z"/>
+</g>
+        </svg>
+        <p class="hero-tagline">GESTIÓN QUE IMPULSA TU NEGOCIO</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat">
+        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5M15 14.5c3 0 5 1.7 5 5"/></svg>
+        <div><p class="stat-value">+2,500</p><p class="stat-label">Empresas confían en VAERON</p></div>
+      </div>
+      <div class="stat">
+        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V12M12 20V4M20 20v-9"/></svg>
+        <div><p class="stat-value">+50K</p><p class="stat-label">Usuarios activos</p></div>
+      </div>
+      <div class="stat">
+        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/></svg>
+        <div><p class="stat-value">99.9%</p><p class="stat-label">Disponibilidad del sistema</p></div>
+      </div>
+      <div class="stat">
+        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17v-2a8 8 0 0116 0v2M4 17a2 2 0 002 2h1v-5H6a2 2 0 00-2 2zM20 17a2 2 0 01-2 2h-1v-5h1a2 2 0 012 2z"/></svg>
+        <div><p class="stat-value">24/7</p><p class="stat-label">Soporte técnico</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="funciones" style="background: var(--bg);">
+  <div class="container">
+    <h2 class="section-title">Todo en un solo sistema</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8"/></svg>
+        <p class="feature-title">Inventario</p>
+        <p class="feature-desc">Control total de tus productos y existencias.</p>
+      </div>
+      <div class="feature-card">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="21" r="1"/><circle cx="18" cy="21" r="1"/><path d="M2 2h3l2.6 12.4a2 2 0 002 1.6h8.8a2 2 0 002-1.6L22 6H5"/></svg>
+        <p class="feature-title">Ventas</p>
+        <p class="feature-desc">Gestiona tus ventas y recibe reportes en tiempo real.</p>
+      </div>
+      <div class="feature-card">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-4 3-6 6.5-6s6.5 2 6.5 6M16 8a3.5 3.5 0 010 7M22 20c0-3-2-5-5-5.3"/></svg>
+        <p class="feature-title">Clientes</p>
+        <p class="feature-desc">Administra tus clientes y mejora su experiencia.</p>
+      </div>
+      <div class="feature-card">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+        <p class="feature-title">Reportes</p>
+        <p class="feature-desc">Toma decisiones con reportes claros y precisos.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="planes">
+  <div class="container">
+    <h2 class="section-title">Un plan para cada etapa de tu negocio</h2>
+    <div class="plans-grid">
+      <div class="plan-card">
+        <p class="plan-name">Básico</p>
+        <p class="plan-price">$29<span>/mes</span></p>
+        <ul class="plan-features">
+          <li>Hasta 500 productos</li>
+          <li>1 usuario</li>
+          <li>Reportes básicos</li>
+          <li>Soporte por correo</li>
+        </ul>
+        <a href="#contacto" class="btn btn-secondary plan-cta">Elegir plan</a>
+      </div>
+      <div class="plan-card featured">
+        <p class="plan-badge">Más popular</p>
+        <p class="plan-name">Profesional</p>
+        <p class="plan-price">$59<span>/mes</span></p>
+        <ul class="plan-features">
+          <li>Productos ilimitados</li>
+          <li>Hasta 5 usuarios</li>
+          <li>Reportes avanzados</li>
+          <li>Soporte prioritario 24/7</li>
+        </ul>
+        <a href="#contacto" class="btn btn-primary plan-cta">Elegir plan</a>
+      </div>
+      <div class="plan-card">
+        <p class="plan-name">Empresarial</p>
+        <p class="plan-price">A medida</p>
+        <ul class="plan-features">
+          <li>Múltiples sucursales</li>
+          <li>Usuarios ilimitados</li>
+          <li>Integraciones personalizadas</li>
+          <li>Gerente de cuenta dedicado</li>
+        </ul>
+        <a href="#contacto" class="btn btn-secondary plan-cta">Hablar con ventas</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="nosotros" style="background: var(--bg);">
+  <div class="container">
+    <h2 class="section-title">Quiénes somos</h2>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>VAERON nace para resolver un problema común en pequeños y medianos negocios: la gestión dispersa entre cuadernos, hojas de cálculo y sistemas que no se hablan entre sí.</p>
+        <p>Diseñamos una plataforma que une inventario, ventas, clientes y facturación en un solo lugar, pensada para que cualquier persona del equipo pueda usarla sin capacitación técnica.</p>
+      </div>
+      <div class="about-values">
+        <div class="value-card">
+          <p class="value-title">Misión</p>
+          <p class="value-desc">Simplificar la gestión empresarial con herramientas accesibles y confiables.</p>
+        </div>
+        <div class="value-card">
+          <p class="value-title">Visión</p>
+          <p class="value-desc">Ser el sistema de referencia para negocios que buscan crecer con orden.</p>
+        </div>
+        <div class="value-card">
+          <p class="value-title">Valores</p>
+          <p class="value-desc">Seguridad, simplicidad y soporte cercano en cada decisión que tomamos.</p>
         </div>
       </div>
     </div>
-  </aside>
-
-  <!-- ── Aquí se inyecta cada vista (main + sus modales) ── -->
-  <div id="viewRoot"></div>
-
+  </div>
 </div>
 
-<!-- Indicador chico de "cambiando de sección", NO pantalla en blanco -->
-<div id="viewLoading" style="display:none;position:fixed;top:14px;right:14px;z-index:9999;background:var(--ink);color:#fff;padding:6px 14px;border-radius:999px;font-size:11.5px;font-weight:600;box-shadow:var(--shadow)">
-  Cargando…
+<div class="section" id="contacto">
+  <div class="container">
+    <h2 class="section-title">Hablemos de tu negocio</h2>
+    <div class="contact-grid">
+      <div class="contact-info">
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M4 6l8 6 8-6"/></svg>
+          <div><p class="contact-label">Correo</p><p>contacto@vaeron.com</p></div>
+        </div>
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.7A2 2 0 014.1 2h3a2 2 0 012 1.7 12.8 12.8 0 00.7 2.8 2 2 0 01-.4 2.1L8.1 9.9a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4 12.8 12.8 0 002.8.7 2 2 0 011.7 2z"/></svg>
+          <div><p class="contact-label">Teléfono</p><p>+51 900 000 000</p></div>
+        </div>
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <div><p class="contact-label">Oficina</p><p>Lima, Perú</p></div>
+        </div>
+      </div>
+      <form class="contact-form" id="contactForm">
+        <input type="text" placeholder="Nombre" required>
+        <input type="email" placeholder="Correo electrónico" required>
+        <textarea placeholder="Cuéntanos sobre tu negocio" rows="4" required></textarea>
+        <button type="submit" class="btn btn-primary">Enviar mensaje</button>
+        <p class="contact-success">¡Gracias! Te contactaremos muy pronto.</p>
+      </form>
+    </div>
+  </div>
 </div>
 
-<script src="firebase-projects.js" defer></script>
-<script src="firebase.js" defer></script>
-<script src="plan-limits.js" defer></script>
-<script src="auth-guard.js" defer></script>
-<script src="nav.js" defer></script>
-<script src="selection.js" defer></script>
-<script src="router.js" defer></script>
+<div class="cta-banner">
+  <div class="container">
+    <h2>¿Listo para transformar tu negocio?</h2>
+    <p>Únete a las empresas que ya gestionan todo con VAERON.</p>
+    <a href="#contacto" class="btn btn-primary">Solicitar demo</a>
+  </div>
+</div>
 
-<!-- Lógica de cada sección — se cargan UNA sola vez, sus conexiones
-     a Firebase quedan vivas para siempre mientras uses la app. -->
-<script src="dashboard-logic.js" defer></script>
-<script src="cloudinary.js" defer></script>
-<script src="stock.js" defer></script>
-<script src="catalogo-logic.js" defer></script>
-<script src="foro-logic.js" defer></script>
-<script src="import-stock.js" defer></script>
-<script src="pedidos-logic.js" defer></script>
-<script src="import-clientes.js" defer></script>
-<script src="registros-logic.js" defer></script>
-<script src="configuracion-logic.js" defer></script>
-<script src="perfil-logic.js" defer></script>
-<script src="tiendas-logic.js" defer></script>
-<script src="facturacion-logic.js" defer></script>
-<script src="auditoria-logic.js" defer></script>
+<footer>
+  <div class="container">© 2026 VAERON. Todos los derechos reservados.</div>
+</footer>
 
-<script defer>
-  document.addEventListener('DOMContentLoaded', () => {
-    authReady.then(({ role }) => {
-      // Si no hay una sección específica en la URL (#stock, #perfil...),
-      // cada rol entra a su pantalla de inicio: el súper-admin a
-      // "Tiendas" (administra las cuentas), las cuentas de una tienda
-      // al Catálogo — nunca al panel del otro.
-      if (!window.location.hash) {
-        window.location.hash = role === 'superadmin' ? '#tiendas' : '#dashboard';
-      }
-      Router.start();
+<script>
+  const menuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  menuBtn.addEventListener('click', () => {
+    const isOpen = mobileMenu.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+
+  // Cerrar el menú móvil al elegir una sección
+  document.querySelectorAll('.mobile-menu a').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      menuBtn.setAttribute('aria-expanded', 'false');
     });
+  });
+
+  // Resaltar el link activo según la sección visible
+  const navLinks = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section[id], div.section[id]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.dataset.section === entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-40% 0px -50% 0px' });
+  sections.forEach(section => observer.observe(section));
+
+  // Formulario de contacto (demo sin backend)
+  const contactForm = document.getElementById('contactForm');
+  contactForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    contactForm.classList.add('sent');
   });
 </script>
 </body>
