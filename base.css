@@ -561,6 +561,49 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
 .settings-card-head-text h3 { font-size: 16px; font-weight: 650; color: var(--text-1); margin: 0 0 2px; letter-spacing: -0.01em; }
 .settings-card-head-text p { font-size: 13.5px; color: var(--text-3); margin: 0; line-height: 1.45; }
 .settings-card-control { padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* Chevron decorativo de cabecera — usado en tarjetas que todavía no
+   tienen una pantalla de detalle propia (Preferencias generales,
+   Soporte y ayuda) o como indicador visual junto a filas estáticas. */
+.settings-card-chevron { margin-left: auto; flex-shrink: 0; color: var(--border-strong); align-self: center; }
+.settings-card-icon.ic-slate { background: var(--icon-gray-bg); color: var(--icon-gray); }
+
+/* Fila estática tipo "Ajustes" — label a la izquierda, valor +
+   chevron a la derecha. Por ahora es solo visual (sin pantalla de
+   detalle detrás) para Moneda principal/Formato de números,
+   Tema/Idioma y los enlaces de Soporte. */
+.settings-static-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border);
+  font-size: 14.5px; color: var(--text-1);
+}
+.settings-static-row:last-child { border-bottom: none; }
+.settings-static-row .settings-static-val {
+  color: var(--text-3); display: flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.settings-static-row-icon { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.settings-static-row-icon svg { flex-shrink: 0; color: var(--text-3); }
+
+/* Toggle — visual únicamente por ahora (no persiste en Firebase);
+   togglePreviewVisual() en configuracion-logic.js solo cambia la
+   clase para que se sienta interactivo mientras se define si esta
+   alerta se conecta a algo real. */
+.toggle-switch {
+  width: 40px; height: 24px; border-radius: 999px; background: var(--border-strong);
+  display: flex; align-items: center; padding: 2px; cursor: pointer;
+  transition: background var(--t); border: none; flex-shrink: 0;
+}
+.toggle-switch .toggle-knob {
+  width: 20px; height: 20px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 2px rgba(20,23,29,0.25); transition: margin-left var(--t);
+}
+.toggle-switch.active { background: var(--icon-blue); }
+.toggle-switch.active .toggle-knob { margin-left: auto; }
+
+.settings-dots-btn {
+  background: none; border: none; padding: 4px; margin: 0 2px 0 auto;
+  cursor: pointer; color: var(--text-3); display: flex; align-items: center;
+}
 .settings-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .settings-row-label { font-size: 13px; color: var(--text-2); white-space: nowrap; }
 .settings-row-input { max-width: 110px; text-align: center; }
@@ -1132,6 +1175,19 @@ td { padding: 13px 18px; vertical-align: middle; }
     width: 100%;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  /* La campana de Configuración no tiene buscador al lado — no hay
+     razón para que se envuelva en su propia fila; se queda arriba
+     junto al título, como en el mockup. */
+  .topbar-hero {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+  .topbar-hero .topbar-actions {
+    width: auto;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
   }
 
   .search-wrap {

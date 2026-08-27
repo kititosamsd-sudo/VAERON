@@ -15,18 +15,32 @@
   <div class="page-content">
     <div class="settings-grid">
 
+      <!-- 1. Moneda y formato — tasa de cambio (real) + moneda/formato (visual, aún no configurable) -->
       <div class="settings-card" id="configCardMoneda">
         <div class="settings-card-head">
           <div class="settings-card-icon">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5v11M15 9.2c0-1.2-1.3-2.2-3-2.2s-3 .9-3 2.1c0 3 6 1.4 6 4.4 0 1.2-1.3 2.1-3 2.1s-3-1-3-2.2"/></svg>
           </div>
           <div class="settings-card-head-text">
-            <h3>Moneda y tasa de cambio</h3>
-            <p>Para convertir entre soles y dólares en el catálogo.</p>
+            <h3>Moneda y formato</h3>
+            <p>Define la moneda principal y el formato numérico del sistema.</p>
           </div>
+          <svg class="settings-card-chevron" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
         </div>
         <div class="settings-card-control">
-          <div class="settings-row">
+          <div class="settings-static-row">
+            <span>Moneda principal</span>
+            <span class="settings-static-val">USD - Dólar estadounidense
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </span>
+          </div>
+          <div class="settings-static-row">
+            <span>Formato de números</span>
+            <span class="settings-static-val">1,234.56
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </span>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
             <span class="settings-row-label">1 USD =</span>
             <input class="form-input text-mono settings-row-input" id="inputTasaCambio" type="number" min="0" step="0.001" placeholder="3.75" oninput="previsualizarTasaCambio()">
             <span class="settings-row-label">Soles</span>
@@ -39,19 +53,21 @@
         </div>
       </div>
 
+      <!-- 2. Stock bajo — umbral (real) + alerta en dashboard (visual, aún no conectada) -->
       <div class="settings-card" id="configCardUmbral">
         <div class="settings-card-head">
           <div class="settings-card-icon ic-amber">
-            <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.5 20 6v6c0 5-3.4 8.4-8 9.5-4.6-1.1-8-4.5-8-9.5V6z"/><line x1="12" y1="8" x2="12" y2="12.5"/><circle cx="12" cy="15.3" r="0.6" fill="currentColor" stroke="none"/></svg>
           </div>
           <div class="settings-card-head-text">
-            <h3>Umbral de stock bajo</h3>
+            <h3>Stock bajo</h3>
             <p>Desde cuántas unidades el Dashboard marca un producto como stock bajo.</p>
           </div>
+          <svg class="settings-card-chevron" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
         </div>
         <div class="settings-card-control">
           <div class="settings-row">
-            <span class="settings-row-label">Avisar con</span>
+            <span class="settings-row-label">Umbral de stock</span>
             <div class="stepper">
               <button type="button" id="btnUmbralMenos" onclick="ajustarUmbralStock(-1)" aria-label="Restar unidad">−</button>
               <input class="text-mono" id="inputUmbralStock" type="number" min="0" step="1" placeholder="5" oninput="previsualizarUmbralStock()">
@@ -60,6 +76,12 @@
             <span class="settings-row-label">unidades o menos</span>
           </div>
           <p class="settings-preview" id="umbralStockPreview"></p>
+          <div class="settings-static-row" style="border-top:1px solid var(--border);margin-top:14px;padding-top:14px;border-bottom:none">
+            <span>Mostrar alerta en el dashboard</span>
+            <button type="button" class="toggle-switch active" id="toggleAlertaDashboard" onclick="togglePreviewVisual(this)" aria-label="Mostrar alerta en el dashboard" title="Próximamente">
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
         </div>
         <div class="settings-card-footer">
           <p id="umbralStockMsg" class="settings-msg"></p>
@@ -67,6 +89,7 @@
         </div>
       </div>
 
+      <!-- 3. Almacenes (real) -->
       <div class="settings-card" id="configCardAlmacenes">
         <div class="settings-card-head">
           <div class="settings-card-icon ic-green">
@@ -76,6 +99,7 @@
             <h3>Almacenes</h3>
             <p id="almacenesPlanNote">Nombres de los almacenes que ve el equipo en Catálogo.</p>
           </div>
+          <svg class="settings-card-chevron" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
         </div>
         <div class="settings-card-control" id="almacenesControl">
           <div id="almacenesList"><!-- filas generadas por renderAlmacenesList() en configuracion-logic.js --></div>
@@ -87,9 +111,10 @@
         </div>
       </div>
 
+      <!-- 4. Logo de la tienda (real) -->
       <div class="settings-card" id="configCardLogo">
         <div class="settings-card-head">
-          <div class="settings-card-icon ic-copper">
+          <div class="settings-card-icon ic-slate">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
           </div>
           <div class="settings-card-head-text">
@@ -110,6 +135,70 @@
         </div>
         <div class="settings-card-footer">
           <p id="logoMsg" class="settings-msg"></p>
+        </div>
+      </div>
+
+      <!-- 5. Preferencias generales — visual, aún no conectada -->
+      <div class="settings-card" id="configCardPreferencias">
+        <div class="settings-card-head">
+          <div class="settings-card-icon ic-copper">
+            <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="1.8"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="1.8"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="1.8"/></svg>
+          </div>
+          <div class="settings-card-head-text">
+            <h3>Preferencias generales</h3>
+            <p>Ajusta las opciones generales del sistema.</p>
+          </div>
+          <svg class="settings-card-chevron" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+        <div class="settings-card-control">
+          <div class="settings-static-row">
+            <span class="settings-static-row-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              Tema
+            </span>
+            <span class="settings-static-val">Claro
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </span>
+          </div>
+          <div class="settings-static-row">
+            <span class="settings-static-row-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="2.5" y1="12" x2="21.5" y2="12"/><path d="M12 2.5c2.6 2.6 4 6 4 9.5s-1.4 6.9-4 9.5c-2.6-2.6-4-6-4-9.5s1.4-6.9 4-9.5z"/></svg>
+              Idioma
+            </span>
+            <span class="settings-static-val">Español
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Soporte y ayuda — visual, aún no conectada -->
+      <div class="settings-card" id="configCardSoporte">
+        <div class="settings-card-head">
+          <div class="settings-card-icon ic-slate">
+            <svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+          </div>
+          <div class="settings-card-head-text">
+            <h3>Soporte y ayuda</h3>
+            <p>Obtén ayuda o contacta al equipo de soporte.</p>
+          </div>
+          <svg class="settings-card-chevron" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+        <div class="settings-card-control">
+          <div class="settings-static-row">
+            <span class="settings-static-row-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5A2.5 2.5 0 0 1 4.5 2H9a4 4 0 0 1 4 4v14.5A3.5 3.5 0 0 0 9.5 17H2z"/><path d="M22 4.5A2.5 2.5 0 0 0 19.5 2H15a4 4 0 0 0-4 4v14.5A3.5 3.5 0 0 1 14.5 17H22z"/></svg>
+              Centro de ayuda
+            </span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--border-strong)"><polyline points="9 6 15 12 9 18"/></svg>
+          </div>
+          <div class="settings-static-row">
+            <span class="settings-static-row-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+              Contactar soporte
+            </span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--border-strong)"><polyline points="9 6 15 12 9 18"/></svg>
+          </div>
         </div>
       </div>
 

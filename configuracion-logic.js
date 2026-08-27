@@ -422,3 +422,12 @@ function guardarUmbralStock() {
       btn.textContent = 'Guardar';
     });
 }
+
+// Toggle puramente visual (Preferencias generales / alerta de stock
+// bajo en dashboard): todavía no persiste nada en Firebase, solo
+// refleja el estado en la UI mientras se decide si se conecta a una
+// preferencia real.
+function togglePreviewVisual(btn) {
+  if (!btn) return;
+  btn.classList.toggle('active');
+}
