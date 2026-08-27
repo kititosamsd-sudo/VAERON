@@ -61,6 +61,21 @@
   --red:     #B23A2C;
   --red-bg:  #FAEAE7;
 
+  /* Íconos pastel — usados en las tarjetas de Configuración/Perfil
+     para dar a cada sección su propio color de identidad (tomado
+     del mockup de rediseño), en vez de que todo comparta el azul
+     de acento del sistema. */
+  --icon-blue:     #2563EB;
+  --icon-blue-bg:  #EFF6FF;
+  --icon-amber:    #F59E0B;
+  --icon-amber-bg: #FFF7ED;
+  --icon-green:    #10B981;
+  --icon-green-bg: #ECFDF5;
+  --icon-purple:   #8B5CF6;
+  --icon-purple-bg:#F5F3FF;
+  --icon-gray:     #64748B;
+  --icon-gray-bg:  #F1F5F9;
+
   /* Radius */
   --r:    8px;
   --r-sm: 6px;

@@ -248,6 +248,37 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
 
 .topbar-actions { display: flex; align-items: center; gap: 8px; }
 
+/* Encabezado "hero" — usado en Configuración para que el título se
+   sienta como portada de sección (28px, bold) en vez de la etiqueta
+   chica compartida por el resto de vistas. Se activa solo con la
+   clase .topbar-hero para no afectar Stock/Dashboard/etc. */
+.topbar.topbar-hero { height: auto; padding: 22px 26px; }
+.topbar-hero .topbar-title h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.topbar-hero .topbar-title p { font-size: 14px; margin-top: 5px; }
+
+/* Botón circular de ícono (campana, etc.) — mismo lenguaje visual
+   que .btn-ghost pero redondo, para acciones puntuales en el topbar
+   que no llevan texto. */
+.icon-btn {
+  position: relative;
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-2); cursor: pointer; flex-shrink: 0;
+  transition: background var(--t), border-color var(--t), color var(--t);
+}
+.icon-btn:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text-1); }
+.icon-btn:disabled { cursor: default; opacity: .55; }
+.icon-btn:disabled:hover { background: var(--surface); border-color: var(--border); color: var(--text-2); }
+.icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn-badge {
+  position: absolute; top: -2px; right: -2px;
+  min-width: 16px; height: 16px; padding: 0 3px; border-radius: 999px;
+  background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--surface);
+}
+
 /* ─── Search ────────────────────────────────────── */
 .search-wrap {
   display: flex; align-items: center; gap: 7px;
@@ -472,14 +503,31 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
   .profile-actions-panel { flex-direction: row; min-width: 0; width: 100%; }
 }
 
-.profile-grid, .settings-grid {
+.profile-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   align-items: start;
 }
 @media (max-width: 900px) {
-  .profile-grid, .settings-grid { grid-template-columns: 1fr; }
+  .profile-grid { grid-template-columns: 1fr; }
+}
+
+/* Configuración — una sola columna en pantallas angostas (como una
+   pantalla de ajustes tipo Stripe/GitHub Settings), pero en
+   escritorio ancho pasa a 2 columnas para aprovechar el espacio en
+   vez de dejar la mitad de la pantalla vacía. Las tarjetas no se
+   estiran para igualar la altura de su par (align-items: start). */
+.settings-grid {
+  display: grid; grid-template-columns: 1fr; gap: 20px;
+  align-items: start;
+  max-width: 720px; margin: 0 auto; width: 100%;
+}
+@media (min-width: 1180px) {
+  .settings-grid {
+    grid-template-columns: 1fr 1fr;
+    max-width: 1080px;
+  }
 }
 
 /* ─── Settings card — usada en Perfil y Configuración ──────────
@@ -487,40 +535,92 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
    una tarjeta con jerarquía clara: cabecera, separador, control,
    y pie con mensaje + acción — consistente en ambas pantallas. ─── */
 .settings-card {
-  display: flex; flex-direction: column; gap: 14px;
+  display: flex; flex-direction: column; gap: 16px;
   background: var(--surface); border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
-  padding: 20px 22px; width: 100%;
+  border-radius: 16px; box-shadow: 0 1px 2px rgba(20,23,29,0.04);
+  padding: 20px; width: 100%;
+  transition: border-color var(--t), box-shadow var(--t);
 }
-.settings-card.settings-amber { border-left-color: var(--amber); }
-.settings-card.settings-copper { border-left-color: var(--copper); }
-.settings-card-head { display: flex; gap: 13px; align-items: flex-start; }
+.settings-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.settings-card-head { display: flex; gap: 12px; align-items: flex-start; }
 .settings-card-icon {
-  width: 32px; height: 32px; border-radius: var(--r-sm);
+  width: 40px; height: 40px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; background: var(--accent-soft); color: var(--accent);
+  flex-shrink: 0; background: var(--icon-blue-bg); color: var(--icon-blue);
 }
-.settings-card-icon.ic-amber  { background: rgba(196,138,26,0.12); color: var(--amber); }
-.settings-card-icon.ic-copper { background: var(--copper-bg); color: var(--copper); }
+/* Paleta pastel por tipo de tarjeta — tomada del mockup de
+   Configuración: cada sección tiene su propio color de identidad
+   en vez de que todo comparta el azul de acento. */
+.settings-card-icon.ic-amber  { background: var(--icon-amber-bg); color: var(--icon-amber); }
+.settings-card-icon.ic-copper { background: var(--icon-purple-bg); color: var(--icon-purple); }
+.settings-card-icon.ic-green  { background: var(--icon-green-bg); color: var(--icon-green); }
 .settings-card-icon svg {
-  width: 16px; height: 16px; fill: none; stroke: currentColor;
+  width: 20px; height: 20px; fill: none; stroke: currentColor;
   stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
-.settings-card-head-text h3 { font-size: 14px; font-weight: 700; color: var(--text-1); margin: 0 0 3px; }
-.settings-card-head-text p { font-size: 12.5px; color: var(--text-3); margin: 0; line-height: 1.4; }
-.settings-card-control { padding-top: 14px; border-top: 1px solid var(--border); }
-.settings-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.settings-row-label { font-size: 12.5px; color: var(--text-2); white-space: nowrap; }
+.settings-card-head-text h3 { font-size: 16px; font-weight: 650; color: var(--text-1); margin: 0 0 2px; letter-spacing: -0.01em; }
+.settings-card-head-text p { font-size: 13.5px; color: var(--text-3); margin: 0; line-height: 1.45; }
+.settings-card-control { padding-top: 16px; border-top: 1px solid var(--border); }
+.settings-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.settings-row-label { font-size: 13px; color: var(--text-2); white-space: nowrap; }
 .settings-row-input { max-width: 110px; text-align: center; }
+
+/* Filas tipo lista (Almacenes): un punto de estado + nombre a la
+   izquierda, campo editable a la derecha — mismo lenguaje visual
+   que la tarjeta contenedora (fila con hairline, sin tarjetas
+   anidadas sueltas). */
+.almacen-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 4px; border-bottom: 1px solid var(--border);
+}
+.almacen-row:last-child { border-bottom: none; }
+.almacen-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: var(--icon-green);
+}
+.almacen-tag {
+  flex-shrink: 0; font-size: 12px; font-weight: 600;
+  white-space: nowrap; padding: 3px 10px; border-radius: 999px;
+  background: var(--icon-gray-bg); color: var(--text-2);
+}
+.almacen-tag.almacen-tag-principal { background: var(--icon-green-bg); color: var(--icon-green); }
+.almacen-row .form-input { flex: 1; }
+
+/* Stepper (Umbral de stock): − valor + en un solo control, más
+   táctil que escribir el número a mano en un input suelto. */
+.stepper {
+  display: flex; align-items: stretch;
+  border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  background: var(--surface-2);
+}
+.stepper button {
+  width: 34px; border: none; background: transparent;
+  color: var(--text-2); font-size: 16px; line-height: 1; cursor: pointer;
+}
+.stepper button:hover:not(:disabled) { background: var(--border); color: var(--ink); }
+.stepper button:disabled { opacity: 0.4; cursor: not-allowed; }
+.stepper input {
+  border: none; width: 48px; text-align: center; background: transparent;
+  font-family: var(--font-mono); font-size: 13px; color: var(--ink);
+}
+.stepper input:disabled { color: var(--text-3); }
 .settings-preview {
-  margin: 10px 0 0; font-size: 11.5px; color: var(--text-2);
+  margin: 12px 0 0; padding: 10px 14px; border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 12px; color: var(--text-2);
   font-family: var(--font-mono); min-height: 15px;
 }
+.settings-preview:empty { display: none; }
 .settings-card-footer {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
 }
 .settings-msg { font-size: 11.5px; color: var(--text-3); margin: 0; flex: 1; }
+
+.btn-accent-outline {
+  background: var(--surface); color: var(--accent);
+  border-color: var(--accent-border);
+}
+.btn-accent-outline:hover { background: var(--accent-soft); border-color: var(--accent); }
 
 .settings-field { display: flex; flex-direction: column; gap: 5px; width: 100%; }
 .settings-field-hint { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); min-height: 14px; }
@@ -869,20 +969,25 @@ td { padding: 13px 18px; vertical-align: middle; }
   /* ── Shell ── */
   .app { flex-direction: column; }
 
-  /* ── Bottom nav ── */
+  /* ── Bottom nav ──
+     Tab bar clara (no barra administrativa oscura): fondo blanco,
+     borde superior fino, y el estado activo se distingue solo por
+     color de acento + peso tipográfico — sin caja de fondo detrás
+     del ícono. */
   aside.sidebar {
     order: 2;
     width: 100%;
     min-width: 0;
-    height: 64px;
+    height: 68px;
     flex-direction: row;
     align-items: center;
     border-right: none;
-    border-top: 1px solid var(--sb-border);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
     position: fixed;
     bottom: 0; left: 0; right: 0;
     z-index: 100;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+    box-shadow: 0 -2px 10px rgba(20,23,29,0.06);
     transition: transform 0.15s ease, opacity 0.15s ease;
   }
 
@@ -911,8 +1016,8 @@ td { padding: 13px 18px; vertical-align: middle; }
 
   .nav-item {
     flex-direction: column;
-    gap: 3px;
-    padding: 6px 16px;
+    gap: 4px;
+    padding: 6px 14px;
     margin-bottom: 0;
     font-size: 10px;
     font-weight: 600;
@@ -920,17 +1025,21 @@ td { padding: 13px 18px; vertical-align: middle; }
     border-radius: 10px;
     min-width: 60px;
     position: relative;
-    color: var(--sb-text);
+    color: var(--text-3);
     letter-spacing: 0.01em;
+    transition: color 0.15s ease;
   }
   /* El texto del nav item SÍ se muestra (a diferencia del sidebar
      lateral de escritorio, acá siempre hay lugar para el label) */
   .nav-item svg {
     width: 20px; height: 20px;
   }
+  /* Activo: solo color de acento + más peso — sin caja de fondo
+     detrás (se ve genérico/administrativo, no como un tab bar real). */
   .nav-item.active {
-    background: var(--sb-active);
-    color: #fff;
+    background: none;
+    color: var(--accent);
+    font-weight: 700;
   }
   .nav-badge {
     position: absolute;
@@ -941,14 +1050,14 @@ td { padding: 13px 18px; vertical-align: middle; }
 
   .nav-item-logout {
     display: flex;
-    color: #F87171;
+    color: var(--red);
   }
-  .nav-item-logout:active { background: rgba(239,68,68,0.15); }
+  .nav-item-logout:active { background: var(--red-bg); }
 
   /* ── Main ── */
   main.main {
     order: 1;
-    height: calc(100dvh - 64px);
+    height: calc(100dvh - 68px);
     overflow: hidden;
   }
 

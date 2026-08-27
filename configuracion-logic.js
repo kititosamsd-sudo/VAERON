@@ -98,9 +98,13 @@ function aplicarBloqueoPorPlan() {
   if (typeof limitePlan === 'function' && !limitePlan('notificaciones')) {
     const input = document.getElementById('inputUmbralStock');
     const btn = document.getElementById('btnGuardarUmbral');
+    const btnMenos = document.getElementById('btnUmbralMenos');
+    const btnMas = document.getElementById('btnUmbralMas');
     const msg = document.getElementById('umbralStockMsg');
     if (input) input.disabled = true;
     if (btn) btn.disabled = true;
+    if (btnMenos) btnMenos.disabled = true;
+    if (btnMas) btnMas.disabled = true;
     if (msg) { msg.textContent = `Disponible desde el plan Medio (tu plan actual: ${nombrePlan()}).`; msg.style.color = 'var(--text-3)'; }
   }
 
@@ -237,9 +241,10 @@ function renderAlmacenesList() {
         </button>`
       : '';
     return `
-      <div class="settings-row" data-alm="${id}">
-        <span class="settings-row-label">Almacén ${id.replace('alm', '')}</span>
-        <input class="form-input settings-row-input" id="inputNombre_${id}" type="text" maxlength="30" value="${nombre}" ${editable ? '' : 'disabled'}>
+      <div class="almacen-row" data-alm="${id}">
+        <span class="almacen-dot"></span>
+        <span class="almacen-tag${esAlm1 ? ' almacen-tag-principal' : ''}">${esAlm1 ? 'Principal' : 'Almacén ' + id.replace('alm', '')}</span>
+        <input class="form-input" id="inputNombre_${id}" type="text" maxlength="30" value="${nombre}" ${editable ? '' : 'disabled'}>
         ${botonEliminar}
       </div>`;
   }).join('');
@@ -352,6 +357,19 @@ function previsualizarUmbralStock() {
   preview.textContent = valor === 0
     ? 'Solo se marcarán como stock bajo los productos con 0 unidades.'
     : `Se marcarán como stock bajo los productos con ${valor} ${valor === 1 ? 'unidad' : 'unidades'} o menos.`;
+}
+
+// Botones −/+ del stepper: mismo input de siempre, solo le suman o
+// restan 1 y disparan la previsualización — no tocan Firebase (eso
+// sigue siendo cosa del botón "Guardar", como con el valor escrito
+// a mano).
+function ajustarUmbralStock(delta) {
+  const input = document.getElementById('inputUmbralStock');
+  if (!input || input.disabled) return;
+  const actual = parseInt(input.value, 10);
+  const base = isNaN(actual) ? 0 : actual;
+  input.value = Math.max(0, base + delta);
+  previsualizarUmbralStock();
 }
 
 function cargarUmbralStock() {
