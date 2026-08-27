@@ -22,8 +22,36 @@ window.Configuracion = {
     cargarUmbralStock();
     cargarAlmacenesForm();
     cargarLogoPreview();
+    actualizarTemaLabel();
   }
 };
+
+/* ── Tema oscuro/claro ──────────────────────────────────────────
+   Preferencia del dispositivo (localStorage), no de la tienda: cada
+   quien puede tener su propio tema sin afectar a los demás. El
+   script bloqueante en <head> de app.html ya aplica el tema guardado
+   ANTES del primer paint (evita el flash blanco→oscuro); acá solo
+   se encarga de cambiarlo cuando la persona toca la fila "Tema" y
+   de reflejar el estado actual en la etiqueta. */
+function toggleTema() {
+  const activarOscuro = document.documentElement.getAttribute('data-theme') !== 'dark';
+  if (activarOscuro) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  try { localStorage.setItem('vaeron-theme', activarOscuro ? 'dark' : 'light'); } catch (e) {}
+  actualizarTemaLabel();
+}
+
+function actualizarTemaLabel() {
+  const label = document.getElementById('temaValLabel');
+  if (!label) return;
+  const esOscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+  const chevron = label.querySelector('svg');
+  label.textContent = esOscuro ? 'Oscuro ' : 'Claro ';
+  if (chevron) label.appendChild(chevron);
+}
 
 /* ── Logo de la tienda ───────────────────────────────────────── */
 

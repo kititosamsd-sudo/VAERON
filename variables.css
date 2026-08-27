@@ -96,3 +96,67 @@
   /* Transitions */
   --t: 0.09s ease;
 }
+
+/* =========================================================
+   Tema oscuro — mismas variables, otros valores. Se activa poniendo
+   data-theme="dark" en <html> (ver toggleTema() en
+   configuracion-logic.js, y el script bloqueante en <head> de
+   app.html que lo aplica ANTES del primer paint para que no haya
+   parpadeo blanco→oscuro al cargar).
+
+   Dos vueltas: la v1 usaba un slate frío casi negro genérico. La v2
+   reutilizaba el negro del sidebar (--sb-bg/--sb-surface) pero
+   fondo y tarjeta quedaban casi al mismo tono (#0A0C10 vs #0F1218,
+   apenas 5% de diferencia) — las tarjetas se aplanaban contra el
+   fondo y todo se sentía "un solo bloque negro" en vez de tener
+   jerarquía. Además --red/--green/--amber seguían siendo los tonos
+   apagados pensados para fondo CLARO (pizarra sobre blanco), que
+   sobre negro se ven sucios/desaturados en vez de legibles.
+
+   Esta versión sigue el patrón de dark mode que usan apps como
+   GitHub/Linear/Vercel: base casi negra pero con temperatura de
+   marca (no gris neutro de plantilla), una diferencia de luminosidad
+   real entre fondo → tarjeta → tarjeta elevada (no solo un borde
+   sutil separándolas), y colores de estado más vivos —pensados para
+   fondo oscuro, no los mismos átomos reciclados del modo claro. */
+:root[data-theme="dark"] {
+  --accent:        #3B82F6;
+  --accent-hover:  #5B9AFF;
+  --accent-soft:   rgba(59, 130, 246, 0.18);
+  --accent-border: rgba(59, 130, 246, 0.4);
+
+  --ink:        #EDEEF1;
+  --ink-hover:  #FFFFFF;
+  --ink-soft:   rgba(255,255,255,0.08);
+
+  --bg:             #0A0B0F;   /* mismo grafito-negro del logo, no un gris neutro */
+  --surface:        #15171E;   /* tarjeta: salto de luminosidad real sobre el fondo, no 5% */
+  --surface-2:      #1C1F28;   /* superficie "elevada" (inputs, filas activas) — un escalón más arriba */
+  --border:         rgba(255,255,255,0.09);
+  --border-strong:  rgba(255,255,255,0.18);
+
+  --text-1:  #EDEEF2;   /* blanco roto, no #FFF puro — menos fatiga visual */
+  --text-2:  #9AA1B0;
+  --text-3:  #6B7280;
+
+  /* Estado — versiones para fondo oscuro (no los mismos tonos
+     apagados del modo claro, que ahí pierden saturación). */
+  --green:    #3DD68C;
+  --green-bg: rgba(61, 214, 140, 0.14);
+  --amber:    #E8A83D;
+  --amber-bg: rgba(232, 168, 61, 0.14);
+  --red:      #F0685E;
+  --red-bg:   rgba(240, 104, 94, 0.14);
+  --copper:     #D69A5C;
+  --copper-bg:  rgba(214, 154, 92, 0.16);
+
+  --icon-blue-bg:  rgba(37, 99, 235, 0.18);
+  --icon-amber-bg: rgba(245, 158, 11, 0.16);
+  --icon-green-bg: rgba(16, 185, 129, 0.16);
+  --icon-purple-bg:rgba(139, 92, 246, 0.18);
+  --icon-gray-bg:  #232733;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow:    0 4px 14px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-lg: 0 20px 48px rgba(0,0,0,0.6), 0 4px 14px rgba(0,0,0,0.35);
+}

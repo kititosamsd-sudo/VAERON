@@ -12,6 +12,17 @@
      ese script puede ejecutarse después de que el navegador ya
      pintó algo. Esta línea SIEMPRE corre primero. -->
 <script>document.documentElement.style.visibility = 'hidden';</script>
+<!-- Tema oscuro/claro: se aplica ANTES de que carguen las hojas de
+     estilo, para que la primera pintura ya sea con el tema correcto
+     (si esto corriera después, se vería un flash blanco→oscuro cada
+     vez que alguien con tema oscuro guardado abre la app). -->
+<script>
+  try {
+    if (localStorage.getItem('vaeron-theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  } catch (e) {}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
@@ -107,10 +118,6 @@
       <a class="nav-item" data-page="perfil" href="#perfil">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Perfil
-      </a>
-      <a class="nav-item nav-item-logout" id="logoutNavItem" href="#">
-        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Salir
       </a>
     </nav>
     <div class="sidebar-footer">

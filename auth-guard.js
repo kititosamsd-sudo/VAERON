@@ -50,6 +50,18 @@ authLoadingOverlay.innerHTML =
   '<div style="width:34px;height:34px;border:3px solid #E2E8F4;border-top-color:#16181D;border-radius:50%;animation:authSpin .7s linear infinite"></div>' +
   '<style>@keyframes authSpin{to{transform:rotate(360deg)}}</style>';
 
+// El logo de marca aparece en dos lugares del HTML según la
+// pantalla: #brandIconImg (sidebar, todas las vistas) y
+// #topbarHeroBrandImg (fila de marca del topbar de Configuración,
+// solo visible en móvil). No siempre están ambos en el DOM a la vez
+// — este helper actualiza el que exista, sin fallar si falta uno.
+function setBrandLogos(url) {
+  ['brandIconImg', 'topbarHeroBrandImg'].forEach(id => {
+    const img = document.getElementById(id);
+    if (img) img.src = url;
+  });
+}
+
 function showAuthOverlay() {
   // Vuelve a mostrar la página (el spinner cubre todo con fondo
   // opaco), pero el contenido real de la app sigue sin poder verse
@@ -264,12 +276,10 @@ const authReady = new Promise(resolve => {
           if (window.Dashboard && typeof Dashboard.refreshPlan === 'function') Dashboard.refreshPlan();
           if (typeof limitePlan === 'function' && limitePlan('logoPersonalizable') && typeof getTiendaLogo === 'function') {
             getTiendaLogo().then(url => {
-              const img = document.getElementById('brandIconImg');
-              if (img && url) img.src = url;
+              if (url) setBrandLogos(url);
             }).catch(() => {});
           } else {
-            const img = document.getElementById('brandIconImg');
-            if (img) img.src = 'logo-vaeron-icon.png';
+            setBrandLogos('logo-vaeron-icon.png');
           }
         }
       });
@@ -291,13 +301,13 @@ const authReady = new Promise(resolve => {
     }
 
     // Logo propio de la tienda (plan Medio/Premium) — reemplaza el
-    // ícono genérico de VAERON del sidebar por el que la tienda subió
-    // en Configuración. Si no aplica (Básico, o Medio/Premium sin
-    // logo subido todavía), se queda tal cual está en el HTML.
+    // ícono genérico de VAERON del sidebar (y, en Configuración, el
+    // de la fila de marca del topbar) por el que la tienda subió en
+    // Configuración. Si no aplica (Básico, o Medio/Premium sin logo
+    // subido todavía), se queda tal cual está en el HTML.
     if (currentTiendaId && typeof limitePlan === 'function' && limitePlan('logoPersonalizable') && typeof getTiendaLogo === 'function') {
       getTiendaLogo().then(url => {
-        const img = document.getElementById('brandIconImg');
-        if (img && url) img.src = url;
+        if (url) setBrandLogos(url);
       }).catch(() => {});
     }
 
