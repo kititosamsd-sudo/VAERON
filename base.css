@@ -226,6 +226,12 @@ nav.sidebar-nav { flex: 1; padding: 14px 10px; overflow-y: auto; }
    en escritorio ya existe el botón dedicado en la tarjeta de usuario. */
 .nav-item-logout { display: none; }
 
+/* "Más" (barra inferior móvil, plan pagado) y su panel — ocultos por
+   defecto (escritorio incluido, donde el sidebar ya tiene espacio de
+   sobra y no hace falta agrupar nada). Se reactivan en el breakpoint
+   móvil, ver más abajo. */
+.nav-more-toggle, .nav-more-panel, .nav-more-backdrop { display: none; }
+
 /* ─── Main area ─────────────────────────────────── */
 main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
@@ -1061,26 +1067,40 @@ td { padding: 13px 18px; vertical-align: middle; }
     align-items: center;
     justify-content: space-evenly;
     padding: 0;
-    overflow: visible;
     height: 100%;
+    /* Plan Premium agrega Catálogo/Pedidos/Foro/Registros al tab bar
+       — hasta 8 ítems en una pantalla de ~380px. Con min-width fijo
+       y sin nowrap, el texto más largo ("Notas de Pedido") se
+       envolvía en 2 líneas mientras el resto quedaba en 1, así que
+       los íconos no quedaban alineados entre sí ("desordenado").
+       Ahora cada ítem no envuelve texto (elipsis si no entra) y, si
+       de verdad no caben todos a un tamaño legible, la barra
+       desliza horizontalmente en vez de romper el layout. */
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  nav.sidebar-nav::-webkit-scrollbar { display: none; }
 
   .nav-section-label { display: none; }
 
   .nav-item {
+    flex: 1 1 0;
     flex-direction: column;
     gap: 4px;
-    padding: 6px 14px;
+    padding: 6px 8px;
     margin-bottom: 0;
     font-size: 10px;
     font-weight: 600;
     text-align: center;
     border-radius: 10px;
-    min-width: 60px;
+    min-width: 52px;
     position: relative;
     color: var(--text-3);
     letter-spacing: 0.01em;
     transition: color 0.15s ease;
+    white-space: nowrap;
   }
   /* El texto del nav item SÍ se muestra (a diferencia del sidebar
      lateral de escritorio, acá siempre hay lugar para el label) */
@@ -1100,6 +1120,78 @@ td { padding: 13px 18px; vertical-align: middle; }
     margin-left: 0;
     font-size: 9px; padding: 1px 4px; min-width: 14px;
   }
+
+  /* "Más" — oculto por defecto (desktop ya lo esconde en general, y
+     acá también por si acaso). Solo se activa en la barra inferior
+     cuando el plan pagado agrega 4 secciones más y de verdad hace
+     falta agrupar. En plan Básico (4 secciones en total) no hay
+     overflow que agrupar, así que sigue sin aparecer. */
+  .nav-more-toggle { display: none; }
+  body:not(.plan-basico) .nav-more-toggle { display: flex; }
+  body:not(.plan-basico) .nav-item.nav-mobile-overflow { display: none; }
+  /* El súper-admin no tiene botón "Más" (es exclusivo de cuentas de
+     tienda — ver .nav-tienda-only en el botón de arriba), así que
+     "Perfil" (el único ítem sin restricción de rol que también carga
+     nav-mobile-overflow, pensado para agruparse en tienda) se quedaba
+     sin ninguna forma de mostrarse: la regla de arriba lo ocultaba de
+     la fila principal y no había "Más" que lo revelara. Se re-muestra
+     en la fila principal solo para súper-admin, y solo a él (el resto
+     de nav-mobile-overflow trae nav-tienda-only, así que el :not() de
+     abajo no los toca). */
+  .role-superadmin .nav-item.nav-mobile-overflow:not(.nav-tienda-only) {
+    display: flex !important;
+  }
+
+  .nav-more-panel {
+    display: flex;
+    position: fixed;
+    right: 10px; bottom: 78px;
+    width: 208px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow-lg);
+    padding: 6px;
+    z-index: 101;
+    flex-direction: column;
+    gap: 1px;
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+  body.nav-more-open .nav-more-panel {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  /* Los ítems DENTRO del panel se ven como fila de menú (ícono +
+     texto en horizontal), no como botón de tab bar (ícono arriba,
+     texto abajo) — son cosas distintas aunque reutilicen .nav-item
+     para heredar el click-to-navigate y el resaltado de "activo". */
+  .nav-more-panel .nav-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    min-width: 0;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .nav-more-panel .nav-item:active { background: var(--surface-2); }
+  .nav-more-panel .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nav-more-panel .nav-item.active { background: var(--accent-soft); }
+
+  .nav-more-backdrop {
+    display: block;
+    position: fixed; inset: 0; z-index: 99;
+    background: transparent;
+    visibility: hidden;
+  }
+  body.nav-more-open .nav-more-backdrop { visibility: visible; }
 
   .nav-item-logout {
     display: flex;
@@ -1361,10 +1453,14 @@ td { padding: 13px 18px; vertical-align: middle; }
 @media (max-width: 390px) {
   .page-content { padding: 10px 10px 80px; }
 
-  .nav-item { padding: 6px 10px; min-width: 50px; font-size: 9.5px; }
+  .nav-item { padding: 6px 4px; min-width: 46px; font-size: 9.5px; }
   .nav-item svg { width: 19px; height: 19px; }
 
-  .stock-stats { grid-template-columns: 1fr 1fr !important; }
+  /* .stock-stats ya se mantiene en 3 columnas parejas desde 768px
+     para abajo (ver stock-card.css) — esta regla vieja la volvía a
+     partir en 2+1 en celulares chicos (≤390px), contradiciendo ese
+     rediseño y afectando también a Tiendas, que reusa la misma clase
+     para sus 3 tarjetas (Tiendas registradas/Activas/Suspendidas). */
   .hist-stats  { grid-template-columns: 1fr 1fr !important; }
 
   .topbar-title h1 { font-size: 14px; }
@@ -1421,8 +1517,17 @@ td { padding: 13px 18px; vertical-align: middle; }
    de una tienda (admin/vendedor) ven el catálogo y su cuenta ──── */
 .nav-superadmin-only { display: none; }
 .role-superadmin .nav-superadmin-only.nav-item { display: flex; }
-.role-superadmin .nav-superadmin-only.nav-section-label { display: block; }
 .role-superadmin .nav-tienda-only { display: none !important; }
+/* El label de sección ("Sistema") solo tiene sentido en el sidebar de
+   escritorio, agrupando visualmente los ítems de arriba. Antes esta
+   regla no tenía media query y su especificidad (3 clases) le ganaba
+   a ".nav-section-label{display:none}" del breakpoint móvil (1 clase)
+   sin importar el ancho de pantalla — por eso "SISTEMA" se colaba
+   dentro de la barra inferior del súper-admin en el celular, comiendo
+   espacio de los íconos reales y volviendo difícil tocar cada sección. */
+@media (min-width: 1281px) {
+  .role-superadmin .nav-superadmin-only.nav-section-label { display: block; }
+}
 
 /* =========================================================
    Dashboard

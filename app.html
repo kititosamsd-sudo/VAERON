@@ -100,18 +100,54 @@
       </a>
       <a class="nav-item nav-tienda-only nav-plan-pago" data-page="pedidos" href="#pedidos">
         <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        Notas de Pedido
+        Pedidos
       </a>
-      <a class="nav-item nav-tienda-only nav-plan-pago" data-page="foro" href="#foro">
+      <a class="nav-item nav-tienda-only nav-plan-pago nav-mobile-overflow" data-page="foro" href="#foro">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Foro
       </a>
-      <a class="nav-item nav-tienda-only nav-admin-only nav-plan-pago" data-page="registros" href="#registros">
+      <a class="nav-item nav-tienda-only nav-admin-only nav-plan-pago nav-mobile-overflow" data-page="registros" href="#registros">
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Registros
       </a>
       <div class="nav-section-label nav-tienda-only">Cuenta</div>
-      <a class="nav-item nav-tienda-only" data-page="configuracion" href="#configuracion">
+      <a class="nav-item nav-tienda-only nav-mobile-overflow" data-page="configuracion" href="#configuracion">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Configuración
+      </a>
+      <a class="nav-item nav-mobile-overflow" data-page="perfil" href="#perfil">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Perfil
+      </a>
+
+      <!-- "Más" — solo aparece en la barra inferior (móvil) cuando el
+           plan pagado agrega Catálogo/Pedidos/Foro/Registros y ya no
+           entran las 8 secciones en una sola fila sin verse
+           apretadas. Agrupa ahí lo que se usa con menos frecuencia
+           en el día a día (Foro, Registros, Configuración, Perfil),
+           dejando Dashboard/Stock/Catálogo/Pedidos siempre a un
+           toque. En plan Básico (solo 4 secciones) o en desktop, no
+           hace falta — ver reglas en base.css. -->
+      <button type="button" class="nav-item nav-tienda-only nav-more-toggle" id="navMoreToggle"
+        aria-haspopup="true" aria-expanded="false" aria-controls="navMorePanel" onclick="toggleNavMore()">
+        <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        Más
+      </button>
+    </nav>
+
+    <!-- Panel del botón "Más" — mismos data-page que las versiones
+         "reales" de arriba, así que el Router (setActiveNavItem) y el
+         click-to-navigate de nav.js los reconocen sin código aparte. -->
+    <div class="nav-more-panel" id="navMorePanel">
+      <a class="nav-item" data-page="foro" href="#foro">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Foro
+      </a>
+      <a class="nav-item nav-admin-only" data-page="registros" href="#registros">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Registros
+      </a>
+      <a class="nav-item" data-page="configuracion" href="#configuracion">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Configuración
       </a>
@@ -119,7 +155,8 @@
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Perfil
       </a>
-    </nav>
+    </div>
+    <div class="nav-more-backdrop" id="navMoreBackdrop" onclick="toggleNavMore(false)"></div>
     <div class="sidebar-footer">
       <div class="user-card-wrap">
         <div class="user-card" id="userCard">
@@ -180,6 +217,7 @@
 <script src="tiendas-logic.js" defer></script>
 <script src="facturacion-logic.js" defer></script>
 <script src="auditoria-logic.js" defer></script>
+<script src="config-sistema-logic.js" defer></script>
 
 <script defer>
   document.addEventListener('DOMContentLoaded', () => {

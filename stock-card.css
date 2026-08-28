@@ -89,6 +89,21 @@
 .product-table th:nth-child(5), .product-table td:nth-child(5) { width: 8%;  }  /* stock */
 .product-table th:nth-child(6), .product-table td:nth-child(6) { width: 12%; }  /* precio venta */
 .product-table th:nth-child(7), .product-table td:nth-child(7) { width: 12%; }  /* acciones */
+
+/* Facturación/Auditoría/Tiendas reusan .product-table (heredado de
+   Stock) pero con su propia cantidad de columnas — sin este reset
+   heredaban los anchos de arriba (pensados para las 7 columnas de
+   Stock: checkbox, código, nombre...), lo que aplastaba su primera
+   columna (ej. nombre de tienda) a un 4% real. En escritorio dejamos
+   que cada columna se reparta según su contenido; el reset para la
+   vista de tarjetas (mobile) va en el bloque @media de abajo, porque
+   ahí necesita empatar en especificidad para ganarle a los anchos de
+   Stock. */
+.simple-table-wrap .product-table { table-layout: auto; }
+@media (min-width: 769px) {
+  .simple-table-wrap .product-table th,
+  .simple-table-wrap .product-table td { width: auto; }
+}
 .product-table thead th {
   text-align: left;
   font-size: 11px;
@@ -203,6 +218,14 @@
   }
   .simple-table-wrap table { min-width: 0; }
   .simple-table-wrap thead { display: none; }
+
+  /* Reset de los anchos por nth-child heredados de Stock (ver arriba):
+     acá necesitan volver a ser 100% real, si no la columna "Tienda"
+     queda aplastada al 4% y el nombre se parte letra por línea. Misma
+     especificidad que la regla de Stock (2 clases + 1 tipo) — gana por
+     venir después en el archivo. */
+  .simple-table-wrap .product-table td,
+  .simple-table-wrap .product-table th { width: 100%; }
 
   .simple-table-wrap tbody tr {
     background: var(--surface);

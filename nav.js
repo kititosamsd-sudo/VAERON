@@ -33,6 +33,20 @@ async function saveWorkbook(wb, filename) {
   XLSX.writeFile(wb, filename); // navegador de escritorio
 }
 
+// ── Panel "Más" del tab bar móvil (plan pagado) ─────────────────
+// Agrupa Foro/Registros/Configuración/Perfil detrás de un botón
+// cuando el plan pagado agrega demasiadas secciones para una sola
+// fila (ver .nav-mobile-overflow / .nav-more-toggle en base.css).
+function toggleNavMore(force) {
+  const open = typeof force === 'boolean' ? force : !document.body.classList.contains('nav-more-open');
+  document.body.classList.toggle('nav-more-open', open);
+  const btn = document.getElementById('navMoreToggle');
+  if (btn) btn.setAttribute('aria-expanded', String(open));
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') toggleNavMore(false);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   const items = document.querySelectorAll('.nav-item[data-page]');
 
@@ -50,6 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         window.location.href = `${page}.html`;
       }
+      // Cualquier navegación (ya sea desde la barra principal o
+      // desde dentro del panel "Más") cierra el panel si estaba
+      // abierto — si no, se queda flotando sobre la pantalla nueva.
+      if (typeof toggleNavMore === 'function') toggleNavMore(false);
     });
   });
 

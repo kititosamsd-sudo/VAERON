@@ -8,39 +8,97 @@
   </div>
 
   <div class="page-content">
-    <div class="config-grid">
+    <div class="settings-grid">
 
-      <div class="config-card">
-        <div class="config-card-icon">
-          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <!-- 1. Cuenta y seguridad — real: correo de la cuenta + acceso directo
+           a Perfil, que ya tiene nombre/contraseña conectados de verdad
+           (ver perfil-logic.js). No se duplica esa lógica acá. -->
+      <div class="settings-card" id="configCardCuenta">
+        <div class="settings-card-head">
+          <div class="settings-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="settings-card-head-text">
+            <h3>Cuenta y seguridad</h3>
+            <p>Datos de acceso de tu cuenta de súper-admin.</p>
+          </div>
         </div>
-        <div class="config-card-body">
-          <h3>Cuenta y seguridad</h3>
-          <p>Datos de acceso, contraseña y verificación.</p>
+        <div class="settings-card-control">
+          <div class="settings-static-row">
+            <span>Correo de acceso</span>
+            <span class="settings-static-val" id="configSistemaCorreo">—</span>
+          </div>
+          <button type="button" class="settings-static-row settings-static-row-clickable" onclick="Router.go('perfil')">
+            <span class="settings-static-row-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Nombre y contraseña
+            </span>
+            <span class="settings-static-val">Ir a Perfil
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </span>
+          </button>
         </div>
-        <span class="config-soon">Próximamente</span>
       </div>
 
-      <div class="config-card">
-        <div class="config-card-icon">
-          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="9" y="3" width="13" height="2" rx="1"/><rect x="9" y="7" width="8" height="2" rx="1"/><rect x="2" y="11" width="6" height="6" rx="1"/><rect x="9" y="11" width="13" height="2" rx="1"/><rect x="9" y="15" width="8" height="2" rx="1"/></svg>
+      <!-- 2. Capacidad de los proyectos — real: cuántas tiendas tiene cada
+           proyecto Firebase configurado, sobre el máximo permitido (mismo
+           dato que usa elegirProyectoConEspacio() para decidir dónde crear
+           la próxima tienda — ver firebase-projects.js). Solo lectura. -->
+      <div class="settings-card" id="configCardProyectos">
+        <div class="settings-card-head">
+          <div class="settings-card-icon ic-slate">
+            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>
+          </div>
+          <div class="settings-card-head-text">
+            <h3>Capacidad de los proyectos</h3>
+            <p>Cuántas tiendas tiene cada proyecto Firebase, sobre el máximo permitido.</p>
+          </div>
         </div>
-        <div class="config-card-body">
-          <h3>Almacenes</h3>
-          <p>Se administra desde la Configuración de cada tienda, no aquí.</p>
+        <div class="settings-card-control" id="configSistemaProyectosList">
+          <p class="settings-msg">Cargando…</p>
         </div>
-        <span class="config-existe">Por tienda</span>
       </div>
 
-      <div class="config-card">
-        <div class="config-card-icon">
-          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <!-- 3. Almacenes -->
+      <div class="settings-card" id="configCardAlmacenes">
+        <div class="settings-card-head">
+          <div class="settings-card-icon">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="9" y="3" width="13" height="2" rx="1"/><rect x="9" y="7" width="8" height="2" rx="1"/><rect x="2" y="11" width="6" height="6" rx="1"/><rect x="9" y="11" width="13" height="2" rx="1"/><rect x="9" y="15" width="8" height="2" rx="1"/></svg>
+          </div>
+          <div class="settings-card-head-text">
+            <h3>Almacenes</h3>
+            <p>Se administra desde la Configuración de cada tienda, no aquí.</p>
+          </div>
         </div>
-        <div class="config-card-body">
-          <h3>Notificaciones</h3>
-          <p>Se administra desde la Configuración de cada tienda, no aquí.</p>
+        <div class="settings-card-control">
+          <button type="button" class="settings-static-row settings-static-row-clickable" onclick="Router.go('tiendas')">
+            <span>Ver tiendas</span>
+            <span class="settings-static-val">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </span>
+          </button>
         </div>
-        <span class="config-existe">Por tienda</span>
+      </div>
+
+      <!-- 4. Notificaciones -->
+      <div class="settings-card" id="configCardNotificaciones">
+        <div class="settings-card-head">
+          <div class="settings-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+          <div class="settings-card-head-text">
+            <h3>Notificaciones</h3>
+            <p>Se administra desde la Configuración de cada tienda, no aquí.</p>
+          </div>
+        </div>
+        <div class="settings-card-control">
+          <button type="button" class="settings-static-row settings-static-row-clickable" onclick="Router.go('tiendas')">
+            <span>Ver tiendas</span>
+            <span class="settings-static-val">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </span>
+          </button>
+        </div>
       </div>
 
     </div>
