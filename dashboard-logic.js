@@ -76,9 +76,14 @@ window.Dashboard = (function () {
       .slice(0, 6);
 
     if (lowItems.length === 0) {
+      list.classList.remove('dash-list-2col');
       list.innerHTML = '<p class="dash-empty">No hay productos con stock bajo.</p>';
       return;
     }
+    // Dos columnas cuando hay más de un producto — antes esta lista
+    // quedaba angosta y muy alta, dejando toda la mitad derecha del
+    // Dashboard vacía en planes sin panel de Rentabilidad (Básico).
+    list.classList.toggle('dash-list-2col', lowItems.length > 1);
     list.innerHTML = lowItems.map(p => `
       <div class="dash-row">
         <div class="dash-row-main">
@@ -100,12 +105,19 @@ window.Dashboard = (function () {
     const panel = document.getElementById('dashProfitPanel');
     if (!panel) return;
 
+    // Cuando este panel no existe para el plan (Básico), "Stock bajo"
+    // pasa a ocupar las dos columnas del grid en vez de quedarse solo
+    // en la mitad izquierda con la derecha vacía.
+    const lowStockPanel = document.getElementById('dashLowStockPanel');
+
     const habilitado = (typeof limitePlan === 'function') ? limitePlan('campoCosto') : false;
     if (!habilitado) {
       panel.style.display = 'none';
+      if (lowStockPanel) lowStockPanel.classList.add('dash-panel-span2');
       return;
     }
     panel.style.display = '';
+    if (lowStockPanel) lowStockPanel.classList.remove('dash-panel-span2');
 
     let costoTotal = 0, ventaTotal = 0;
     const conMargen = products.map(p => {
@@ -739,6 +751,7 @@ window.Dashboard = (function () {
   function renderWarehousePanel(products) {
     const listEl = document.getElementById('dashWarehouseUnitsList');
     const totalEl = document.getElementById('dashWarehouseUnitsTotal');
+    const legendEl = document.getElementById('dashWarehouseLegend');
     if (!listEl) return;
     const { labels, totals } = buildWarehouseChartData(products);
     const totalUnits = totals.reduce((s, n) => s + n, 0);
@@ -747,6 +760,7 @@ window.Dashboard = (function () {
 
     if (totalUnits === 0) {
       listEl.innerHTML = '<p class="dash-empty">Sin stock registrado todavía.</p>';
+      if (legendEl) legendEl.innerHTML = '';
       return;
     }
     listEl.innerHTML = labels.map((label, i) => {
@@ -764,6 +778,23 @@ window.Dashboard = (function () {
         </div>
       `;
     }).join('');
+
+    // Leyenda al pie — mismo criterio visual que la de "Stock por
+    // categoría" al lado. Antes esta tarjeta no tenía pie, así que
+    // cuando había pocos almacenes quedaba visiblemente más corta
+    // que su vecina y el grid dejaba un hueco vacío entre ambas.
+    if (legendEl) {
+      legendEl.innerHTML = labels.map((label, i) => {
+        const pct = totalUnits > 0 ? (totals[i] / totalUnits) * 100 : 0;
+        const color = WAREHOUSE_COLORS[i % WAREHOUSE_COLORS.length];
+        return `
+          <span class="dash-legend-item">
+            <span class="dash-legend-dot" style="background:${color}"></span>
+            ${escapeHtml(label)} · ${totals[i].toLocaleString('es-PE')} u. (${pct.toLocaleString('es-PE', { maximumFractionDigits: 0 })}%)
+          </span>
+        `;
+      }).join('');
+    }
   }
 
   /* ── Gráfico: stock por categoría ── */
