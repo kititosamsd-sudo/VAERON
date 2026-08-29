@@ -1,0 +1,65 @@
+{
+  "rules": {
+
+    "directorio": {
+      "$correoKey": {
+        ".read": true,
+        ".write": "auth != null && auth.token.email === 'adonay@gmail.com'"
+      }
+    },
+
+    "cuentas": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'adonay@gmail.com')",
+        ".write": "auth != null && (auth.token.email === 'adonay@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && newData.child('rol').val() !== 'superadmin' && ((newData.exists() && newData.child('tiendaId').val() === root.child('cuentas').child(auth.uid).child('tiendaId').val()) || (!newData.exists() && data.child('tiendaId').val() === root.child('cuentas').child(auth.uid).child('tiendaId').val()))))"
+      }
+    },
+
+    "eventos": {
+      ".read": "auth != null && auth.token.email === 'adonay@gmail.com'",
+      ".write": "auth != null && auth.token.email === 'adonay@gmail.com'"
+    },
+
+    "tiendas": {
+      ".read": "auth != null && auth.token.email === 'adonay@gmail.com'",
+      ".write": "auth != null && auth.token.email === 'adonay@gmail.com'",
+
+      "$tiendaId": {
+        ".read": "auth != null && (auth.token.email === 'adonay@gmail.com' || root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId)",
+
+        "info": {
+          ".write": "auth != null && auth.token.email === 'adonay@gmail.com'"
+        },
+
+        "usuarios": {
+          "$uid": {
+            ".write": "auth != null && (auth.token.email === 'adonay@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && auth.uid !== $uid))"
+          }
+        },
+
+        "products": {
+          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
+        },
+        "clients": {
+          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
+        },
+        "config": {
+          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
+        },
+        "meta": {
+          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
+        }
+      }
+    },
+
+    "foro": {
+      "publicaciones": {
+        ".read": true,
+        "$postId": {
+          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() != null && (!data.exists() || data.child('tiendaId').val() === root.child('cuentas').child(auth.uid).child('tiendaId').val()) && (!newData.exists() || newData.child('tiendaId').val() === root.child('cuentas').child(auth.uid).child('tiendaId').val())"
+        }
+      }
+    }
+
+  }
+}

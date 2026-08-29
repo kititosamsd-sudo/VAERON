@@ -3,7 +3,7 @@
   <div class="topbar">
     <div class="topbar-title">
       <h1>Catálogo</h1>
-      <p>Galería de imágenes de productos</p>
+      <p id="catalogoSubtitle">Galería de imágenes de productos</p>
     </div>
     <div class="topbar-actions">
       <div class="search-wrap">
@@ -14,6 +14,49 @@
   </div>
 
   <div class="page-content">
+
+    <!-- ── Completitud de fotos ── -->
+    <div class="catalogo-progress">
+      <div class="catalogo-progress-head">
+        <span>Completitud de fotos</span>
+        <span class="catalogo-progress-value" id="catalogoProgressValue">—</span>
+      </div>
+      <div class="catalogo-progress-track">
+        <div class="catalogo-progress-fill" id="catalogoProgressFill"></div>
+      </div>
+    </div>
+
+    <!-- ── Filtros, orden y modo de vista ── -->
+    <div class="catalogo-toolbar">
+      <div class="catalogo-tabs" id="catalogoTabs">
+        <button class="catalogo-tab active" data-filter="all" onclick="setCatalogoFilter('all')">Todas</button>
+        <button class="catalogo-tab" data-filter="withImage" onclick="setCatalogoFilter('withImage')">Con foto</button>
+        <button class="catalogo-tab" data-filter="noImage" onclick="setCatalogoFilter('noImage')">
+          Sin foto <span class="catalogo-tab-count" id="catalogoNoImageCount">0</span>
+        </button>
+      </div>
+      <div class="catalogo-toolbar-right">
+        <div class="catalogo-sort-wrap">
+          <button class="btn btn-ghost btn-sm" id="btnCatalogoSort" onclick="toggleCatalogoSortMenu(event)">
+            <span id="catalogoSortLabel">Recientes</span>
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="catalogo-sort-menu" id="catalogoSortMenu">
+            <button onclick="setCatalogoSort('recent')">Recientes</button>
+            <button onclick="setCatalogoSort('nameAsc')">Nombre (A-Z)</button>
+            <button onclick="setCatalogoSort('nameDesc')">Nombre (Z-A)</button>
+          </div>
+        </div>
+        <div class="catalogo-view-toggle">
+          <button class="active" id="btnCatalogoViewGrid" onclick="setCatalogoView('grid')" title="Vista de grilla">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          </button>
+          <button id="btnCatalogoViewList" onclick="setCatalogoView('list')" title="Vista de lista">
+            <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div class="catalogo-grid" id="catalogoGrid"></div>
 

@@ -392,7 +392,71 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
    descargar, así que catalogo-view.html trae su propia copia del
    modal #imageViewModal (cada vista de la SPA es autocontenida,
    ver router.js — solo una vive en el DOM a la vez).
+
+   Rediseño: de "galería plana" a herramienta de catálogo con
+   propósito — barra de completitud de fotos, filtros por estado
+   de imagen, orden y vista grilla/lista, y tarjetas con jerarquía
+   real (código, stock, nombre, categoría, precio). Sin colores
+   de categoría en las tarjetas (se probaron chips y filos de
+   color — quedaban "candy"/genéricos); el único color vivo es el
+   azul de acento en las acciones y el rojo en "Sin stock".
    ========================================================= */
+
+/* ── Barra de completitud de fotos ── */
+.catalogo-progress { max-width: 300px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.catalogo-progress-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 11.5px; color: var(--text-2); margin-bottom: 6px;
+}
+.catalogo-progress-value { font-family: var(--font-mono); font-weight: 700; color: var(--text-1); }
+.catalogo-progress-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.catalogo-progress-fill { height: 100%; width: 0%; background: var(--ink); transition: width 0.3s ease; }
+
+/* ── Toolbar: tabs de filtro + orden + vista ── */
+.catalogo-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.catalogo-tabs { display: flex; gap: 20px; }
+.catalogo-tab {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  padding: 0 0 9px; font-size: 12.5px; font-weight: 500; color: var(--text-3);
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-ui); transition: color var(--t), border-color var(--t);
+}
+.catalogo-tab:hover { color: var(--text-1); }
+.catalogo-tab.active { color: var(--text-1); font-weight: 700; border-bottom-color: var(--ink); }
+.catalogo-tab-count {
+  background: var(--surface-2); color: var(--text-2);
+  font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 20px;
+}
+.catalogo-toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+.catalogo-sort-wrap { position: relative; }
+.catalogo-sort-menu {
+  display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 20;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+  box-shadow: var(--shadow); padding: 4px; min-width: 150px;
+}
+.catalogo-sort-menu.open { display: block; }
+.catalogo-sort-menu button {
+  display: block; width: 100%; text-align: left; background: none; border: none;
+  font-size: 12.5px; color: var(--text-2); padding: 7px 9px; border-radius: var(--r-sm);
+  cursor: pointer; font-family: var(--font-ui);
+}
+.catalogo-sort-menu button:hover { background: var(--surface-2); color: var(--text-1); }
+
+.catalogo-view-toggle { display: flex; border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden; }
+.catalogo-view-toggle button {
+  border: none; background: var(--surface); color: var(--text-3);
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.catalogo-view-toggle button + button { border-left: 1px solid var(--border); }
+.catalogo-view-toggle button svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.catalogo-view-toggle button.active { background: var(--surface-2); color: var(--text-1); }
+
+/* ── Grilla y tarjetas ── */
 .catalogo-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -413,33 +477,85 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  transition: border-color var(--t);
 }
+.catalogo-item:hover { border-color: var(--border-strong); }
+
 .catalogo-thumb-wrap {
-  aspect-ratio: 1 / 1;
+  position: relative;
+  aspect-ratio: 4 / 3;
   background: var(--surface-2);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
   cursor: pointer;
+  border-bottom: 1px solid var(--border);
 }
 .catalogo-thumb-wrap img {
   width: 100%; height: 100%; object-fit: cover;
   transition: transform var(--t);
 }
 .catalogo-thumb-wrap:hover img { transform: scale(1.04); }
+
 .catalogo-thumb-empty {
-  font-size: 11.5px; color: var(--text-3); text-align: center; padding: 0 8px;
-  cursor: default;
+  aspect-ratio: 4 / 3;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  cursor: pointer;
 }
-.catalogo-item-body { padding: 9px 10px 11px; }
+.catalogo-thumb-empty svg { width: 22px; height: 22px; stroke: var(--text-3); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.catalogo-thumb-empty span { font-size: 10.5px; font-weight: 600; color: var(--accent); }
+
+/* Vista rápida — al hover de la tarjeta */
+.catalogo-quickview {
+  position: absolute; top: 7px; right: 7px; z-index: 2;
+  width: 24px; height: 24px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity var(--t); cursor: pointer;
+}
+.catalogo-item:hover .catalogo-quickview { opacity: 1; }
+.catalogo-quickview svg { width: 13px; height: 13px; stroke: var(--text-2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.catalogo-item-body { padding: 10px 11px 11px; }
+.catalogo-item-top {
+  display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;
+}
 .catalogo-item-code {
-  font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-3);
 }
+.catalogo-item-stock { font-size: 10px; color: var(--text-3); }
+.catalogo-item-stock-zero { color: var(--red); }
 .catalogo-item-name {
-  font-size: 12.5px; font-weight: 600; color: var(--text-1);
+  font-size: 12.5px; font-weight: 600; color: var(--text-1); letter-spacing: -0.1px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  margin-top: 1px;
+  margin-bottom: 2px;
 }
+.catalogo-item-cat { font-size: 10.5px; color: var(--text-3); margin-bottom: 7px; }
+.catalogo-item-price-row {
+  display: flex; justify-content: flex-end;
+  padding-top: 7px; border-top: 1px solid var(--border);
+  min-width: 0;
+}
+.catalogo-item-price {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text-1);
+  text-align: right; max-width: 100%; overflow-wrap: break-word;
+}
+
+/* ── Vista de lista ── */
+.catalogo-grid-list { grid-template-columns: 1fr; gap: 8px; }
+.catalogo-grid-list .catalogo-item { display: flex; align-items: center; }
+.catalogo-grid-list .catalogo-thumb-wrap,
+.catalogo-grid-list .catalogo-thumb-empty {
+  width: 64px; height: 64px; aspect-ratio: unset; flex-shrink: 0; border-bottom: none; border-right: 1px solid var(--border);
+}
+.catalogo-grid-list .catalogo-item-body {
+  flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 8px 14px;
+}
+.catalogo-grid-list .catalogo-item-top { flex-direction: column-reverse; align-items: flex-start; gap: 2px; margin: 0; min-width: 90px; }
+.catalogo-grid-list .catalogo-item-name { margin: 0; flex: 1; min-width: 160px; }
+.catalogo-grid-list .catalogo-item-cat { margin: 0; min-width: 110px; }
+.catalogo-grid-list .catalogo-item-price-row { padding: 0; border-top: none; min-width: 70px; }
 
 /* ─── Perfil ("ver cuenta") ────────────────────────────────────── */
 .profile-header {

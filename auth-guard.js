@@ -207,10 +207,10 @@ const authReady = new Promise(resolve => {
       currentTiendaPlan = (tiendaInfo && tiendaInfo.plan) || 'basico';
       currentTiendaNombre = (tiendaInfo && tiendaInfo.nombre) || currentUserName;
 
-      // Primera vez que alguien entra a ESTA tienda: le arma un
-      // catálogo de ejemplo propio (independiente del de cualquier
-      // otra tienda). Si ya lo tiene, seedIfEmpty() no hace nada.
-      try { await seedIfEmpty(); } catch (err) { /* si falla, la tienda simplemente arranca vacía */ }
+      // Antes acá se llamaba a seedIfEmpty() para armarle a cada tienda
+      // nueva un catálogo/cartera de "ejemplo" (MODO DEMO). Se quitó:
+      // toda tienda nueva debe arrancar 100% vacía — sin datos
+      // compartidos con ninguna otra tienda, ni siquiera de ejemplo.
     }
 
     currentUserRole = cuenta.rol;

@@ -155,7 +155,7 @@ const db = firebase.database();
 // =========================================================
 // AISLAMIENTO POR TIENDA
 // =========================================================
-// refProducts/refClients/refUsers/refMeta se comportan
+// refProducts/refClients/refUsers se comportan
 // como refs normales de Firebase (.child(), .set(), .on(), etc.)
 // pero en realidad son un Proxy: cada vez que se usa alguna de sus
 // propiedades, resuelve la ruta real en el momento —
@@ -1398,56 +1398,11 @@ function getClient(ruc) {
   return refClients.child(ruc).get().then(snap => snap.val());
 }
 
-// =========================================================
-// SEED — Solo se ejecuta una vez en la vida del proyecto.
-// Usa meta/seeded como bandera permanente.
-// =========================================================
-
-const refMeta = scopedRef('meta');
-
-// Datos de EJEMPLO para la maqueta de Adonay — reemplázalos por
-// el catálogo/cartera real de clientes cuando corresponda.
-// "almacenes" reparte la cantidad total entre los 3 almacenes de
-// ejemplo (alm1/alm2/alm3) — ver WAREHOUSES más abajo. El campo
-// "stock" es siempre la SUMA de los 3 almacenes.
-const SEED_PRODUCTS = {
-  'PRD-001': { name: "Producto de ejemplo A", desc: "Línea estándar · Presentación 1", price: 45,  stock: 20, category: 'linea-1',   almacenes: { alm1: 10, alm2: 6, alm3: 4 } },
-  'PRD-002': { name: "Producto de ejemplo B", desc: "Línea estándar · Presentación 2", price: 120, stock: 3,  category: 'linea-1',   almacenes: { alm1: 1,  alm2: 1, alm3: 1 } },
-  'PRD-003': { name: "Producto de ejemplo C", desc: "Línea premium · Presentación 1",  price: 260, stock: 8,  category: 'linea-2',   almacenes: { alm1: 5,  alm2: 3, alm3: 0 } },
-  'PRD-004': { name: "Producto de ejemplo D", desc: "Línea premium · Presentación 2",  price: 75,  stock: 15, category: 'linea-2',   almacenes: { alm1: 5,  alm2: 5, alm3: 5 } },
-  'PRD-005': { name: "Producto de ejemplo E", desc: "Accesorio / insumo",              price: 18,  stock: 5,  category: 'accesorios', almacenes: { alm1: 2,  alm2: 2, alm3: 1 } }
-};
-
-const SEED_CLIENTS = {
-  '20601234567': { nombre: "Cliente de ejemplo 1 S.A.C.", ciudad: 'Lima' },
-  '20512986754': { nombre: "Cliente de ejemplo 2 E.I.R.L.", ciudad: 'Arequipa' },
-  '20489001234': { nombre: "Cliente de ejemplo 3 S.A.", ciudad: 'Cusco' },
-  '20345678901': { nombre: "Cliente de ejemplo 4 S.A.C.", ciudad: 'Trujillo' }
-};
-
-async function seedIfEmpty() {
-  try {
-    const seededSnap = await refMeta.get();
-    if (seededSnap.exists()) return;
-    const [productsSnap, clientsSnap] = await Promise.all([
-      refProducts.get(),
-      refClients.get()
-    ]);
-    if (!productsSnap.exists()) await refProducts.set(SEED_PRODUCTS);
-    if (!clientsSnap.exists()) await refClients.set(SEED_CLIENTS);
-    await refMeta.set(true);
-  } catch (err) {
-    console.error('Seed error:', err);
-  }
-}
-
-// MODO DEMO: seedIfEmpty() ya no se llama solo al cargar el archivo
-// (antes no había "tiendas" — todo compartía un único catálogo). Ahora
-// cada tienda necesita su propio catálogo de ejemplo la primera vez
-// que alguien entra a ella, así que auth-guard.js la llama apenas
-// confirma con qué tienda inició sesión (ver authReady). Una vez que
-// conectes el proyecto Firebase real de Adonay, quita esa llamada (o
-// reemplaza mock-sdk.js) y ya no se ejecutará contra tu base real.
+// (Antes acá vivía un bloque de SEED de datos de ejemplo que se
+// auto-cargaba en cada tienda nueva la primera vez que alguien
+// entraba — se eliminó por completo: cada tienda se paga y se aloja
+// por separado, así que debe arrancar sin ningún dato compartido,
+// ni siquiera de ejemplo.)
 
 // =========================================================
 // USUARIOS (cuentas individuales de vendedor + admin)
