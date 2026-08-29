@@ -114,7 +114,7 @@ function displayProductCode(code) {
 function fmtPrice(n) {
   const num = Number(n);
   if (isNaN(num)) return "0";
-  return num.toLocaleString('es-PE', { minimumFractionDigits: num % 1 === 0 ? 0 : 2 });
+  return num.toLocaleString(formatoNumeroActivo(), { minimumFractionDigits: num % 1 === 0 ? 0 : 2 });
 }
 
 // Tasa de cambio USD → Sol, propia de cada tienda (Configuración).
@@ -471,7 +471,7 @@ function updateStats() {
   }, 0);
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statLow').textContent   = low;
-  document.getElementById('statValue').textContent = `S/ ${value.toLocaleString('es-PE', { maximumFractionDigits: 0 })}`;
+  document.getElementById('statValue').textContent = `S/ ${value.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 })}`;
 }
 
 /* ── Firebase listener ── */
@@ -571,11 +571,18 @@ function resetImagePreview(previewId) {
   }
 }
 
+// Moneda principal (Configuración → Moneda y formato) — se carga
+// una vez en Stock.init() y se cachea acá, mismo patrón que
+// umbralStock/tasaCambio de este archivo. 'PEN' es el default de
+// siempre (el que ya traía el <select> del HTML) si la tienda nunca
+// lo configuró.
+let monedaPrincipalCache = 'PEN';
+
 function openAddModal() {
   pendingImageData.add = '';
   resetImagePreview('addImagePreview');
   const currencyEl = document.getElementById('addCurrency');
-  if (currencyEl) currencyEl.value = 'PEN';
+  if (currencyEl) currencyEl.value = monedaPrincipalCache;
   openModal('addModal');
 }
 
@@ -1238,6 +1245,10 @@ window.Stock = {
           currentTasaCambio = nueva;
           renderProducts();
         }
+        // Moneda principal — solo decide qué opción viene
+        // preseleccionada la próxima vez que se abra "Agregar
+        // producto" (openAddModal), no repinta nada acá.
+        if (cfg && cfg.monedaPrincipal) monedaPrincipalCache = cfg.monedaPrincipal;
       }).catch(() => {});
     }
   }

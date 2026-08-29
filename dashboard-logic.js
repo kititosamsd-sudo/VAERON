@@ -17,6 +17,12 @@ window.Dashboard = (function () {
   // lo configuró.
   let umbralStock = 5;
 
+  // Si el Dashboard debe mostrar el KPI rojo + panel "Stock bajo" —
+  // configurable desde Configuración (ver setAlertaDashboard en
+  // firebase.js). true por defecto: si la tienda nunca lo tocó, el
+  // Dashboard se sigue viendo como siempre.
+  let alertaDashboardActiva = true;
+
   // Nombres reales y cuáles almacenes están activos para esta tienda
   // (hasta 6, según plan — ver plan-limits.js). Se carga una vez en
   // init(); null mientras tanto = usar el fallback de 3 fijos de
@@ -64,9 +70,18 @@ window.Dashboard = (function () {
     const elLow = document.getElementById('dashLowStock');
     if (!elValue) return; // la vista ya no está montada (se navegó a otra pantalla)
 
-    elValue.textContent = `S/ ${value.toLocaleString('es-PE', { maximumFractionDigits: 0 })}`;
-    elTotal.textContent = total.toLocaleString('es-PE');
-    elLow.textContent = low.toLocaleString('es-PE');
+    elValue.textContent = `S/ ${value.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 })}`;
+    elTotal.textContent = total.toLocaleString(formatoNumeroActivo());
+    elLow.textContent = low.toLocaleString(formatoNumeroActivo());
+
+    // "Alerta en el dashboard" (Configuración) — con la alerta
+    // apagada, se ocultan el KPI rojo y el panel entero de "Stock
+    // bajo" de abajo; el resto del Dashboard sigue igual.
+    const kpiCard = document.getElementById('dashLowStockKpiCard');
+    const lowStockPanel = document.getElementById('dashLowStockPanel');
+    if (kpiCard) kpiCard.style.display = alertaDashboardActiva ? '' : 'none';
+    if (lowStockPanel) lowStockPanel.style.display = alertaDashboardActiva ? '' : 'none';
+    if (!alertaDashboardActiva) return;
 
     const list = document.getElementById('dashLowStockList');
     if (!list) return;
@@ -132,10 +147,10 @@ window.Dashboard = (function () {
     const margenTotal = ventaTotal - costoTotal;
     const margenPct = ventaTotal > 0 ? (margenTotal / ventaTotal) * 100 : 0;
 
-    const fmt = (n) => `S/ ${n.toLocaleString('es-PE', { maximumFractionDigits: 0 })}`;
+    const fmt = (n) => `S/ ${n.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 })}`;
     document.getElementById('dashCostTotal').textContent = fmt(costoTotal);
     document.getElementById('dashMarginTotal').textContent = fmt(margenTotal);
-    document.getElementById('dashMarginPct').textContent = `${margenPct.toLocaleString('es-PE', { maximumFractionDigits: 1 })}%`;
+    document.getElementById('dashMarginPct').textContent = `${margenPct.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 1 })}%`;
 
     const list = document.getElementById('dashTopMarginList');
     if (!list) return;
@@ -154,7 +169,7 @@ window.Dashboard = (function () {
           <div class="dash-row-title">${escapeHtml(p.name || p.code || '')}</div>
           <div class="dash-row-meta">${escapeHtml(displayProductCode ? displayProductCode(p.code || '') : (p.code || ''))}</div>
         </div>
-        <div class="dash-row-value">S/ ${margenUnit.toLocaleString('es-PE', { maximumFractionDigits: 2 })}</div>
+        <div class="dash-row-value">S/ ${margenUnit.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 2 })}</div>
       </div>
     `).join('');
   }
@@ -207,13 +222,13 @@ window.Dashboard = (function () {
     if (!summaryEl || !canvas || !window.Chart) return;
 
     const { items, totalValue, totalCount, tierA, tierB, tierC } = buildAbcAnalysis(products);
-    const fmt = (n) => `S/ ${n.toLocaleString('es-PE', { maximumFractionDigits: 0 })}`;
+    const fmt = (n) => `S/ ${n.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 })}`;
 
     if (totalCount === 0) {
       summaryEl.textContent = 'Sin datos suficientes todavía (falta precio o stock en los productos).';
     } else {
       const pctA = (tierA.count / totalCount) * 100;
-      summaryEl.innerHTML = `<strong>${tierA.count}</strong> de ${totalCount} productos (${pctA.toLocaleString('es-PE', { maximumFractionDigits: 1 })}%) concentran el 80% del valor total (${fmt(totalValue)}).`;
+      summaryEl.innerHTML = `<strong>${tierA.count}</strong> de ${totalCount} productos (${pctA.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 1 })}%) concentran el 80% del valor total (${fmt(totalValue)}).`;
     }
 
     if (abcChart) { abcChart.destroy(); abcChart = null; }
@@ -248,7 +263,7 @@ window.Dashboard = (function () {
       legendEl.innerHTML = tiers.map(t => `
         <div class="dash-legend-item">
           <span class="dash-abc-tier" style="background:${ABC_COLORS[t.key]}">${t.key}</span>
-          ${t.label} · ${t.count.toLocaleString('es-PE')} prod.
+          ${t.label} · ${t.count.toLocaleString(formatoNumeroActivo())} prod.
         </div>
       `).join('');
     }
@@ -309,7 +324,7 @@ window.Dashboard = (function () {
     const listEl = document.getElementById('dashWarehouseValueList');
     if (!listEl) return;
     const { rows, totalValue } = buildWarehouseValueData(products);
-    const fmt = (n) => `S/ ${n.toLocaleString('es-PE', { maximumFractionDigits: 0 })}`;
+    const fmt = (n) => `S/ ${n.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 })}`;
 
     if (totalValue === 0) {
       listEl.innerHTML = '<p class="dash-empty">Sin datos suficientes todavía.</p>';
@@ -325,7 +340,7 @@ window.Dashboard = (function () {
             <span class="dash-wh-value-amount">${fmt(r.value)}</span>
           </div>
           <div class="dash-wh-value-track"><div class="dash-wh-value-fill" style="width:${pct}%;background:${color}"></div></div>
-          <span class="dash-wh-value-meta">${r.units.toLocaleString('es-PE')} unidades · ${pct.toLocaleString('es-PE', { maximumFractionDigits: 1 })}% del valor</span>
+          <span class="dash-wh-value-meta">${r.units.toLocaleString(formatoNumeroActivo())} unidades · ${pct.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 1 })}% del valor</span>
         </div>
       `;
     }).join('');
@@ -439,7 +454,7 @@ window.Dashboard = (function () {
           <div class="dash-health-metric" title="${escapeHtml(m.detail)}">
             <div class="dash-health-metric-top">
               <span class="dash-health-metric-label">${escapeHtml(m.label)}</span>
-              <span class="dash-health-metric-val">${pct.toLocaleString('es-PE', { maximumFractionDigits: 0 })}%</span>
+              <span class="dash-health-metric-val">${pct.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 })}%</span>
             </div>
             <div class="dash-health-metric-track"><div class="dash-health-metric-fill" style="width:${pct}%;background:${color}"></div></div>
           </div>
@@ -602,20 +617,20 @@ window.Dashboard = (function () {
 
     if (totalCount > 0) {
       const pctA = (tierA.count / totalCount) * 100;
-      insights.push({ type: 'info', text: `El <strong>tramo A</strong> concentra el 80% del valor en solo ${pctA.toLocaleString('es-PE', { maximumFractionDigits: 1 })}% de tus productos (${tierA.count} de ${totalCount}).` });
+      insights.push({ type: 'info', text: `El <strong>tramo A</strong> concentra el 80% del valor en solo ${pctA.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 1 })}% de tus productos (${tierA.count} de ${totalCount}).` });
     }
 
     if (whTotal > 0 && whRows.length > 1) {
       const top = whRows.reduce((a, b) => (b.value > a.value ? b : a));
       const pct = (top.value / whTotal) * 100;
       if (pct >= 60) {
-        insights.push({ type: 'warn', text: `<strong>${escapeHtml(top.label)}</strong> concentra el ${pct.toLocaleString('es-PE', { maximumFractionDigits: 0 })}% del valor de tu inventario — considera redistribuir stock.` });
+        insights.push({ type: 'warn', text: `<strong>${escapeHtml(top.label)}</strong> concentra el ${pct.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 })}% del valor de tu inventario — considera redistribuir stock.` });
       }
     }
 
     if (health.pctCostCoverage < 100) {
       const faltan = health.total - health.conCosto;
-      insights.push({ type: 'info', text: `Te falta cargar el costo en <strong>${faltan}</strong> producto${faltan === 1 ? '' : 's'} (${(100 - health.pctCostCoverage).toLocaleString('es-PE', { maximumFractionDigits: 0 })}%) — sin eso, el panel de Rentabilidad no los incluye.` });
+      insights.push({ type: 'info', text: `Te falta cargar el costo en <strong>${faltan}</strong> producto${faltan === 1 ? '' : 's'} (${(100 - health.pctCostCoverage).toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 })}%) — sin eso, el panel de Rentabilidad no los incluye.` });
     }
 
     if (health.diversificacion < 40) {
@@ -700,7 +715,7 @@ window.Dashboard = (function () {
 
   function renderClientStats(clients) {
     const elClients = document.getElementById('dashClientCount');
-    if (elClients) elClients.textContent = clients.length.toLocaleString('es-PE');
+    if (elClients) elClients.textContent = clients.length.toLocaleString(formatoNumeroActivo());
   }
 
   // Muestra/oculta la tarjeta "Clientes registrados" según el plan —
@@ -756,7 +771,7 @@ window.Dashboard = (function () {
     const { labels, totals } = buildWarehouseChartData(products);
     const totalUnits = totals.reduce((s, n) => s + n, 0);
 
-    if (totalEl) totalEl.textContent = `${totalUnits.toLocaleString('es-PE')} u.`;
+    if (totalEl) totalEl.textContent = `${totalUnits.toLocaleString(formatoNumeroActivo())} u.`;
 
     if (totalUnits === 0) {
       listEl.innerHTML = '<p class="dash-empty">Sin stock registrado todavía.</p>';
@@ -771,10 +786,10 @@ window.Dashboard = (function () {
         <div class="dash-wh-value-row">
           <div class="dash-wh-value-top">
             <span class="dash-wh-value-name">${escapeHtml(label)}</span>
-            <span class="dash-wh-value-amount">${units.toLocaleString('es-PE')} u.</span>
+            <span class="dash-wh-value-amount">${units.toLocaleString(formatoNumeroActivo())} u.</span>
           </div>
           <div class="dash-wh-value-track"><div class="dash-wh-value-fill" style="width:${pct}%;background:${color}"></div></div>
-          <span class="dash-wh-value-meta">${pct.toLocaleString('es-PE', { maximumFractionDigits: 1 })}% del stock total</span>
+          <span class="dash-wh-value-meta">${pct.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 1 })}% del stock total</span>
         </div>
       `;
     }).join('');
@@ -790,7 +805,7 @@ window.Dashboard = (function () {
         return `
           <span class="dash-legend-item">
             <span class="dash-legend-dot" style="background:${color}"></span>
-            ${escapeHtml(label)} · ${totals[i].toLocaleString('es-PE')} u. (${pct.toLocaleString('es-PE', { maximumFractionDigits: 0 })}%)
+            ${escapeHtml(label)} · ${totals[i].toLocaleString(formatoNumeroActivo())} u. (${pct.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 })}%)
           </span>
         `;
       }).join('');
@@ -829,8 +844,8 @@ window.Dashboard = (function () {
     // con una categoría real (ver buildCategoryChartData()).
     const colors = labels.map((label, i) => label === 'otros' ? CATEGORY_OTHER_COLOR : CATEGORY_COLORS[i % CATEGORY_COLORS.length]);
 
-    if (totalEl) totalEl.textContent = grandTotal.toLocaleString('es-PE');
-    if (headerTotalEl) headerTotalEl.textContent = `${grandTotal.toLocaleString('es-PE')} u.`;
+    if (totalEl) totalEl.textContent = grandTotal.toLocaleString(formatoNumeroActivo());
+    if (headerTotalEl) headerTotalEl.textContent = `${grandTotal.toLocaleString(formatoNumeroActivo())} u.`;
 
     if (categoryChart) { categoryChart.destroy(); categoryChart = null; }
     categoryChart = new Chart(canvas, {
@@ -861,7 +876,7 @@ window.Dashboard = (function () {
         return `
           <div class="dash-legend-item">
             <span class="dash-legend-dot" style="background:${colors[i]}"></span>
-            ${escapeHtml(label)} · ${totals[i].toLocaleString('es-PE')} u. (${pct.toLocaleString('es-PE', { maximumFractionDigits: 0 })}%)
+            ${escapeHtml(label)} · ${totals[i].toLocaleString(formatoNumeroActivo())} u. (${pct.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 })}%)
           </div>
         `;
       }).join('');
@@ -911,10 +926,14 @@ window.Dashboard = (function () {
           .then(cfg => {
             if (cfg && cfg.stockBajoUmbral !== undefined && cfg.stockBajoUmbral !== null) {
               umbralStock = Number(cfg.stockBajoUmbral);
-              if (latestProducts.length) renderStockStats(latestProducts);
             }
+            // false explícito = apagada; cualquier otro valor (incluido
+            // "nunca configurado") se lee como prendida, igual que el
+            // resto de estos toggles.
+            alertaDashboardActiva = !(cfg && cfg.alertaStockDashboard === false);
+            if (latestProducts.length) renderStockStats(latestProducts);
           })
-          .catch(() => {}); // valor por defecto (5) ya está puesto arriba
+          .catch(() => {}); // valores por defecto ya están puestos arriba
       }
 
       // Nombres reales + cuáles almacenes están activos, para que el
@@ -964,6 +983,26 @@ window.Dashboard = (function () {
     if (latestProducts.length) renderStockStats(latestProducts);
   }
 
+  // Mismo patrón que setUmbralStock() de arriba, pero para el toggle
+  // de "Alerta en el dashboard".
+  function setAlertaDashboard(activa) {
+    alertaDashboardActiva = !!activa;
+    if (latestProducts.length) renderStockStats(latestProducts);
+  }
+
+  // Llamado desde Configuración cuando se guarda un formato de
+  // números nuevo en la misma sesión (SPA) — formatoNumeroActivo()
+  // ya está actualizado (ver setFormatoNumero en firebase.js), acá
+  // solo falta repintar lo que ya estaba en pantalla con el formato
+  // viejo.
+  function refreshFormatoNumero() {
+    if (!latestProducts.length) return;
+    renderStockStats(latestProducts);
+    renderProductCharts();
+    renderProfitPanel(latestProducts);
+    renderAdvancedPanel(latestProducts);
+  }
+
   // Llamado desde auth-guard.js cuando el plan de la tienda cambia en
   // vivo (el súper-admin lo sube/baja desde Facturación), para que la
   // etiqueta de plan y el panel de Rentabilidad se actualicen al
@@ -977,5 +1016,5 @@ window.Dashboard = (function () {
     }
   }
 
-  return { init, setUmbralStock, refreshPlan };
+  return { init, setUmbralStock, setAlertaDashboard, refreshFormatoNumero, refreshPlan };
 })();

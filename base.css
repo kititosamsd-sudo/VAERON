@@ -636,10 +636,9 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
 .settings-static-row.settings-static-row-clickable:hover { color: var(--accent); }
 .settings-static-row.settings-static-row-clickable:hover .settings-static-val { color: var(--accent); }
 
-/* Toggle — visual únicamente por ahora (no persiste en Firebase);
-   togglePreviewVisual() en configuracion-logic.js solo cambia la
-   clase para que se sienta interactivo mientras se define si esta
-   alerta se conecta a algo real. */
+/* Toggle — usado por "Alerta en el dashboard" (Configuración), ahora
+   conectado de verdad a tiendas/{tiendaId}/config/alertaStockDashboard
+   (ver toggleAlertaDashboard() en configuracion-logic.js). */
 .toggle-switch {
   width: 40px; height: 24px; border-radius: 999px; background: var(--border-strong);
   display: flex; align-items: center; padding: 2px; cursor: pointer;
@@ -1015,6 +1014,23 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .form-input::placeholder { color: var(--text-3); }
+
+/* Campo de contraseña con ojito para mostrar/ocultar — el input
+   nunca cambia de tamaño, solo gana espacio a la derecha para el
+   botón. */
+.pw-field-wrap { position: relative; width: 100%; }
+.pw-field-wrap .form-input { padding-right: 38px; }
+.pw-toggle-btn {
+  position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
+  width: 28px; height: 28px; border: none; background: none;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); cursor: pointer; border-radius: var(--r-sm);
+}
+.pw-toggle-btn:hover { color: var(--text-1); background: var(--ink-soft); }
+.pw-toggle-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pw-toggle-btn .pw-eye-off { display: none; }
+.pw-toggle-btn.showing .pw-eye { display: none; }
+.pw-toggle-btn.showing .pw-eye-off { display: block; }
 
 .form-select {
   width: 100%; height: 36px;

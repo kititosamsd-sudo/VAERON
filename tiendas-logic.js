@@ -102,6 +102,7 @@ function openEditTienda(tiendaId) {
   if (!t) return;
   editingTiendaId = tiendaId;
   document.getElementById('tiendaEditError').style.display = 'none';
+  document.getElementById('tiendaResetPasswordMsg').textContent = '';
   document.getElementById('editTiendaNombre').value = t.nombre || '';
   document.getElementById('editTiendaTelefono').value = t.telefono || '';
   document.getElementById('editTiendaCiudad').value = t.ciudad || '';
@@ -144,6 +145,34 @@ async function guardarEdicionTienda() {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Guardar cambios';
+  }
+}
+
+// Como el SDK cliente no deja cambiarle la contraseña a otra cuenta
+// (ver comentario en enviarResetPasswordAdmin, firebase.js), lo que
+// hace este botón es mandarle al administrador de la tienda un
+// correo real de Firebase para que él mismo ponga su contraseña
+// nueva — no queda ninguna contraseña vieja visible ni reutilizable.
+async function enviarResetPasswordTiendaForm() {
+  if (!editingTiendaId) return;
+  const t = tiendasCache.find(x => x.tiendaId === editingTiendaId);
+  const msg = document.getElementById('tiendaResetPasswordMsg');
+  const btn = document.getElementById('btnResetPasswordTienda');
+  if (!t || !t.adminCorreo) {
+    if (msg) { msg.textContent = 'Esta tienda no tiene un correo de administrador identificado.'; msg.style.color = 'var(--red)'; }
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  if (msg) msg.textContent = '';
+  try {
+    await enviarResetPasswordAdmin(t.adminCorreo, t.proyecto, editingTiendaId);
+    if (msg) { msg.textContent = `Correo enviado a ${t.adminCorreo}.`; msg.style.color = 'var(--text-3)'; }
+  } catch (err) {
+    if (msg) { msg.textContent = err.message || 'No se pudo enviar el correo.'; msg.style.color = 'var(--red)'; }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Enviar correo para restablecerla';
   }
 }
 

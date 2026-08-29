@@ -68,6 +68,20 @@ function actualizarContadorNombre() {
   hint.classList.toggle('bad', len >= max);
 }
 
+// ── Ojito de mostrar/ocultar contraseña ─────────────────────────
+// Alterna el input entre type="password" (oculto, por defecto) y
+// type="text" (visible) — el valor nunca se toca, solo cómo se ve.
+function togglePasswordVisibility(inputId, btnEl) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const mostrando = input.type === 'text';
+  input.type = mostrando ? 'password' : 'text';
+  if (btnEl) {
+    btnEl.classList.toggle('showing', !mostrando);
+    btnEl.setAttribute('aria-label', mostrando ? 'Mostrar contraseña' : 'Ocultar contraseña');
+  }
+}
+
 // ── Fuerza de la nueva contraseña + coincidencia con la confirmación
 //    (en vivo, mientras la persona escribe — no espera al submit) ──
 function evaluarFuerzaPassword() {

@@ -24,6 +24,9 @@ window.Configuracion = {
     cargarLogoPreview();
     actualizarTemaLabel();
     renderConfigPlanBadge();
+    cargarAlertaDashboard();
+    cargarMonedaPrincipal();
+    cargarFormatoNumero();
   }
 };
 
@@ -258,8 +261,88 @@ function guardarTasaCambio() {
     });
 }
 
-/* ── Almacenes ────────────────────────────────────────────────── */
-// Estado local de la tarjeta: se carga una vez con getAlmacenesConfig()
+/* ── Moneda principal ─────────────────────────────────────────── */
+function cargarMonedaPrincipal() {
+  const select = document.getElementById('selectMonedaPrincipal');
+  const sub = document.getElementById('monedaPrincipalSub');
+  if (!select) return;
+  getTiendaConfig()
+    .then(cfg => {
+      const moneda = (cfg && cfg.monedaPrincipal === 'USD') ? 'USD' : 'PEN';
+      select.value = moneda;
+      if (sub) sub.textContent = moneda === 'USD' ? 'Dólares ($)' : 'Soles (S/)';
+    })
+    .catch(() => {});
+}
+
+function guardarMonedaPrincipal() {
+  const select = document.getElementById('selectMonedaPrincipal');
+  const msg = document.getElementById('monedaPrincipalMsg');
+  const btn = document.getElementById('btnGuardarMonedaPrincipal');
+  const moneda = select.value === 'USD' ? 'USD' : 'PEN';
+
+  btn.disabled = true;
+  btn.textContent = 'Guardando…';
+  setMonedaPrincipal(moneda)
+    .then(() => {
+      if (msg) { msg.textContent = 'Guardado. Así viene marcada la próxima vez que agregues un producto.'; msg.style.color = 'var(--text-3)'; }
+      const sub = document.getElementById('monedaPrincipalSub');
+      if (sub) sub.textContent = moneda === 'USD' ? 'Dólares ($)' : 'Soles (S/)';
+      // Si Stock ya está montado en esta misma sesión (SPA), que el
+      // próximo "Agregar producto" ya la use sin recargar.
+      if (typeof monedaPrincipalCache !== 'undefined') monedaPrincipalCache = moneda;
+    })
+    .catch(err => {
+      if (msg) { msg.textContent = 'No se pudo guardar: ' + (err.message || err); msg.style.color = 'var(--red)'; }
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
+    });
+}
+
+/* ── Formato de números ───────────────────────────────────────── */
+function cargarFormatoNumero() {
+  const select = document.getElementById('selectFormatoNumero');
+  const sub = document.getElementById('formatoNumeroSub');
+  if (!select) return;
+  getTiendaConfig()
+    .then(cfg => {
+      const formato = (cfg && cfg.formatoNumero === 'es-ES') ? 'es-ES' : 'es-PE';
+      select.value = formato;
+      if (sub) sub.textContent = formato === 'es-ES' ? '1.234,56' : '1,234.56';
+    })
+    .catch(() => {});
+}
+
+function guardarFormatoNumero() {
+  const select = document.getElementById('selectFormatoNumero');
+  const msg = document.getElementById('formatoNumeroMsg');
+  const btn = document.getElementById('btnGuardarFormatoNumero');
+  const formato = select.value === 'es-ES' ? 'es-ES' : 'es-PE';
+
+  btn.disabled = true;
+  btn.textContent = 'Guardando…';
+  setFormatoNumero(formato)
+    .then(() => {
+      if (msg) { msg.textContent = 'Formato guardado. Se aplica desde ahora en toda la app.'; msg.style.color = 'var(--text-3)'; }
+      const sub = document.getElementById('formatoNumeroSub');
+      if (sub) sub.textContent = formato === 'es-ES' ? '1.234,56' : '1,234.56';
+      // setFormatoNumero() de firebase.js ya actualizó el cache en
+      // memoria (formatoNumeroActivo()) — si Dashboard o Stock ya
+      // están montados en esta misma sesión, se repintan para que
+      // se note al toque, sin esperar a navegar de nuevo a esa vista.
+      if (window.Dashboard && typeof window.Dashboard.refreshFormatoNumero === 'function') window.Dashboard.refreshFormatoNumero();
+      if (typeof renderProducts === 'function') renderProducts();
+    })
+    .catch(err => {
+      if (msg) { msg.textContent = 'No se pudo guardar: ' + (err.message || err); msg.style.color = 'var(--red)'; }
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
+    });
+}
 // y se re-renderiza en el DOM cada vez que cambia (agregar/eliminar).
 // Los nombres solo se mandan a Firebase al tocar "Guardar nombres";
 // agregar y eliminar sí pegan a Firebase al toque, porque eliminar
@@ -515,11 +598,37 @@ function guardarUmbralStock() {
     });
 }
 
-// Toggle puramente visual (Preferencias generales / alerta de stock
-// bajo en dashboard): todavía no persiste nada en Firebase, solo
-// refleja el estado en la UI mientras se decide si se conecta a una
-// preferencia real.
-function togglePreviewVisual(btn) {
+// Alerta de stock bajo en el Dashboard — persiste de verdad en
+// tiendas/{tiendaId}/config/alertaStockDashboard (ver
+// setAlertaDashboard en firebase.js). Antes era un toggle puramente
+// visual ("Próximamente"); ahora sí controla si el Dashboard muestra
+// el KPI rojo y el panel de "Stock bajo".
+function cargarAlertaDashboard() {
+  const btn = document.getElementById('toggleAlertaDashboard');
   if (!btn) return;
-  btn.classList.toggle('active');
+  getTiendaConfig()
+    .then(cfg => {
+      const activa = cfg && cfg.alertaStockDashboard === false ? false : true;
+      btn.classList.toggle('active', activa);
+    })
+    .catch(() => {});
+}
+
+function toggleAlertaDashboard(btn) {
+  if (!btn) return;
+  const activa = !btn.classList.contains('active');
+  btn.classList.toggle('active', activa);
+  btn.disabled = true;
+  setAlertaDashboard(activa)
+    .then(() => {
+      if (window.Dashboard && typeof window.Dashboard.setAlertaDashboard === 'function') {
+        window.Dashboard.setAlertaDashboard(activa);
+      }
+    })
+    .catch(() => {
+      // Si falla el guardado, la vuelve a su estado anterior en vez
+      // de dejar la UI mintiendo sobre lo que quedó guardado.
+      btn.classList.toggle('active', !activa);
+    })
+    .finally(() => { btn.disabled = false; });
 }

@@ -311,6 +311,17 @@ const authReady = new Promise(resolve => {
       }).catch(() => {});
     }
 
+    // Formato de números (Configuración → Moneda y formato) — se
+    // cachea una sola vez acá, ANTES de que Dashboard o Stock
+    // pinten nada, para que ya salgan con el formato correcto desde
+    // el primer render en vez de "saltar" de es-PE al elegido apenas
+    // termine de cargar.
+    if (currentTiendaId && typeof getTiendaConfig === 'function' && typeof setFormatoNumeroCache === 'function') {
+      getTiendaConfig().then(cfg => {
+        if (cfg && cfg.formatoNumero) setFormatoNumeroCache(cfg.formatoNumero);
+      }).catch(() => {});
+    }
+
     resolve({ user, role: currentUserRole, name: currentUserName, uid: currentUserUid, tiendaId: currentTiendaId, profile: currentUserProfile });
   });
 });

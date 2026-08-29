@@ -71,17 +71,35 @@
         <div class="settings-card-control" style="display:flex;flex-direction:column;gap:10px">
           <div class="form-group" style="width:100%;margin-bottom:0">
             <label class="form-label">Contraseña actual</label>
-            <input class="form-input" id="pwActual" type="password" autocomplete="current-password">
+            <div class="pw-field-wrap">
+              <input class="form-input" id="pwActual" type="password" autocomplete="current-password">
+              <button type="button" class="pw-toggle-btn" onclick="togglePasswordVisibility('pwActual', this)" aria-label="Mostrar contraseña actual" title="Mostrar/ocultar">
+                <svg class="pw-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="pw-eye-off" viewBox="0 0 24 24"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.3 20.3 0 0 1 4.22-5.06M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a20.4 20.4 0 0 1-2.36 3.36M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
           </div>
           <div class="settings-field">
             <label class="form-label">Nueva contraseña</label>
-            <input class="form-input" id="pwNueva" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" oninput="evaluarFuerzaPassword()">
+            <div class="pw-field-wrap">
+              <input class="form-input" id="pwNueva" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" oninput="evaluarFuerzaPassword()">
+              <button type="button" class="pw-toggle-btn" onclick="togglePasswordVisibility('pwNueva', this)" aria-label="Mostrar contraseña nueva" title="Mostrar/ocultar">
+                <svg class="pw-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="pw-eye-off" viewBox="0 0 24 24"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.3 20.3 0 0 1 4.22-5.06M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a20.4 20.4 0 0 1-2.36 3.36M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
             <div class="pw-strength-track"><div class="pw-strength-fill" id="pwStrengthFill"></div></div>
             <span class="settings-field-hint" id="pwStrengthLabel"></span>
           </div>
           <div class="settings-field">
             <label class="form-label">Confirmar nueva contraseña</label>
-            <input class="form-input" id="pwConfirmar" type="password" autocomplete="new-password" oninput="evaluarFuerzaPassword()">
+            <div class="pw-field-wrap">
+              <input class="form-input" id="pwConfirmar" type="password" autocomplete="new-password" oninput="evaluarFuerzaPassword()">
+              <button type="button" class="pw-toggle-btn" onclick="togglePasswordVisibility('pwConfirmar', this)" aria-label="Mostrar confirmación de contraseña" title="Mostrar/ocultar">
+                <svg class="pw-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="pw-eye-off" viewBox="0 0 24 24"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.3 20.3 0 0 1 4.22-5.06M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a20.4 20.4 0 0 1-2.36 3.36M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
             <span class="settings-field-hint" id="pwMatchHint"></span>
           </div>
         </div>

@@ -23,28 +23,60 @@
             <p class="cfg-panel-desc">Moneda, umbrales de stock y almacenes.</p>
           </div>
 
-          <!-- Moneda y formato — tasa de cambio (real) + moneda/formato (aún no configurable) -->
+          <!-- Moneda y formato — las tres, reales -->
           <div class="cfg-group" id="configCardMoneda">
             <div class="cfg-group-heading"><span class="cfg-chip-dot blue"></span>Moneda y formato</div>
             <div class="cfg-card">
               <div class="cfg-row">
                 <div class="cfg-row-left">
                   <span class="cfg-row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5v11M15 9.2c0-1.2-1.3-2.2-3-2.2s-3 .9-3 2.1c0 3 6 1.4 6 4.4 0 1.2-1.3 2.1-3 2.1s-3-1-3-2.2"/></svg></span>
-                  <div class="cfg-row-text"><div class="cfg-row-label">Moneda principal</div></div>
+                  <div class="cfg-row-text">
+                    <div class="cfg-row-label">Moneda principal</div>
+                    <div class="cfg-row-sub" id="monedaPrincipalSub">Soles (S/)</div>
+                  </div>
                 </div>
                 <div class="cfg-row-right">
-                  <span style="font-size:13px;color:var(--text-3);margin-right:6px">USD - Dólar</span>
-                  <span class="settings-soon-tag">Próximamente</span>
+                  <button type="button" class="btn btn-primary btn-sm" onclick="toggleCfgEdit('boxMonedaPrincipal')">Editar</button>
+                </div>
+              </div>
+              <div class="cfg-edit-box" id="boxMonedaPrincipal">
+                <div class="settings-row" style="margin-top:6px">
+                  <span class="settings-row-label">Preseleccionada al agregar un producto</span>
+                  <select class="form-input" id="selectMonedaPrincipal" style="max-width:180px">
+                    <option value="PEN">Soles (S/)</option>
+                    <option value="USD">Dólares ($)</option>
+                  </select>
+                </div>
+                <p class="settings-field-hint" style="margin-top:2px">No cambia la moneda de ningún producto que ya tengas cargado — cada producto sigue con la suya propia.</p>
+                <div class="settings-card-footer" style="margin-top:10px">
+                  <p id="monedaPrincipalMsg" class="settings-msg"></p>
+                  <button class="btn btn-primary btn-sm" id="btnGuardarMonedaPrincipal" onclick="guardarMonedaPrincipal()">Guardar</button>
                 </div>
               </div>
               <div class="cfg-row">
                 <div class="cfg-row-left">
                   <span class="cfg-row-icon"><svg viewBox="0 0 24 24"><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="10" y1="4" x2="8" y2="20"/><line x1="16" y1="4" x2="14" y2="20"/></svg></span>
-                  <div class="cfg-row-text"><div class="cfg-row-label">Formato de números</div></div>
+                  <div class="cfg-row-text">
+                    <div class="cfg-row-label">Formato de números</div>
+                    <div class="cfg-row-sub" id="formatoNumeroSub">1,234.56</div>
+                  </div>
                 </div>
                 <div class="cfg-row-right">
-                  <span style="font-size:13px;color:var(--text-3);margin-right:6px">1,234.56</span>
-                  <span class="settings-soon-tag">Próximamente</span>
+                  <button type="button" class="btn btn-primary btn-sm" onclick="toggleCfgEdit('boxFormatoNumero')">Editar</button>
+                </div>
+              </div>
+              <div class="cfg-edit-box" id="boxFormatoNumero">
+                <div class="settings-row" style="margin-top:6px">
+                  <span class="settings-row-label">Formato</span>
+                  <select class="form-input" id="selectFormatoNumero" style="max-width:220px">
+                    <option value="es-PE">1,234.56 (coma miles, punto decimal)</option>
+                    <option value="es-ES">1.234,56 (punto miles, coma decimal)</option>
+                  </select>
+                </div>
+                <p class="settings-field-hint" style="margin-top:2px">Se aplica a los montos y cantidades del Dashboard e Inventario.</p>
+                <div class="settings-card-footer" style="margin-top:10px">
+                  <p id="formatoNumeroMsg" class="settings-msg"></p>
+                  <button class="btn btn-primary btn-sm" id="btnGuardarFormatoNumero" onclick="guardarFormatoNumero()">Guardar</button>
                 </div>
               </div>
               <div class="cfg-row">
@@ -111,11 +143,11 @@
                   <span class="cfg-row-icon amber"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></span>
                   <div class="cfg-row-text">
                     <div class="cfg-row-label">Alerta en el dashboard</div>
+                    <div class="cfg-row-sub">KPI rojo y panel "Stock bajo" en el Dashboard</div>
                   </div>
                 </div>
                 <div class="cfg-row-right">
-                  <span class="settings-soon-tag">Próximamente</span>
-                  <button type="button" class="toggle-switch active" id="toggleAlertaDashboard" onclick="togglePreviewVisual(this)" aria-label="Mostrar alerta en el dashboard" title="Próximamente">
+                  <button type="button" class="toggle-switch active" id="toggleAlertaDashboard" onclick="toggleAlertaDashboard(this)" aria-label="Mostrar alerta en el dashboard">
                     <span class="toggle-knob"></span>
                   </button>
                 </div>

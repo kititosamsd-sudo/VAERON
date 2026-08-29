@@ -61,6 +61,39 @@ function escapeHtml(str) {
   }[ch]));
 }
 
+// ── Formato de números (Configuración → Moneda y formato) ────────
+// Un solo locale cacheado en memoria — todo toLocaleString() de
+// NÚMEROS de la app pasa por formatoNumeroActivo() en vez de tener
+// 'es-PE' fijo repetido en cada archivo, así cambiarlo en
+// Configuración se nota en todos lados de una sola vez. Las FECHAS
+// (toLocaleDateString) siguen fijas en es-PE aparte a propósito —
+// el formato de números no debería cambiar cómo se ven las fechas.
+let formatoNumeroLocale = 'es-PE'; // por defecto: 1,234.56
+function formatoNumeroActivo() { return formatoNumeroLocale; }
+// Lo llama auth-guard.js al iniciar sesión (mismo patrón que
+// currentTiendaPlan, ver ahí) para que ya esté listo antes del
+// primer render de Dashboard/Stock.
+function setFormatoNumeroCache(locale) {
+  formatoNumeroLocale = (locale === 'es-ES') ? 'es-ES' : 'es-PE';
+}
+function setFormatoNumero(formato) {
+  const locale = (formato === 'es-ES') ? 'es-ES' : 'es-PE';
+  formatoNumeroLocale = locale;
+  return refConfig.update({ formatoNumero: locale });
+}
+
+// ── Moneda principal por defecto (Configuración → Moneda y formato)
+// No cambia la moneda de ningún producto ya cargado — cada producto
+// ya tenía su propio campo currency (USD/PEN) elegible al crearlo,
+// ver stock.js. Esto solo decide qué opción viene preseleccionada
+// al abrir "Agregar producto" — antes era PEN fijo en el HTML
+// (primera <option> del <select>) sin que Configuración lo reflejara
+// de verdad (mostraba "USD" siempre, así nunca se hubiera tocado).
+function setMonedaPrincipal(moneda) {
+  const m = (moneda === 'USD') ? 'USD' : 'PEN';
+  return refConfig.update({ monedaPrincipal: m });
+}
+
 // escapeJsAttr — para cuando el texto va DENTRO de un onclick="..."
 // con argumentos entre comillas simples, ej:
 //   onclick="openEditStock('${escapeJsAttr(p.name)}')"
@@ -262,6 +295,13 @@ function setUmbralStock(valor) {
   const n = Number(valor);
   const stockBajoUmbral = (!isNaN(n) && n >= 0) ? n : 5;
   return refConfig.update({ stockBajoUmbral });
+}
+
+// Mostrar/ocultar el aviso de stock bajo en el Dashboard (KPI rojo +
+// panel "Stock bajo"). true por defecto — si nunca se configuró,
+// el Dashboard sigue mostrándolo como siempre.
+function setAlertaDashboard(activa) {
+  return refConfig.update({ alertaStockDashboard: !!activa });
 }
 
 // ── Logo propio de la tienda (Configuración, plan Medio/Premium) ──
@@ -598,6 +638,24 @@ async function editarAdminNombre(tiendaId, adminUid, nombre, proyecto) {
   return projectDb.ref('tiendas').child(tiendaId).child('usuarios').child(adminUid).update({ nombre }).then(() => {
     registrarEvento('tienda_editada', 'Actualizó el nombre del administrador', tiendaId);
   });
+}
+
+// Cambiar la contraseña de otra persona tiene el mismo límite que
+// cambiarle el correo (ver comentario arriba): el SDK cliente no lo
+// permite sin un backend con Admin SDK, que este proyecto no tiene.
+// Lo que SÍ puede hacer el SDK cliente es esto — mandarle al propio
+// administrador un correo de Firebase para que él mismo entre y
+// ponga su contraseña nueva. Se abre una app secundaria (como en
+// crearTienda) solo para no tocar la sesión del súper-admin.
+async function enviarResetPasswordAdmin(correoAdmin, proyecto, tiendaId) {
+  const projectConfig = FIREBASE_PROJECTS[proyecto].config;
+  const secondaryApp = firebase.initializeApp(projectConfig, 'Secondary-' + Date.now());
+  try {
+    await secondaryApp.auth().sendPasswordResetEmail(correoAdmin);
+    registrarEvento('tienda_editada', `Envió un correo para restablecer la contraseña de ${correoAdmin}`, tiendaId);
+  } finally {
+    await secondaryApp.delete().catch(() => {});
+  }
 }
 
 // Borra una tienda por completo: su nodo entero en /tiendas (info +
