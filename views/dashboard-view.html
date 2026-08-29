@@ -15,25 +15,31 @@
   <div class="page-content">
 
     <div class="dash-stats">
-      <div class="stat-card dash-stat-card">
-        <div class="dash-stat-icon dash-ic-teal">
-          <svg viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <div class="stat-card dash-stat-card dash-stat-hero">
+        <div class="dash-stat-head">
+          <span class="stat-label">Valor de inventario</span>
+          <span class="dash-stat-icon dash-ic-teal">
+            <svg viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          </span>
         </div>
-        <div class="stat-label">Valor de inventario</div>
         <div class="stat-value" id="dashStockValue">—</div>
       </div>
       <div class="stat-card dash-stat-card">
-        <div class="dash-stat-icon dash-ic-copper">
-          <svg viewBox="0 0 24 24"><path d="M20.5 7.3 12 12l-8.5-4.7M12 12v9M3.5 7.3v9.4L12 21l8.5-4.3V7.3L12 3z"/></svg>
+        <div class="dash-stat-head">
+          <span class="stat-label">Productos registrados</span>
+          <span class="dash-stat-icon dash-ic-copper">
+            <svg viewBox="0 0 24 24"><path d="M20.5 7.3 12 12l-8.5-4.7M12 12v9M3.5 7.3v9.4L12 21l8.5-4.3V7.3L12 3z"/></svg>
+          </span>
         </div>
-        <div class="stat-label">Productos registrados</div>
         <div class="stat-value" id="dashProductCount">—</div>
       </div>
-      <div class="stat-card dash-stat-card">
-        <div class="dash-stat-icon dash-ic-red">
-          <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div class="stat-card dash-stat-card dash-stat-risk">
+        <div class="dash-stat-head">
+          <span class="stat-label">Stock bajo</span>
+          <span class="dash-stat-icon dash-ic-red">
+            <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </span>
         </div>
-        <div class="stat-label">Stock bajo</div>
         <div class="stat-value" style="color:var(--red)" id="dashLowStock">—</div>
       </div>
       <!-- Clientes: solo tiene sentido en planes con Pedidos habilitado
@@ -43,10 +49,12 @@
            ver index.html), así que esta tarjeta tampoco se le muestra.
            dashboard-logic.js la oculta/muestra en init(). -->
       <div class="stat-card dash-stat-card" id="dashClientCard">
-        <div class="dash-stat-icon dash-ic-amber">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div class="dash-stat-head">
+          <span class="stat-label">Clientes registrados</span>
+          <span class="dash-stat-icon dash-ic-amber">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
         </div>
-        <div class="stat-label">Clientes registrados</div>
         <div class="stat-value" id="dashClientCount">—</div>
       </div>
     </div>
@@ -56,18 +64,24 @@
       <div class="dash-panel dash-panel-chart">
         <div class="dash-panel-header">
           <h2>Stock por almacén</h2>
+          <span class="dash-panel-metric" id="dashWarehouseUnitsTotal">—</span>
         </div>
-        <div class="dash-chart-wrap">
-          <canvas id="chartWarehouses"></canvas>
+        <div id="dashWarehouseUnitsList" class="dash-wh-value-list">
+          <p class="dash-empty">Cargando…</p>
         </div>
       </div>
 
       <div class="dash-panel dash-panel-chart">
         <div class="dash-panel-header">
           <h2>Stock por categoría</h2>
+          <span class="dash-panel-metric" id="dashCategoryUnitsTotal">—</span>
         </div>
-        <div class="dash-chart-wrap">
+        <div class="dash-chart-wrap dash-donut-wrap">
           <canvas id="chartCategories"></canvas>
+          <div class="dash-donut-center">
+            <div class="dash-donut-center-value" id="dashCategoryDonutTotal">—</div>
+            <div class="dash-donut-center-label">unidades</div>
+          </div>
         </div>
         <div id="chartCategoriesLegend" class="dash-legend"></div>
       </div>
@@ -118,6 +132,138 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- ── Panel avanzado (exclusivo Premium) ──────────────────
+         Tres análisis que solo tienen sentido con volumen real de
+         datos: concentración de valor (ABC/Pareto), comparación de
+         valor entre almacenes (hasta 6 solo en Premium) e índice de
+         salud de inventario. renderAdvancedPanel() en
+         dashboard-logic.js decide qué ve cada plan: en Básico esta
+         sección entera queda oculta (display:none, ni se calcula);
+         en Medio se calcula con datos reales pero queda con blur +
+         candado encima (dashAdvancedLock), para que quede claro que
+         es la propia información de la tienda la que se desbloquea
+         al subir a Premium. -->
+    <div class="dash-advanced-section" id="dashAdvancedSection">
+      <div class="dash-advanced-header">
+        <div class="dash-advanced-eyebrow">
+          <svg viewBox="0 0 24 24" class="dash-crown-icon"><path d="M5 18h14l1.6-9.4-5.1 3-3.5-6.1-3.5 6.1-5.1-3L5 18z"/><path d="M5 18h14"/></svg>
+          Panel avanzado · Premium
+        </div>
+        <h2 class="dash-advanced-title">Análisis inteligente de tu inventario</h2>
+        <p class="dash-advanced-sub">Lo que ves acá se calcula con los datos reales de tu tienda — no es una demostración.</p>
+      </div>
+
+      <div class="dash-advanced-body" id="dashAdvancedBody">
+        <div class="dash-advanced-grid" id="dashAdvancedGrid">
+
+          <!-- Anillos de progreso — 3 indicadores clave de un vistazo,
+               el mismo lenguaje visual que un panel de BI real. -->
+          <div class="dash-ring-row">
+            <div class="dash-ring-card">
+              <div class="dash-ring-wrap">
+                <canvas id="chartRingDisponibilidad"></canvas>
+                <div class="dash-ring-value" id="ringDisponibilidadVal">—</div>
+              </div>
+              <div class="dash-ring-label">Disponibilidad de stock</div>
+            </div>
+            <div class="dash-ring-card">
+              <div class="dash-ring-wrap">
+                <canvas id="chartRingDiversificacion"></canvas>
+                <div class="dash-ring-value" id="ringDiversificacionVal">—</div>
+              </div>
+              <div class="dash-ring-label">Diversificación de categorías</div>
+            </div>
+            <div class="dash-ring-card">
+              <div class="dash-ring-wrap">
+                <canvas id="chartRingCostos"></canvas>
+                <div class="dash-ring-value" id="ringCostosVal">—</div>
+              </div>
+              <div class="dash-ring-label">Cobertura de costos cargados</div>
+            </div>
+          </div>
+
+          <div class="dash-advanced-row-3col">
+
+            <div class="dash-panel dash-panel-abc">
+              <div class="dash-panel-header">
+                <h2>Concentración de valor (ABC)</h2>
+                <span class="dash-plan-badge dash-plan-badge-premium">Premium</span>
+              </div>
+              <p class="dash-abc-summary" id="dashAbcSummary">Cargando…</p>
+              <div class="dash-chart-wrap dash-chart-wrap-sm">
+                <canvas id="chartAbc"></canvas>
+              </div>
+              <div id="dashAbcLegend" class="dash-legend dash-abc-legend"></div>
+              <div id="dashAbcList" class="dash-list"></div>
+            </div>
+
+            <div class="dash-panel dash-panel-wh-value">
+              <div class="dash-panel-header">
+                <h2>Valor por almacén</h2>
+                <span class="dash-plan-badge dash-plan-badge-premium">Premium</span>
+              </div>
+              <div id="dashWarehouseValueList" class="dash-wh-value-list">
+                <p class="dash-empty">Cargando…</p>
+              </div>
+            </div>
+
+            <div class="dash-panel dash-panel-health">
+              <div class="dash-panel-header">
+                <h2>Índice de salud del inventario</h2>
+                <span class="dash-plan-badge dash-plan-badge-premium">Premium</span>
+              </div>
+              <div class="dash-health-wrap">
+                <div class="dash-gauge-wrap">
+                  <canvas id="chartHealth"></canvas>
+                  <div class="dash-gauge-score">
+                    <span id="dashHealthScore">—</span>
+                    <span class="dash-gauge-score-label">/ 100</span>
+                  </div>
+                </div>
+                <div class="dash-health-breakdown" id="dashHealthBreakdown"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="dash-advanced-row-2col">
+
+            <div class="dash-panel dash-panel-radar">
+              <div class="dash-panel-header">
+                <h2>Comparativa entre almacenes</h2>
+                <span class="dash-plan-badge dash-plan-badge-premium">Premium</span>
+              </div>
+              <div class="dash-chart-wrap dash-chart-wrap-radar" id="dashRadarWrap">
+                <canvas id="chartWarehouseRadar"></canvas>
+              </div>
+              <div id="dashRadarLegend" class="dash-legend"></div>
+            </div>
+
+            <div class="dash-panel dash-panel-insights">
+              <div class="dash-panel-header">
+                <h2>Insights inteligentes</h2>
+                <span class="dash-plan-badge dash-plan-badge-premium">Premium</span>
+              </div>
+              <div id="dashInsightsList" class="dash-insights-list">
+                <p class="dash-empty">Cargando…</p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="dash-advanced-lock" id="dashAdvancedLock" style="display:none">
+          <div class="dash-lock-icon-wrap">
+            <svg viewBox="0 0 24 24" class="dash-lock-icon"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          </div>
+          <p class="dash-lock-title">Disponible en el plan Premium</p>
+          <p class="dash-lock-text">Análisis ABC, valor por almacén, comparativa entre almacenes e insights automáticos, calculados con los datos reales de tu tienda. Pídele a tu proveedor que suba tu plan para verlos nítidos.</p>
+        </div>
+
+      </div>
     </div>
 
   </div>

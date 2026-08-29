@@ -33,6 +33,11 @@ const PLAN_LIMITES = {
     // registrados" — no tiene sentido mostrarla si la tienda no puede
     // gestionar clientes en ningún otro lado de la app.
     pedidosDisponible: false,
+    // Panel avanzado del Dashboard (ABC de inventario, valor por
+    // almacén, índice de salud) — ver renderAdvancedPanel() en
+    // dashboard-logic.js. Básico/Medio ven una vista previa
+    // bloqueada del mismo panel, no una ausencia total.
+    panelAvanzado: false,
   },
   medio: {
     maxVendedores: 2,
@@ -46,6 +51,7 @@ const PLAN_LIMITES = {
     compartirImagen: true,
     foro: true,
     pedidosDisponible: true,
+    panelAvanzado: false,
   },
   premium: {
     maxVendedores: Infinity,
@@ -64,6 +70,7 @@ const PLAN_LIMITES = {
     compartirImagen: true,
     foro: true,
     pedidosDisponible: true,
+    panelAvanzado: true,
   },
 };
 

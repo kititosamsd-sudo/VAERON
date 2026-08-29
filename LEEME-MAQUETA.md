@@ -37,12 +37,10 @@ tiendas.
   instante (estén o no con la app abierta) y no pueden volver a
   entrar hasta que la reactives.
 
-**Importante — lo que todavía falta:** el catálogo (productos,
-clientes, notas) sigue viviendo en un solo lugar compartido
-(`/products`, `/clients`, `/orders`), NO separado por tienda todavía.
-Esta capa de cuentas resuelve el login y el panel de administración;
-mover el catálogo para que cada tienda tenga el suyo, totalmente
-aislado, es el siguiente paso.
+**Estado del catálogo:** el catálogo (productos, clientes, notas)
+ya vive separado por tienda, bajo `/tiendas/{tiendaId}/products`,
+`/clients`, `/orders`, etc. — totalmente aislado entre tiendas (ver
+`scopedRef()` en `firebase.js`).
 
 ## Login de administrador (demo)
 - Correo: `adonay@gmail.com`

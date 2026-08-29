@@ -185,11 +185,11 @@ const refConfig   = scopedRef('config');
 //   /tiendas/{tiendaId}/usuarios/{uid} → perfil de esa persona
 //        DENTRO de esa tienda (nombre, correo, rol, activo)
 //
-// Todavía falta mover /products, /clients, /orders para que cada
-// uno viva bajo /tiendas/{tiendaId}/... (así el catálogo de una
-// tienda queda realmente separado del de otra). Por ahora esta
-// capa solo resuelve el login y el panel de "Tiendas" — es el
-// siguiente paso una vez que esto esté probado.
+// /products, /clients, /orders (y config, usuarios, meta) ya viven
+// bajo /tiendas/{tiendaId}/... — ver scopedRef() más abajo, que
+// arma refProducts/refClients/etc. apuntando ahí y bloquea el
+// acceso si no hay tienda activa. El catálogo de una tienda está
+// completamente separado del de otra.
 const refCuentas = db.ref('cuentas');
 const refTiendas = db.ref('tiendas');
 

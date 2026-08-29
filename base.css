@@ -537,6 +537,42 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
   }
 }
 
+/* ─── Configuración: agrupación en secciones ────────────────────
+   Antes las 6 tarjetas caían sueltas en una sola grilla, sin
+   indicar por qué "Almacenes" y "Soporte" son cosas distintas —
+   se sentía como una lista, no una pantalla de ajustes organizada.
+   Se agrupan por función real (ajustes operativos del inventario
+   vs. tienda/cuenta) con un eyebrow por sección, mismo patrón que
+   usan Stripe/Linear Settings. Reutiliza el mismo max-width que
+   .settings-grid para que el ancho no cambie. */
+.settings-groups {
+  display: flex; flex-direction: column; gap: 40px;
+  max-width: 1080px; margin: 0 auto; width: 100%;
+}
+.settings-section-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text-3);
+  margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.settings-section-grid {
+  display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start;
+}
+@media (min-width: 1180px) {
+  .settings-section-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* Badge "Próximamente" — reemplaza el chevron decorativo que antes
+   tenían las filas sin función real todavía (Moneda principal,
+   Formato de números, Idioma). Un chevron ahí sugería que se podía
+   tocar y abría algo; esto es honesto sobre qué está vivo y qué no,
+   sin que la fila deje de verse terminada. */
+.settings-soon-tag {
+  font-size: 10.5px; font-weight: 650; letter-spacing: 0.02em;
+  color: var(--text-3); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 2px 9px; white-space: nowrap;
+}
+
 /* ─── Settings card — usada en Perfil y Configuración ──────────
    Reemplaza el bloque genérico de icono+título+botón suelto por
    una tarjeta con jerarquía clara: cabecera, separador, control,
@@ -686,6 +722,67 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
 .settings-field-hint.warn { color: var(--amber); }
 .settings-field-hint.ok   { color: var(--green); }
 .settings-field-hint.bad  { color: var(--red); }
+
+/* ─── Configuración — layout de rail (nuevo) ────────────────────
+   Reemplaza la grilla de tarjetas sueltas por un rail de categorías
+   + filas agrupadas por color, como Stripe/GitHub Settings. Clases
+   nuevas con prefijo "cfg-" para no tocar .settings-card* (Perfil
+   sigue usando esas tal cual). */
+.cfg-shell {
+  display: flex; gap: 24px; align-items: flex-start;
+  max-width: 780px; margin: 0 auto; width: 100%;
+}
+.cfg-panels { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
+.cfg-panel { display: flex; flex-direction: column; gap: 24px; }
+.cfg-panel-title { font-size: 18px; font-weight: 650; color: var(--text-1); margin: 0 0 2px; letter-spacing: -0.01em; }
+.cfg-panel-desc { font-size: 13.5px; color: var(--text-3); margin: 0; }
+
+.cfg-group { display: flex; flex-direction: column; gap: 9px; }
+.cfg-group-heading {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text-3);
+}
+.cfg-chip-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.cfg-chip-dot.blue   { background: var(--icon-blue); }
+.cfg-chip-dot.amber  { background: var(--icon-amber); }
+.cfg-chip-dot.green  { background: var(--icon-green); }
+.cfg-chip-dot.purple { background: var(--icon-purple); }
+.cfg-chip-dot.slate  { background: var(--icon-gray); }
+
+.cfg-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 0 16px;
+}
+.cfg-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--border);
+}
+.cfg-row:last-child { border-bottom: none; }
+.cfg-row-left { display: flex; align-items: center; gap: 11px; min-width: 0; flex: 1; }
+.cfg-row-icon {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--icon-blue-bg); color: var(--icon-blue);
+}
+.cfg-row-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cfg-row-icon.amber  { background: var(--icon-amber-bg); color: var(--icon-amber); }
+.cfg-row-icon.green  { background: var(--icon-green-bg); color: var(--icon-green); }
+.cfg-row-icon.purple { background: var(--icon-purple-bg); color: var(--icon-purple); }
+.cfg-row-icon.slate  { background: var(--icon-gray-bg); color: var(--icon-gray); }
+.cfg-row-text { min-width: 0; }
+.cfg-row-text .cfg-row-label { font-size: 13.5px; color: var(--text-1); }
+.cfg-row-text .cfg-row-sub { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.cfg-row-right { display: flex; align-items: center; flex-shrink: 0; gap: 8px; }
+
+/* Bloque de edición inline: oculto hasta tocar "Editar" en su fila.
+   Los controles reales (input, preview, botón Guardar) viven acá
+   tal cual estaban antes — solo se muestran/ocultan, nunca se
+   destruyen del DOM, así toda la lógica de configuracion-logic.js
+   sigue funcionando igual. */
+.cfg-edit-box { display: none; padding: 2px 0 14px; border-bottom: 1px solid var(--border); }
+.cfg-edit-box.open { display: block; }
+.cfg-edit-box:last-child { border-bottom: none; }
 
 .pw-strength-track {
   height: 4px; border-radius: 3px; background: var(--surface-2);
@@ -1125,10 +1222,15 @@ td { padding: 13px 18px; vertical-align: middle; }
      acá también por si acaso). Solo se activa en la barra inferior
      cuando el plan pagado agrega 4 secciones más y de verdad hace
      falta agrupar. En plan Básico (4 secciones en total) no hay
-     overflow que agrupar, así que sigue sin aparecer. */
+     overflow que agrupar, así que sigue sin aparecer.
+     OJO: la clase de plan la agrega auth-guard.js en <html>
+     (document.documentElement), no en <body> — por eso acá se
+     escribe "html:not(.plan-basico)" y no "body:not(...)". Con
+     "body" la regla siempre se cumplía (ese <body> nunca tiene la
+     clase) y "Más" aparecía en cualquier plan, incluido Básico. */
   .nav-more-toggle { display: none; }
-  body:not(.plan-basico) .nav-more-toggle { display: flex; }
-  body:not(.plan-basico) .nav-item.nav-mobile-overflow { display: none; }
+  html:not(.plan-basico) .nav-more-toggle { display: flex; }
+  html:not(.plan-basico) .nav-item.nav-mobile-overflow { display: none; }
   /* El súper-admin no tiene botón "Más" (es exclusivo de cuentas de
      tienda — ver .nav-tienda-only en el botón de arriba), así que
      "Perfil" (el único ítem sin restricción de rol que también carga
@@ -1534,7 +1636,7 @@ td { padding: 13px 18px; vertical-align: middle; }
    ========================================================= */
 .dash-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1.3fr 1fr 1fr 1fr;
   gap: 12px;
   margin-bottom: 20px;
 }
@@ -1622,7 +1724,9 @@ td { padding: 13px 18px; vertical-align: middle; }
   color: var(--copper); background: var(--copper-bg);
 }
 .dash-plan-tag.plan-tag-premium {
-  color: var(--accent); background: var(--accent-soft); border-color: var(--accent-border);
+  color: #fff; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-bright) 100%);
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(26,70,196,0.35);
 }
 .dash-profit-summary {
   display: grid;
@@ -1718,18 +1822,80 @@ td { padding: 13px 18px; vertical-align: middle; }
 /* =========================================================
    Dashboard — íconos de las tarjetas y panel de gráficos
    ========================================================= */
-.dash-stat-card { position: relative; padding-top: 44px; }
-.dash-stat-icon {
-  position: absolute; top: 14px; right: 14px;
-  width: 30px; height: 30px;
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
+
+/* Tarjetas de estadística — antes: ícono en una burbuja pastel
+   flotando arriba a la derecha (position:absolute), las 4 iguales.
+   Es EL patrón más repetido de cualquier dashboard genérico. Ahora:
+   el ícono vive en el flujo normal (una fila junto a la etiqueta,
+   ya no flota), y una franja de 3-4px arriba de cada tarjeta marca
+   jerarquía real — no las 4 son igual de importantes:
+     · Valor de inventario (dash-stat-hero) es EL número del negocio:
+       franja más gruesa con el degradado azul del propio logo
+       (ink → accent → accent-bright) y el valor en tipografía más
+       grande que las demás.
+     · Stock bajo (dash-stat-risk) es el único accionable/urgente:
+       franja ámbar→rojo, mismo lenguaje de "alerta" que ya usa el
+       número en rojo debajo.
+     · Productos/Clientes quedan deliberadamente quietas (franja
+       gris acero neutra) — no todo necesita gritar. */
+.dash-stat-card {
+  position: relative;
+  overflow: hidden;
+  padding: 15px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
 }
-.dash-stat-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.dash-ic-teal   { background: var(--accent-soft); color: var(--accent); }
-.dash-ic-copper { background: var(--copper-bg);   color: var(--copper); }
-.dash-ic-amber  { background: rgba(196,138,26,0.12); color: var(--amber); }
-.dash-ic-red    { background: var(--red-bg);      color: var(--red); }
+.dash-stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--border-strong);
+}
+.dash-stat-hero::before {
+  height: 4px;
+  background: linear-gradient(90deg, var(--sb-bg) 0%, var(--accent) 55%, var(--accent-bright) 100%);
+}
+.dash-stat-risk::before { background: linear-gradient(90deg, var(--amber), var(--red)); }
+
+.dash-stat-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dash-stat-card .stat-label { margin: 0; }
+.dash-stat-hero .stat-value { font-size: 27px; }
+.dash-stat-hero .stat-label { font-weight: 700; color: var(--text-2); }
+
+.dash-stat-icon {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid transparent;
+}
+.dash-stat-icon svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dash-ic-teal   { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+.dash-ic-copper { background: var(--copper-bg);   color: var(--copper); border-color: rgba(169,104,46,.28); }
+.dash-ic-amber  { background: rgba(196,138,26,0.12); color: var(--amber); border-color: rgba(196,138,26,.3); }
+.dash-ic-red    { background: var(--red-bg);      color: var(--red); border-color: rgba(178,58,44,.28); }
+
+/* Badge mono en headers de panel (ej. "1,240 u.") — igual criterio
+   que .dash-plan-badge, pero neutro: es un dato, no un estado. */
+.dash-panel-metric {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  color: var(--text-2); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 3px 10px; white-space: nowrap;
+}
+
+/* Centro del donut "Stock por categoría" — antes quedaba un agujero
+   vacío en el medio; ahora muestra el total, mismo criterio que los
+   anillos y el gauge del panel Premium (el centro de un donut es el
+   lugar más natural para el número que resume todo lo de alrededor). */
+.dash-donut-wrap { position: relative; }
+.dash-donut-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.dash-donut-center-value { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-1); }
+.dash-donut-center-label { font-size: 10.5px; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
 
 .dash-charts {
   display: grid;
@@ -1754,3 +1920,147 @@ td { padding: 13px 18px; vertical-align: middle; }
   font-size: 12px; color: var(--text-2);
 }
 .dash-legend-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+
+/* =========================================================
+   Dashboard — Panel avanzado (exclusivo Premium)
+   Ver renderAdvancedPanel() en dashboard-logic.js. Usa el mismo
+   --accent/--copper de siempre, no un color "premium" nuevo — la
+   diferenciación viene del layout (grid de 3, gauge, eyebrow con
+   corona) y del contenido en sí, no de inventar otra paleta.
+   ========================================================= */
+.dash-advanced-section { margin-top: 22px; }
+
+.dash-advanced-header { margin-bottom: 14px; }
+.dash-advanced-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+.dash-crown-icon { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dash-advanced-title { font-size: 17px; font-weight: 700; color: var(--text-1); margin: 0 0 3px; }
+.dash-advanced-sub { font-size: 12.5px; color: var(--text-3); margin: 0; }
+
+.dash-advanced-body { position: relative; }
+
+.dash-advanced-grid { display: flex; flex-direction: column; gap: 16px; transition: filter .15s ease; }
+.dash-advanced-grid.is-locked { filter: blur(6px); pointer-events: none; user-select: none; }
+
+.dash-advanced-row-3col { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 16px; }
+.dash-advanced-row-2col { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+@media (max-width: 1024px) {
+  .dash-advanced-row-3col { grid-template-columns: 1fr; }
+  .dash-advanced-row-2col { grid-template-columns: 1fr; }
+}
+
+/* ── Fila de anillos de progreso ── */
+.dash-ring-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 640px) { .dash-ring-row { grid-template-columns: 1fr; } }
+.dash-ring-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow);
+  padding: 16px; display: flex; align-items: center; gap: 14px;
+}
+.dash-ring-wrap { position: relative; width: 62px; height: 62px; flex-shrink: 0; }
+.dash-ring-value {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 13.5px; font-weight: 700; color: var(--text-1);
+}
+.dash-ring-label { font-size: 12.5px; color: var(--text-2); line-height: 1.35; }
+
+.dash-plan-badge-premium {
+  color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-border);
+}
+
+/* Candado — cubre dash-advanced-grid entero cuando el plan no es
+   Premium (ver display:none/flex desde dashboard-logic.js). */
+.dash-advanced-lock {
+  position: absolute; inset: 0;
+  display: none;
+  flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  gap: 6px;
+  padding: 24px;
+  background: rgba(241, 243, 247, 0.35);
+  border-radius: var(--r-lg);
+}
+:root[data-theme="dark"] .dash-advanced-lock { background: rgba(10, 11, 15, 0.35); }
+.dash-lock-icon-wrap {
+  width: 44px; height: 44px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2);
+  margin-bottom: 4px;
+}
+.dash-lock-icon { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dash-lock-title { font-size: 14.5px; font-weight: 700; color: var(--text-1); margin: 0; }
+.dash-lock-text { font-size: 12.5px; color: var(--text-2); max-width: 380px; line-height: 1.5; margin: 0; }
+
+/* ── Panel ABC ── */
+.dash-abc-summary { font-size: 12.5px; color: var(--text-2); line-height: 1.5; margin: 0 0 10px; }
+.dash-abc-summary strong { color: var(--text-1); font-family: var(--font-mono); }
+.dash-chart-wrap-sm { height: 150px; margin-bottom: 4px; }
+.dash-abc-legend { margin-top: 8px; padding-top: 8px; }
+.dash-abc-tier {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-weight: 700; font-size: 10.5px;
+  width: 15px; height: 15px; border-radius: 4px;
+  color: #fff; justify-content: center; flex-shrink: 0;
+}
+
+/* ── Panel valor por almacén ── */
+.dash-wh-value-list { display: flex; flex-direction: column; gap: 12px; }
+.dash-wh-value-row { display: flex; flex-direction: column; gap: 4px; }
+.dash-wh-value-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.dash-wh-value-name { font-size: 13px; font-weight: 600; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-wh-value-amount { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; color: var(--text-1); white-space: nowrap; flex-shrink: 0; }
+.dash-wh-value-track { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.dash-wh-value-fill { height: 100%; border-radius: 999px; background: var(--accent); }
+.dash-wh-value-meta { font-size: 11px; color: var(--text-3); }
+
+/* ── Panel índice de salud (gauge) ── */
+.dash-health-wrap { display: flex; align-items: center; gap: 18px; }
+.dash-gauge-wrap { position: relative; width: 132px; height: 88px; flex-shrink: 0; }
+.dash-gauge-score {
+  position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%);
+  display: flex; align-items: baseline; gap: 2px;
+  font-family: var(--font-mono); font-weight: 700; color: var(--text-1);
+}
+.dash-gauge-score span:first-child { font-size: 22px; }
+.dash-gauge-score-label { font-size: 11px; color: var(--text-3); font-weight: 600; }
+.dash-health-breakdown { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+.dash-health-metric { display: flex; flex-direction: column; gap: 3px; }
+.dash-health-metric-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dash-health-metric-label { font-size: 12px; color: var(--text-2); }
+.dash-health-metric-val { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text-1); }
+.dash-health-metric-track { height: 4px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.dash-health-metric-fill { height: 100%; border-radius: 999px; }
+@media (max-width: 480px) {
+  .dash-health-wrap { flex-direction: column; }
+}
+
+/* ── Radar comparativo entre almacenes ── */
+.dash-chart-wrap-radar { height: 240px; }
+.dash-panel-radar .dash-legend { margin-top: 6px; }
+
+/* ── Insights inteligentes ── */
+.dash-insights-list { display: flex; flex-direction: column; gap: 10px; }
+.dash-insight-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border-left: 3px solid var(--border-strong);
+  font-size: 12.5px; line-height: 1.5; color: var(--text-2);
+}
+.dash-insight-item strong { color: var(--text-1); }
+.dash-insight-item.is-warn { border-left-color: #B23A2C; }
+.dash-insight-item.is-info { border-left-color: var(--accent); }
+.dash-insight-item.is-good { border-left-color: #146B4C; }
+.dash-insight-icon { flex-shrink: 0; margin-top: 1px; font-size: 14px; line-height: 1; }

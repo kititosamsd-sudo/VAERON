@@ -1,162 +1,141 @@
-<div style="background:#0f1115;border-radius:20px;padding:20px;display:flex;justify-content:center">
-<div style="width:390px;background:#F8FAFC;border-radius:28px;overflow:hidden;font-family:'Inter',-apple-system,sans-serif;box-shadow:0 0 0 1px rgba(255,255,255,0.06)">
+<h2 class="sr-only">Vista previa en modo claro de la página Configuración de VAERON, con un rail de categorías dentro de la propia página y filas agrupadas por color.</h2>
+<div style="font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:#FFFFFF;border:1px solid #E3E6ED;border-radius:16px;box-shadow:0 1px 3px rgba(20,23,29,0.08);overflow:hidden">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 24px 16px;border-bottom:1px solid #E3E6ED">
+    <div>
+      <div style="font-size:19px;font-weight:650;color:#14171D;letter-spacing:-0.01em">Configuración</div>
+      <div style="font-size:13px;color:#8991A0;margin-top:2px">Personaliza tu sistema y tus preferencias.</div>
+    </div>
+    <span style="font-size:11px;font-weight:650;color:#4A5160;background:#F7F8FB;border:1px solid #E3E6ED;border-radius:999px;padding:4px 11px;white-space:nowrap;margin-top:2px">Plan Básico</span>
+  </div>
+  <div style="display:flex;min-height:400px">
+    <nav id="settingsNav" style="width:172px;flex-shrink:0;background:#F7F8FB;padding:14px 10px;display:flex;flex-direction:column;gap:2px;border-right:1px solid #E3E6ED"></nav>
+    <div id="panelContent" style="flex:1;padding:22px 26px"></div>
+  </div>
+</div>
+<script>
+const ACCENT = '#1A46C4';
+const ACCENT_SOFT = 'rgba(26,70,196,0.09)';
+const INK = '#14171D';
+const TEXT2 = '#4A5160';
+const TEXT3 = '#8991A0';
+const BORDER = '#E3E6ED';
 
-<div style="background:#F8FAFC;padding:14px 24px 4px;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;color:#0F172A">
-<span>9:41</span>
-<span style="display:flex;gap:5px;align-items:center"><i class="ti ti-antenna-bars-5" style="font-size:15px" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:15px" aria-hidden="true"></i><i class="ti ti-battery-4" style="font-size:16px" aria-hidden="true"></i></span>
-</div>
+const CHIP = {
+  blue:   { bg: '#EFF6FF', fg: '#2563EB' },
+  amber:  { bg: '#FFF7ED', fg: '#F59E0B' },
+  green:  { bg: '#ECFDF5', fg: '#10B981' },
+  slate:  { bg: '#F1F5F9', fg: '#64748B' },
+  purple: { bg: '#F5F3FF', fg: '#8B5CF6' }
+};
 
-<div style="background:#FFFFFF;border-bottom:1px solid #E2E8F0;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">
-<div style="display:flex;align-items:center;gap:8px">
-<div style="width:30px;height:30px;border-radius:8px;background:#0B1220;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">VR</div>
-<span style="font-size:15px;font-weight:700;letter-spacing:2px;color:#0F172A">VAERON</span>
-</div>
-<div style="position:relative">
-<i class="ti ti-bell" style="font-size:22px;color:#0F172A" aria-hidden="true"></i>
-<span style="position:absolute;top:-4px;right:-6px;background:#2563EB;color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:999px;display:flex;align-items:center;justify-content:center">2</span>
-</div>
-</div>
+const TABS = [
+  { id: 'inventario', icon: 'ti-package', label: 'Inventario' },
+  { id: 'tienda', icon: 'ti-building-store', label: 'Tienda y cuenta' }
+];
 
-<div style="padding:24px 20px 0">
-<h1 style="font-size:28px;font-weight:700;color:#0F172A;margin:0">Configuración</h1>
-<p style="font-size:16px;color:#64748B;margin:6px 0 20px">Personaliza tu sistema y tus preferencias.</p>
-</div>
+const PANELS = {
+  inventario: {
+    title: 'Inventario',
+    desc: 'Moneda, umbrales de stock y almacenes.',
+    groups: [
+      { heading: 'Moneda y formato', chip: 'blue', rows: [
+        { icon: 'ti-currency-dollar', label: 'Moneda principal', value: 'USD - Dólar', tag: 'Próximamente' },
+        { icon: 'ti-hash', label: 'Formato de números', value: '1,234.56', tag: 'Próximamente' },
+        { icon: 'ti-exchange', label: 'Tasa de cambio', sub: '1 USD = 3.4 soles', action: 'Editar' }
+      ]},
+      { heading: 'Stock bajo', chip: 'amber', rows: [
+        { icon: 'ti-alert-triangle', label: 'Umbral de stock', sub: '3 unidades o menos', action: 'Editar' },
+        { icon: 'ti-bell', label: 'Alerta en el dashboard', toggle: true }
+      ]},
+      { heading: 'Almacenes', chip: 'green', rows: [
+        { icon: 'ti-building-warehouse', label: 'Almacén 1', sub: 'Principal', action: 'Editar' },
+        { icon: 'ti-building-warehouse', label: 'Almacén 2', sub: 'AV UNIÓN', action: 'Editar' }
+      ]}
+    ]
+  },
+  tienda: {
+    title: 'Tienda y cuenta',
+    desc: 'Identidad de marca y preferencias del sistema.',
+    groups: [
+      { heading: 'Marca', chip: 'slate', rows: [
+        { icon: 'ti-photo', label: 'Logo de la tienda', sub: 'Disponible desde el plan Medio', action: 'Subir', disabled: true }
+      ]},
+      { heading: 'Preferencias', chip: 'purple', rows: [
+        { icon: 'ti-moon', label: 'Tema', value: 'Claro', action: 'Cambiar' },
+        { icon: 'ti-language', label: 'Idioma', value: 'Español', tag: 'Próximamente' }
+      ]},
+      { heading: 'Soporte', chip: 'slate', rows: [
+        { icon: 'ti-lifebuoy', label: 'Centro de ayuda', tag: 'Próximamente' },
+        { icon: 'ti-mail', label: 'Contactar soporte', tag: 'Próximamente' }
+      ]}
+    ]
+  }
+};
 
-<div style="padding:0 20px 24px;display:flex;flex-direction:column;gap:16px">
+function chipHtml(icon, chip) {
+  const c = CHIP[chip] || CHIP.slate;
+  return '<div style="width:30px;height:30px;border-radius:8px;background:' + c.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+    '<i class="ti ' + icon + '" aria-hidden="true" style="font-size:15px;color:' + c.fg + '"></i></div>';
+}
 
-<div style="background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:20px">
-<div style="display:flex;gap:12px;align-items:flex-start">
-<div style="width:40px;height:40px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-currency-dollar" style="font-size:20px;color:#2563EB" aria-hidden="true"></i></div>
-<div style="flex:1">
-<div style="display:flex;justify-content:space-between;align-items:flex-start">
-<div>
-<div style="font-size:17px;font-weight:650;color:#0F172A">Moneda y formato</div>
-<div style="font-size:14px;color:#64748B;margin-top:2px">Define la moneda principal y el formato numérico del sistema.</div>
-</div>
-<i class="ti ti-chevron-right" style="font-size:18px;color:#94A3B8;margin-top:4px" aria-hidden="true"></i>
-</div>
-</div>
-</div>
-<div style="border-top:1px solid #E2E8F0;margin-top:16px;padding-top:4px">
-<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #E2E8F0">
-<span style="font-size:15px;font-weight:500;color:#0F172A">Moneda principal</span>
-<span style="font-size:15px;color:#64748B;display:flex;align-items:center;gap:6px">USD - Dólar estadounidense <i class="ti ti-chevron-right" style="font-size:16px;color:#94A3B8" aria-hidden="true"></i></span>
-</div>
-<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0">
-<span style="font-size:15px;font-weight:500;color:#0F172A">Formato de números</span>
-<span style="font-size:15px;color:#64748B;display:flex;align-items:center;gap:6px">1,234.56 <i class="ti ti-chevron-right" style="font-size:16px;color:#94A3B8" aria-hidden="true"></i></span>
-</div>
-</div>
-</div>
+function rowHtml(r, chip) {
+  let right = '';
+  if (r.toggle) {
+    right = '<div style="width:34px;height:20px;border-radius:999px;background:' + ACCENT + ';position:relative;flex-shrink:0"><div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;right:2px"></div></div>';
+  } else if (r.tag) {
+    right = '<span style="font-size:10.5px;font-weight:650;color:' + TEXT3 + ';background:#F7F8FB;border:1px solid ' + BORDER + ';border-radius:999px;padding:2px 9px;white-space:nowrap">' + r.tag + '</span>';
+  } else if (r.action) {
+    right = '<button style="font-size:12.5px;font-weight:600;height:28px;padding:0 12px;border-radius:8px;border:1px solid ' + (r.disabled ? BORDER : INK) + ';background:' + (r.disabled ? '#F7F8FB' : INK) + ';color:' + (r.disabled ? TEXT3 : '#fff') + ';cursor:' + (r.disabled ? 'not-allowed' : 'pointer') + '">' + r.action + '</button>';
+  } else if (r.value) {
+    right = '<span style="font-size:13px;color:' + TEXT2 + '">' + r.value + '</span>';
+  }
+  return '<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid ' + BORDER + '">' +
+    '<div style="display:flex;align-items:center;gap:11px;min-width:0">' +
+    chipHtml(r.icon, chip) +
+    '<div style="min-width:0">' +
+    '<div style="font-size:13.5px;color:' + INK + '">' + r.label + '</div>' +
+    (r.sub ? '<div style="font-size:12px;color:' + TEXT3 + '">' + r.sub + '</div>' : '') +
+    '</div></div>' +
+    '<div style="display:flex;align-items:center;flex-shrink:0">' + right + '</div>' +
+    '</div>';
+}
 
-<div style="background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:20px">
-<div style="display:flex;gap:12px;align-items:flex-start">
-<div style="width:40px;height:40px;border-radius:10px;background:#FFF7ED;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-alert-triangle" style="font-size:20px;color:#F59E0B" aria-hidden="true"></i></div>
-<div style="flex:1">
-<div style="font-size:17px;font-weight:650;color:#0F172A">Stock bajo</div>
-<div style="font-size:14px;color:#64748B;margin-top:2px">Configura los niveles mínimos de stock y recibe alertas en el dashboard.</div>
-</div>
-</div>
-<div style="border-top:1px solid #E2E8F0;margin-top:16px;padding-top:16px;display:flex;justify-content:space-between;align-items:center">
-<span style="font-size:15px;font-weight:500;color:#0F172A">Umbral de stock</span>
-<div style="display:flex;align-items:center;gap:10px">
-<div style="display:flex;align-items:stretch;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">
-<span style="width:32px;display:flex;align-items:center;justify-content:center;color:#94A3B8">−</span>
-<span style="width:36px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#0F172A;border-left:1px solid #E2E8F0;border-right:1px solid #E2E8F0">3</span>
-<span style="width:32px;display:flex;align-items:center;justify-content:center;color:#0F172A">+</span>
-</div>
-<span style="font-size:14px;color:#64748B">unidades o menos</span>
-</div>
-</div>
-<div style="display:flex;justify-content:space-between;align-items:center;padding-top:14px;margin-top:14px;border-top:1px solid #E2E8F0">
-<span style="font-size:15px;font-weight:500;color:#0F172A">Mostrar alerta en el dashboard</span>
-<div style="width:40px;height:24px;border-radius:999px;background:#2563EB;display:flex;align-items:center;padding:2px"><div style="width:20px;height:20px;border-radius:50%;background:#fff;margin-left:auto"></div></div>
-</div>
-</div>
+function groupHtml(g) {
+  const rows = g.rows.map(r => rowHtml(r, g.chip)).join('');
+  return '<div style="margin-bottom:22px">' +
+    '<div style="font-size:11px;font-weight:650;letter-spacing:0.05em;text-transform:uppercase;color:' + TEXT3 + ';margin-bottom:9px">' + g.heading + '</div>' +
+    '<div style="background:#FFFFFF;border:1px solid ' + BORDER + ';border-radius:12px;padding:2px 16px 0">' + rows + '</div>' +
+    '</div>';
+}
 
-<div style="background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:20px">
-<div style="display:flex;gap:12px;align-items:flex-start">
-<div style="width:40px;height:40px;border-radius:10px;background:#ECFDF5;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-building-warehouse" style="font-size:20px;color:#10B981" aria-hidden="true"></i></div>
-<div style="flex:1">
-<div style="font-size:17px;font-weight:650;color:#0F172A">Almacenes</div>
-<div style="font-size:14px;color:#64748B;margin-top:2px">Administra los almacenes donde almacenas tus productos.</div>
-</div>
-</div>
-<div style="border-top:1px solid #E2E8F0;margin-top:16px;padding-top:4px">
-<div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #E2E8F0">
-<span style="width:7px;height:7px;border-radius:50%;background:#10B981"></span>
-<span style="font-size:15px;font-weight:500;color:#0F172A">Almacén 1</span>
-<span style="background:#ECFDF5;color:#059669;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px">Principal</span>
-<span style="flex:1"></span>
-<i class="ti ti-dots" style="font-size:18px;color:#94A3B8" aria-hidden="true"></i>
-<i class="ti ti-chevron-right" style="font-size:16px;color:#94A3B8" aria-hidden="true"></i>
-</div>
-<div style="display:flex;align-items:center;gap:10px;padding:12px 0">
-<span style="width:7px;height:7px;border-radius:50%;background:#10B981"></span>
-<span style="font-size:15px;font-weight:500;color:#0F172A">Almacén 2</span>
-<span style="background:#F1F5F9;color:#64748B;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px">AV UNIÓN</span>
-<span style="flex:1"></span>
-<i class="ti ti-dots" style="font-size:18px;color:#94A3B8" aria-hidden="true"></i>
-<i class="ti ti-chevron-right" style="font-size:16px;color:#94A3B8" aria-hidden="true"></i>
-</div>
-</div>
-<button style="margin-top:12px;width:100%;background:#fff;border:1px solid #2563EB;color:#2563EB;font-size:15px;font-weight:600;padding:11px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ti ti-plus" style="font-size:16px" aria-hidden="true"></i>Agregar almacén</button>
-</div>
+function renderPanel(id) {
+  const p = PANELS[id];
+  document.getElementById('panelContent').innerHTML =
+    '<div style="font-size:16px;font-weight:650;color:' + INK + ';margin-bottom:2px">' + p.title + '</div>' +
+    '<div style="font-size:13px;color:' + TEXT3 + ';margin-bottom:18px">' + p.desc + '</div>' +
+    p.groups.map(groupHtml).join('');
+  document.querySelectorAll('#panelContent > div[style*="margin-bottom:22px"] > div[style*="border-radius:12px"]').forEach(box => {
+    const last = box.lastElementChild;
+    if (last) last.style.borderBottom = 'none';
+  });
+}
 
-<div style="background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:20px">
-<div style="display:flex;gap:12px;align-items:flex-start">
-<div style="width:40px;height:40px;border-radius:10px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-adjustments-horizontal" style="font-size:20px;color:#8B5CF6" aria-hidden="true"></i></div>
-<div style="flex:1">
-<div style="font-size:17px;font-weight:650;color:#0F172A">Preferencias generales</div>
-<div style="font-size:14px;color:#64748B;margin-top:2px">Ajusta las opciones generales del sistema.</div>
-</div>
-</div>
-<div style="border-top:1px solid #E2E8F0;margin-top:16px;padding-top:4px">
-<div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #E2E8F0">
-<i class="ti ti-moon" style="font-size:17px;color:#64748B" aria-hidden="true"></i>
-<span style="font-size:15px;font-weight:500;color:#0F172A;flex:1">Tema</span>
-<span style="font-size:15px;color:#64748B">Claro</span>
-<i class="ti ti-chevron-right" style="font-size:16px;color:#94A3B8;margin-left:6px" aria-hidden="true"></i>
-</div>
-<div style="display:flex;align-items:center;gap:10px;padding:12px 0">
-<i class="ti ti-world" style="font-size:17px;color:#64748B" aria-hidden="true"></i>
-<span style="font-size:15px;font-weight:500;color:#0F172A;flex:1">Idioma</span>
-<span style="font-size:15px;color:#64748B">Español</span>
-<i class="ti ti-chevron-right" style="font-size:16px;color:#94A3B8;margin-left:6px" aria-hidden="true"></i>
-</div>
-</div>
-</div>
+function renderNav(activeId) {
+  const nav = document.getElementById('settingsNav');
+  nav.innerHTML = TABS.map(t => {
+    const active = t.id === activeId;
+    return '<div data-tab="' + t.id + '" style="display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;font-size:13px;font-weight:' + (active ? '600' : '500') + ';cursor:pointer;' +
+      (active ? 'background:' + ACCENT_SOFT + ';color:' + ACCENT + ';' : 'color:' + TEXT2 + ';') + '">' +
+      '<i class="ti ' + t.icon + '" aria-hidden="true" style="font-size:16px"></i>' + t.label + '</div>';
+  }).join('');
+  nav.querySelectorAll('[data-tab]').forEach(el => {
+    el.addEventListener('click', () => {
+      renderNav(el.dataset.tab);
+      renderPanel(el.dataset.tab);
+    });
+  });
+}
 
-<div style="background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:20px">
-<div style="display:flex;gap:12px;align-items:flex-start">
-<div style="width:40px;height:40px;border-radius:10px;background:#F1F5F9;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-headset" style="font-size:20px;color:#64748B" aria-hidden="true"></i></div>
-<div style="flex:1">
-<div style="font-size:17px;font-weight:650;color:#0F172A">Soporte y ayuda</div>
-<div style="font-size:14px;color:#64748B;margin-top:2px">Obtén ayuda o contacta al equipo de soporte.</div>
-</div>
-</div>
-<div style="border-top:1px solid #E2E8F0;margin-top:16px;padding-top:4px">
-<div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #E2E8F0">
-<i class="ti ti-book" style="font-size:17px;color:#64748B" aria-hidden="true"></i>
-<span style="font-size:15px;font-weight:500;color:#0F172A;flex:1">Centro de ayuda</span>
-<i class="ti ti-chevron-right" style="font-size:16px;color:#94A3B8" aria-hidden="true"></i>
-</div>
-<div style="display:flex;align-items:center;gap:10px;padding:12px 0">
-<i class="ti ti-mail" style="font-size:17px;color:#64748B" aria-hidden="true"></i>
-<span style="font-size:15px;font-weight:500;color:#0F172A;flex:1">Contactar soporte</span>
-<i class="ti ti-chevron-right" style="font-size:16px;color:#94A3B8" aria-hidden="true"></i>
-</div>
-</div>
-</div>
-
-</div>
-
-<div style="background:#fff;border-top:1px solid #E2E8F0;padding:10px 0 22px;display:grid;grid-template-columns:repeat(4,1fr)">
-<div style="display:flex;flex-direction:column;align-items:center;gap:3px"><i class="ti ti-layout-grid" style="font-size:22px;color:#64748B" aria-hidden="true"></i><span style="font-size:11px;color:#64748B">Dashboard</span></div>
-<div style="display:flex;flex-direction:column;align-items:center;gap:3px"><i class="ti ti-box" style="font-size:22px;color:#64748B" aria-hidden="true"></i><span style="font-size:11px;color:#64748B">Stock</span></div>
-<div style="display:flex;flex-direction:column;align-items:center;gap:3px"><i class="ti ti-settings" style="font-size:22px;color:#2563EB" aria-hidden="true"></i><span style="font-size:11px;color:#2563EB;font-weight:600">Configuración</span></div>
-<div style="display:flex;flex-direction:column;align-items:center;gap:3px"><i class="ti ti-user" style="font-size:22px;color:#64748B" aria-hidden="true"></i><span style="font-size:11px;color:#64748B">Perfil</span></div>
-</div>
-
-</div>
-</div>
+renderNav('inventario');
+renderPanel('inventario');
+</script>

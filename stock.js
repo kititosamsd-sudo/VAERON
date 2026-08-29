@@ -846,9 +846,7 @@ async function exportWarehouseStock() {
 function addProduct() {
   const name  = document.getElementById('addName').value.trim();
   const code  = normalizeProductCode(document.getElementById('addCode').value);
-  // Cantidad desactivada temporalmente en este modal: los productos
-  // nuevos entran con stock 0, sin leer el input oculto.
-  const stock = 0;
+  const stock = parseFloat(document.getElementById('addStock').value) || 0;
   const price = parseFloat(document.getElementById('addPrice').value) || 0;
   const costo = parseFloat(document.getElementById('addCosto').value) || 0;
   const precioMayor = parseFloat(document.getElementById('addPrecioMayor').value) || 0;

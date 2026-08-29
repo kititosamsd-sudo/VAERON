@@ -23,8 +23,33 @@ window.Configuracion = {
     cargarAlmacenesForm();
     cargarLogoPreview();
     actualizarTemaLabel();
+    renderConfigPlanBadge();
   }
 };
+
+// Muestra/oculta el bloque de edición de una fila (Tasa de cambio,
+// Umbral de stock, nombre de un almacén). Los controles reales
+// dentro del bloque nunca se sacan del DOM, solo se ocultan con
+// CSS — por eso previsualizarTasaCambio(), guardarUmbralStock(),
+// etc. siguen funcionando igual estén visibles o no.
+function toggleCfgEdit(boxId) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  box.classList.toggle('open');
+}
+
+// Mismo patrón que renderPlanBadge() en dashboard-logic.js —
+// misma fuente de verdad (planActual()/nombrePlan() de
+// plan-limits.js), nunca un "if (plan === 'medio')" suelto nuevo.
+function renderConfigPlanBadge() {
+  const tag = document.getElementById('configPlanTag');
+  if (!tag) return;
+  if (typeof planActual !== 'function' || typeof nombrePlan !== 'function') return;
+  const plan = planActual();
+  tag.className = 'dash-plan-tag plan-tag-' + plan;
+  tag.textContent = 'Plan ' + nombrePlan(plan);
+  tag.style.display = '';
+}
 
 /* ── Tema oscuro/claro ──────────────────────────────────────────
    Preferencia del dispositivo (localStorage), no de la tienda: cada
@@ -136,12 +161,18 @@ function aplicarBloqueoPorPlan() {
     if (msg) { msg.textContent = `Disponible desde el plan Medio (tu plan actual: ${nombrePlan()}).`; msg.style.color = 'var(--text-3)'; }
   }
 
-  const logoNota = document.getElementById('logoPlanNote');
-  const logoLabel = document.getElementById('logoFileLabel');
-  if (typeof limitePlan === 'function' && !limitePlan('logoPersonalizable')) {
-    if (logoNota) logoNota.textContent = `Disponible desde el plan Medio (tu plan actual: ${nombrePlan()}).`;
-    if (logoLabel) logoLabel.style.display = 'none';
-  } else if (!esAdmin) {
+  // A diferencia del resto de tarjetas bloqueadas por plan (que se ven
+  // deshabilitadas con una nota, para mostrar qué se desbloquea al
+  // subir), "Logo de la tienda" se oculta por completo en Básico: no
+  // tiene sentido dejar visible un control de foto vacío/deshabilitado
+  // para una función que la tienda no puede usar en ningún otro lado
+  // de la app todavía.
+  const logoCard = document.getElementById('configCardLogo');
+  const logoDisponibleEnPlan = (typeof limitePlan === 'function') ? limitePlan('logoPersonalizable') : true;
+  if (logoCard) logoCard.style.display = logoDisponibleEnPlan ? '' : 'none';
+  if (logoDisponibleEnPlan && !esAdmin) {
+    const logoNota = document.getElementById('logoPlanNote');
+    const logoLabel = document.getElementById('logoFileLabel');
     if (logoNota) logoNota.textContent = 'Solo el administrador de la tienda puede cambiar el logo.';
     if (logoLabel) logoLabel.style.display = 'none';
   }
@@ -173,14 +204,17 @@ function previsualizarTasaCambio() {
 function cargarTasaCambio() {
   const input = document.getElementById('inputTasaCambio');
   const msg = document.getElementById('tasaCambioMsg');
+  const sub = document.getElementById('tasaCambioSub');
   if (!input) return;
   getTiendaConfig()
     .then(cfg => {
       if (cfg && cfg.tasaCambio) {
         input.value = cfg.tasaCambio;
         if (msg) msg.textContent = '';
-      } else if (msg) {
-        msg.textContent = 'Todavía no configuraste una tasa. Mientras tanto, el catálogo solo muestra cada precio en su propia moneda, sin conversión.';
+        if (sub) sub.textContent = `1 USD = ${cfg.tasaCambio} soles`;
+      } else {
+        if (msg) msg.textContent = 'Todavía no configuraste una tasa. Mientras tanto, el catálogo solo muestra cada precio en su propia moneda, sin conversión.';
+        if (sub) sub.textContent = 'Sin configurar';
       }
       previsualizarTasaCambio();
     })
@@ -205,6 +239,8 @@ function guardarTasaCambio() {
   setTasaCambio(valor)
     .then(() => {
       if (msg) { msg.textContent = 'Tasa guardada. El catálogo ya la usa para mostrar el equivalente en cada producto.'; msg.style.color = 'var(--text-3)'; }
+      const sub = document.getElementById('tasaCambioSub');
+      if (sub) sub.textContent = `1 USD = ${valor} soles`;
       // Si la vista de Stock ya cargó productos con la tasa vieja
       // (o sin tasa), esto la actualiza en caliente sin que la
       // persona tenga que recargar la página.
@@ -260,21 +296,39 @@ function renderAlmacenesList() {
     if (almacenesState.activos[id]) activosOrdenados.push(id);
   }
 
+  const iconAlmacen = '<svg viewBox="0 0 24 24"><path d="M3 21V10l9-6 9 6v11"/><path d="M3 10h18"/><rect x="9" y="13" width="6" height="8"/></svg>';
+
   cont.innerHTML = activosOrdenados.map(id => {
     const esAlm1 = id === 'alm1';
     const nombre = escapeHtml(almacenesState.nombres[id] || id);
+    const numero = id.replace('alm', '');
     const botonEliminar = (!esAlm1 && eliminable)
       ? `<button type="button" class="btn-reg-delete" title="Eliminar almacén" onclick="confirmarEliminarAlmacen('${id}')">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         </button>`
       : '';
+    const filaEdicion = editable
+      ? `<div class="cfg-edit-box" id="boxAlm_${id}">
+          <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+            <input class="form-input" id="inputNombre_${id}" type="text" maxlength="30" value="${nombre}" style="flex:1">
+            ${botonEliminar}
+          </div>
+        </div>`
+      : `<input class="form-input" id="inputNombre_${id}" type="text" maxlength="30" value="${nombre}" disabled style="display:none">`;
     return `
-      <div class="almacen-row" data-alm="${id}">
-        <span class="almacen-dot"></span>
-        <span class="almacen-tag${esAlm1 ? ' almacen-tag-principal' : ''}">${esAlm1 ? 'Principal' : 'Almacén ' + id.replace('alm', '')}</span>
-        <input class="form-input" id="inputNombre_${id}" type="text" maxlength="30" value="${nombre}" ${editable ? '' : 'disabled'}>
-        ${botonEliminar}
-      </div>`;
+      <div class="cfg-row" data-alm="${id}">
+        <div class="cfg-row-left">
+          <span class="cfg-row-icon green">${iconAlmacen}</span>
+          <div class="cfg-row-text">
+            <div class="cfg-row-label">Almacén ${numero}</div>
+            <div class="cfg-row-sub">${esAlm1 ? 'Principal' : nombre}</div>
+          </div>
+        </div>
+        <div class="cfg-row-right">
+          ${editable ? `<button type="button" class="btn btn-primary btn-sm" onclick="toggleCfgEdit('boxAlm_${id}')">Editar</button>` : ''}
+        </div>
+      </div>
+      ${filaEdicion}`;
   }).join('');
 
   const hayEspacio = activosOrdenados.length < maxAlmacenes;
@@ -359,6 +413,12 @@ function guardarAlmacenesForm() {
   setAlmacenesConfig({ nombres, activos: almacenesState.activos })
     .then(({ nombres: n, activos: a }) => {
       almacenesState = { nombres: n, activos: a };
+      // Vuelve a pintar las filas para que el subtítulo (nombre
+      // resumido junto a "Almacén N") refleje lo recién guardado —
+      // antes el input de toda la vida ya mostraba el valor nuevo
+      // sin necesitar esto, pero ahora el nombre vive en un
+      // resumen colapsado, no en el input siempre visible.
+      renderAlmacenesList();
       if (msg) { msg.textContent = 'Nombres guardados. El Catálogo ya los muestra así.'; msg.style.color = 'var(--text-3)'; }
       // Si Stock ya está montado en esta misma sesión (SPA), refresca
       // sus pestañas al toque en vez de esperar a que recarguen.
@@ -403,6 +463,7 @@ function ajustarUmbralStock(delta) {
 function cargarUmbralStock() {
   const input = document.getElementById('inputUmbralStock');
   const msg = document.getElementById('umbralStockMsg');
+  const sub = document.getElementById('umbralStockSub');
   if (!input) return;
   getTiendaConfig()
     .then(cfg => {
@@ -411,6 +472,7 @@ function cargarUmbralStock() {
         : 5;
       input.value = umbral;
       if (msg) msg.textContent = (cfg && cfg.stockBajoUmbral !== undefined) ? '' : 'Todavía no lo configuraste — el Dashboard usa 5 unidades por defecto.';
+      if (sub) sub.textContent = `${umbral} ${umbral === 1 ? 'unidad' : 'unidades'} o menos`;
       previsualizarUmbralStock();
     })
     .catch(() => {
@@ -434,6 +496,8 @@ function guardarUmbralStock() {
   setUmbralStock(valor)
     .then(() => {
       if (msg) { msg.textContent = 'Umbral guardado. El Dashboard ya lo usa para marcar el stock bajo.'; msg.style.color = 'var(--text-3)'; }
+      const sub = document.getElementById('umbralStockSub');
+      if (sub) sub.textContent = `${valor} ${valor === 1 ? 'unidad' : 'unidades'} o menos`;
       // Igual que con la tasa de cambio: si el Dashboard ya está
       // montado en esta misma sesión (SPA, sin recargar), se lo
       // avisamos para que recalcule "Stock bajo" con el valor nuevo
