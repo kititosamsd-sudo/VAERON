@@ -24,7 +24,7 @@ separadas, más un rol de **súper-admin** (el dueño del sistema, vos)
 que no pertenece a ninguna tienda y solo administra la lista de
 tiendas.
 
-- **Súper-admin (vos)**: entra con `adonay@gmail.com` / `123456` (se
+- **Súper-admin (vos)**: entra con `vaeronspa@gmail.com` / `123456` (se
   crea solo la primera vez, igual que antes). Al entrar ve únicamente
   la pantalla **Tiendas**: lista de tiendas, botón "Nueva tienda"
   (crea el nombre de la tienda + su primer usuario admin con correo y
@@ -43,7 +43,7 @@ ya vive separado por tienda, bajo `/tiendas/{tiendaId}/products`,
 `scopedRef()` en `firebase.js`).
 
 ## Login de administrador (demo)
-- Correo: `adonay@gmail.com`
+- Correo: `vaeronspa@gmail.com`
 - Clave: `123456`
 
 Se crea automáticamente la primera vez que se inicia sesión con esas

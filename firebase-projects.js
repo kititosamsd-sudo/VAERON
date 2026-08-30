@@ -61,7 +61,7 @@
 // directorio, inicia sesión en TODOS los proyectos a la vez (ver
 // login.html). Debe coincidir EXACTO con la cuenta que se creó a mano
 // en cada proyecto.
-const ADMIN_BOOTSTRAP_EMAIL = 'adonay@gmail.com';
+const ADMIN_BOOTSTRAP_EMAIL = 'vaeronspa@gmail.com';
 
 const FIREBASE_PROJECTS = {
   proyecto_a: {
@@ -98,6 +98,66 @@ const FIREBASE_PROJECTS = {
       storageBucket: "base-c-bfd38.firebasestorage.app",
       messagingSenderId: "531782990537",
       appId: "1:531782990537:web:945fb83ebc9a8cbf596b18"
+    }
+  },
+  proyecto_d: {
+    label: 'Proyecto D',
+    config: {
+      apiKey: "AIzaSyBG4cwbpXthJV-8rjWrm0B6ERlKfQxoPvg",
+      authDomain: "base-d-b2c48.firebaseapp.com",
+      databaseURL: "https://base-d-b2c48-default-rtdb.firebaseio.com",
+      projectId: "base-d-b2c48",
+      storageBucket: "base-d-b2c48.firebasestorage.app",
+      messagingSenderId: "885787527634",
+      appId: "1:885787527634:web:a53106ed16f6351be3600b"
+    }
+  },
+  proyecto_e: {
+    label: 'Proyecto E',
+    config: {
+      apiKey: "AIzaSyB_9KvE3ZNWxQ4P8cZGrheGD3uZi2UK6jE",
+      authDomain: "base-e-77551.firebaseapp.com",
+      databaseURL: "https://base-e-77551-default-rtdb.firebaseio.com",
+      projectId: "base-e-77551",
+      storageBucket: "base-e-77551.firebasestorage.app",
+      messagingSenderId: "28552490980",
+      appId: "1:28552490980:web:32e38c05168510c450e1f1"
+    }
+  },
+  proyecto_f: {
+    label: 'Proyecto F',
+    config: {
+      apiKey: "AIzaSyAeLoI5CxMNCVEZ2O6gFIMv1kuu_mK3bLA",
+      authDomain: "base-f-1d521.firebaseapp.com",
+      databaseURL: "https://base-f-1d521-default-rtdb.firebaseio.com",
+      projectId: "base-f-1d521",
+      storageBucket: "base-f-1d521.firebasestorage.app",
+      messagingSenderId: "125236416068",
+      appId: "1:125236416068:web:5b6b949c88fc020e073611"
+    }
+  },
+  proyecto_g: {
+    label: 'Proyecto G',
+    config: {
+      apiKey: "AIzaSyCIT6749ZVb8w_QP4Y9oc-9v1v3U8znV58",
+      authDomain: "base-g-dce50.firebaseapp.com",
+      databaseURL: "https://base-g-dce50-default-rtdb.firebaseio.com",
+      projectId: "base-g-dce50",
+      storageBucket: "base-g-dce50.firebasestorage.app",
+      messagingSenderId: "114864824664",
+      appId: "1:114864824664:web:2248804752e38556e5452d"
+    }
+  },
+  proyecto_h: {
+    label: 'Proyecto H',
+    config: {
+      apiKey: "AIzaSyDqmlt0Au0wsHPBiqhCLF49FKEP-lszk18",
+      authDomain: "base-h-4c539.firebaseapp.com",
+      databaseURL: "https://base-h-4c539-default-rtdb.firebaseio.com",
+      projectId: "base-h-4c539",
+      storageBucket: "base-h-4c539.firebasestorage.app",
+      messagingSenderId: "989564204710",
+      appId: "1:989564204710:web:9eaa23a7cfcddcb1032667"
     }
   }
 };

@@ -372,7 +372,7 @@
             // proyecto (en modo demo hace las veces de "ya la creaste a
             // mano en la consola de cada proyecto", ver
             // firebase-projects.js).
-            if (String(email).toLowerCase() === 'adonay@gmail.com' && password === '123456') {
+            if (String(email).toLowerCase() === 'vaeronspa@gmail.com' && password === '123456') {
               const uid = 'u_admin_demo';
               users[email.toLowerCase()] = { uid, password: '123456' };
               saveUsers(ns, users);
