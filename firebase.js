@@ -1349,7 +1349,21 @@ function watchClients(callback) {
     console.error('[Firebase] Error leyendo /clients:', err);
     alert('No se pudo cargar la lista de clientes (permiso denegado o sin conexión). Revisa la consola para más detalle.');
   };
-  watchCollectionWithCache(refClients, 'mf_cache_clients_v1', 'ruc', callback, onError);
+  // Limpieza única: antes esta caché usaba una clave fija
+  // ('mf_cache_clients_v1'), sin distinguir de qué tienda eran los
+  // clientes guardados. localStorage es por NAVEGADOR, no por
+  // tienda — así que si en este mismo navegador antes se entró a
+  // otra tienda, su lista de clientes quedaba guardada bajo esa
+  // clave y se la servía tal cual a la siguiente tienda que abriera
+  // sesión ahí, aunque en Firebase esa tienda nueva tuviera /clients
+  // vacío. Ahora la clave incluye el tiendaId, así que cada tienda
+  // tiene su propio cajón y nunca puede leer el de otra. Se borra la
+  // clave vieja sin aislar para que ningún navegador la siga
+  // sirviendo por error.
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem('mf_cache_clients_v1');
+  } catch (err) {}
+  watchCollectionWithCache(refClients, 'mf_cache_clients_v1:' + currentTiendaId, 'ruc', callback, onError);
 }
 
 // ── Apagar listeners en tiempo real antes de cerrar sesión ──────

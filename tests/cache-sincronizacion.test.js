@@ -194,11 +194,52 @@ test('watchClients: caché+delta persistido entre sesiones (a diferencia de watc
   window.watchClients(() => {});
   await waitTick();
 
-  const cache = JSON.parse(window.localStorage.getItem('mf_cache_clients_v1'));
+  const cache = JSON.parse(window.localStorage.getItem('mf_cache_clients_v1:' + TIENDA_TEST));
   store.clients['20222222222'] = { nombre: 'Cliente B', ciudad: 'Arequipa', updatedAt: cache.lastSync + 5000 };
 
   let list = null;
   window.watchClients(l => { list = l; });
   await waitTick();
   assert.ok(list.some(c => c.ruc === '20222222222'), 'un cliente nuevo de otro dispositivo debe llegar por sincronización incremental');
+});
+
+test('watchClients: la caché de una tienda NUNCA se filtra a otra tienda en el mismo navegador', async () => {
+  // Bug real reportado: al crear una tienda nueva, "Notas de Pedido"
+  // mostraba los mismos clientes que otra tienda ya existente. La
+  // causa era que la clave de caché en localStorage era fija
+  // ('mf_cache_clients_v1'), sin distinguir de qué tienda eran los
+  // datos guardados — y localStorage es por NAVEGADOR, no por
+  // tienda. Este test simula exactamente eso: la MISMA "ventana"
+  // (mismo localStorage) usada primero por Tienda A y después por
+  // Tienda B.
+  const sharedLocalStorage = (() => {
+    let data = {};
+    return {
+      getItem: k => (k in data ? data[k] : null),
+      setItem: (k, v) => { data[k] = String(v); },
+      removeItem: k => { delete data[k]; },
+      clear: () => { data = {}; },
+    };
+  })();
+
+  // "Tienda A" ya tiene clientes y los cachea en este navegador.
+  const appA = loadApp(['firebase-projects.js', 'firebase.js'], '', 'tienda-A', sharedLocalStorage);
+  const storeA = tiendaStore(appA.firebase, 'tienda-A');
+  storeA.clients = {
+    '20601234567': { nombre: 'Cliente de Tienda A', ciudad: 'Lima', updatedAt: 1000 },
+  };
+  appA.window.watchClients(() => {});
+  await waitTick();
+
+  // "Tienda B" es NUEVA (su /clients en Firebase está vacío) y abre
+  // sesión en el MISMO navegador (mismo localStorage) justo después.
+  const appB = loadApp(['firebase-projects.js', 'firebase.js'], '', 'tienda-B', sharedLocalStorage);
+  const storeB = tiendaStore(appB.firebase, 'tienda-B');
+  storeB.clients = {};
+
+  let listB = null;
+  appB.window.watchClients(l => { listB = l; });
+  await waitTick();
+
+  assert.ok(Array.isArray(listB) && listB.length === 0, 'Tienda B nueva debe arrancar sin ningún cliente, aunque Tienda A ya tenga caché en este navegador');
 });

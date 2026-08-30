@@ -24,8 +24,12 @@ function readSrc(relPath) {
  *   código de la prueba use refProducts/refClients/refOrders/refUsers (que ahora viven
  *   bajo tiendas/{tiendaId}/... — ver scopedRef() en firebase.js). Las pruebas que no
  *   necesitan tocar catálogo (ej. solo funciones puras) pueden dejarlo en null.
+ * @param {object|null} sharedLocalStorage - si se da, este objeto (con getItem/setItem/
+ *   removeItem/clear) se usa como localStorage de esta ventana en vez de crear uno nuevo
+ *   vacío. Sirve para simular "el mismo navegador" entre dos loadApp() de tiendas
+ *   distintas.
  */
-function loadApp(files, bodyHtml = '', tiendaId = null) {
+function loadApp(files, bodyHtml = '', tiendaId = null, sharedLocalStorage = null) {
   const dom = new JSDOM(`<!DOCTYPE html><html><body>${bodyHtml}</body></html>`, {
     url: 'https://example.invalid/index.html',
     pretendToBeVisual: true,
@@ -38,6 +42,15 @@ function loadApp(files, bodyHtml = '', tiendaId = null) {
   window.alert = () => {};
   window.confirm = () => true;
   window.matchMedia = window.matchMedia || (() => ({ matches: false, addListener() {}, removeListener() {} }));
+  // jsdom ya expone su propio window.localStorage (con solo getter en
+  // algunas versiones) — una asignación directa (window.localStorage = x)
+  // puede quedar silenciosamente ignorada. Object.defineProperty fuerza
+  // el reemplazo de verdad, necesario para poder compartir un mismo
+  // localStorage "de mentira" entre dos loadApp() (simular dos tiendas
+  // en el mismo navegador).
+  if (sharedLocalStorage) {
+    Object.defineProperty(window, 'localStorage', { value: sharedLocalStorage, configurable: true });
+  }
   window.localStorage = window.localStorage || (() => {
     let data = {};
     return {
