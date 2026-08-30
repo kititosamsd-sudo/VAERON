@@ -23,6 +23,7 @@ window.Configuracion = {
     cargarAlmacenesForm();
     cargarLogoPreview();
     actualizarTemaLabel();
+    actualizarIdiomaLabel();
     renderConfigPlanBadge();
     cargarAlertaDashboard();
     cargarMonedaPrincipal();
@@ -77,8 +78,39 @@ function actualizarTemaLabel() {
   if (!label) return;
   const esOscuro = document.documentElement.getAttribute('data-theme') === 'dark';
   const chevron = label.querySelector('svg');
-  label.textContent = esOscuro ? 'Oscuro ' : 'Claro ';
+  const texto = (typeof t === 'function') ? t(esOscuro ? 'config.temaOscuro' : 'config.temaClaro') : (esOscuro ? 'Oscuro' : 'Claro');
+  label.textContent = texto + ' ';
   if (chevron) label.appendChild(chevron);
+}
+
+/* ── Idioma ───────────────────────────────────────────────────
+   El motor real (diccionario, t(), aplicarIdioma()) vive en
+   i18n.js — acá solo conectamos la UI de este modal con
+   cambiarIdioma(), que ya hace el trabajo pesado (guardar en
+   localStorage y volver a renderizar la vista actual). */
+function seleccionarIdioma(codigo) {
+  if (typeof cambiarIdioma === 'function') cambiarIdioma(codigo);
+  closeModal('idiomaModal');
+  // cambiarIdioma() ya vuelve a renderizar toda la vista de
+  // configuración (Router.go force), así que no hace falta
+  // actualizar el label acá — actualizarIdiomaLabel() corre de
+  // nuevo dentro de Configuracion.init().
+}
+
+function actualizarIdiomaLabel() {
+  const label = document.getElementById('idiomaValLabel');
+  if (!label) return;
+  const codigo = (typeof idiomaActivo === 'function') ? idiomaActivo() : 'es';
+  const chevron = label.querySelector('svg');
+  const texto = (typeof t === 'function') ? t(codigo === 'en' ? 'config.idiomaIngles' : 'config.idiomaEspanol') : (codigo === 'en' ? 'English' : 'Español');
+  label.textContent = texto + ' ';
+  if (chevron) label.appendChild(chevron);
+
+  // Marca cuál opción está activa dentro del modal, si está abierto.
+  const opEs = document.getElementById('idiomaOpcionEs');
+  const opEn = document.getElementById('idiomaOpcionEn');
+  if (opEs) opEs.classList.toggle('activo', codigo === 'es');
+  if (opEn) opEn.classList.toggle('activo', codigo === 'en');
 }
 
 /* ── Contactar soporte (WhatsApp) ────────────────────────────────

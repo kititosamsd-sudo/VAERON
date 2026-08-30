@@ -104,3 +104,16 @@ Los productos y clientes que ves al abrir la app son de ejemplo
 (Producto A/B/C..., Cliente de ejemplo 1-4). Bórralos o reemplázalos desde
 Stock / Registros de clientes, o edita `SEED_PRODUCTS` / `SEED_CLIENTS` en
 `firebase.js` antes de la primera vez que se abra la app en un dispositivo.
+
+## Antes de subir a producción (checklist)
+- **No subas `reiniciar-cuentas.html`** al hosting público — es una
+  herramienta de desarrollo que solo borra el mock local
+  (`localStorage`), no toca Firebase, pero no tiene sentido dejarla
+  accesible en el servidor real.
+- Verifica que `database.rules.json` esté publicado (idéntico) en las
+  **8** bases de Firebase — correr `node scripts/check-views-sync.js`
+  solo valida que las vistas y el router coincidan, no reemplaza subir
+  las reglas a la consola.
+- Corre `npm test` y confirma que las 76 pruebas pasen antes de armar
+  el zip final.
+

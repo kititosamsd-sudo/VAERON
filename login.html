@@ -277,27 +277,27 @@ c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
     </div>
 
     <div class="login-card">
-      <h1>Bienvenido de nuevo</h1>
-      <p class="login-sub">Inicia sesión para continuar</p>
+      <h1 data-i18n="login.bienvenida">Bienvenido de nuevo</h1>
+      <p class="login-sub" data-i18n="login.subtitulo">Inicia sesión para continuar</p>
 
       <div class="login-error" id="loginError"></div>
       <div class="login-info" id="loginInfo"></div>
 
       <form id="loginForm">
         <div class="form-field">
-          <label for="loginIdentifier">Correo electrónico</label>
+          <label for="loginIdentifier" data-i18n="login.correo">Correo electrónico</label>
           <div class="field-group">
             <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
-            <input type="email" id="loginIdentifier" placeholder="ejemplo@empresa.com" autocomplete="username" required>
+            <input type="email" id="loginIdentifier" placeholder="ejemplo@empresa.com" data-i18n-placeholder="login.correoPlaceholder" autocomplete="username" required>
           </div>
         </div>
 
         <div class="form-field">
-          <label for="loginPassword">Contraseña</label>
+          <label for="loginPassword" data-i18n="login.clave">Contraseña</label>
           <div class="field-group">
             <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña" autocomplete="current-password" required>
-            <button type="button" class="toggle-pw" id="togglePw" title="Mostrar/ocultar contraseña">
+            <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña" data-i18n-placeholder="login.clavePlaceholder" autocomplete="current-password" required>
+            <button type="button" class="toggle-pw" id="togglePw" title="Mostrar/ocultar contraseña" data-i18n-title="login.mostrarClave">
               <svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
@@ -306,17 +306,17 @@ c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
         <div class="login-row">
           <label class="login-remember">
             <input type="checkbox" id="loginRemember" checked>
-            Recordarme
+            <span data-i18n="login.recordarme">Recordarme</span>
           </label>
-          <button type="button" class="login-forgot" id="forgotBtn">¿Olvidaste tu contraseña?</button>
+          <button type="button" class="login-forgot" id="forgotBtn" data-i18n="login.olvideClave">¿Olvidaste tu contraseña?</button>
         </div>
 
         <button type="submit" class="btn-login" id="loginSubmit">
-          Iniciar sesión
+          <span data-i18n="login.entrar">Iniciar sesión</span>
         </button>
       </form>
 
-      <p class="login-footer-text">¿No tienes cuenta? <a href="#" id="noAccountHint" onclick="return false;">Pide acceso a tu administrador</a></p>
+      <p class="login-footer-text"><span data-i18n="login.sinCuenta">¿No tienes cuenta?</span> <a href="#" id="noAccountHint" onclick="return false;" data-i18n="login.pedirAcceso">Pide acceso a tu administrador</a></p>
     </div>
   </div>
 
@@ -324,6 +324,8 @@ c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
 
 <script src="firebase-projects.js"></script>
 <script src="firebase.js"></script>
+<script src="i18n.js"></script>
+<script>aplicarIdioma(document);</script>
 <script>
   const form         = document.getElementById('loginForm');
   const identifierEl = document.getElementById('loginIdentifier');
@@ -418,7 +420,7 @@ c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
     const authEmail = resolveAuthEmail();
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Ingresando…';
+    submitBtn.textContent = t('login.entrando');
 
     try {
       const persistence = rememberEl.checked
@@ -499,7 +501,7 @@ c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
         if (intentos >= MAX_INTENTOS) {
           setAttempts(idKey, 0);
           setLockUntil(idKey, Date.now() + BLOQUEO_MS);
-          submitBtn.textContent = 'Iniciar sesión';
+          submitBtn.textContent = t('login.entrar');
           checkBloqueo(); // pinta el mensaje y bloquea el formulario
           return;
         }
@@ -508,7 +510,7 @@ c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
       errorEl.textContent = traducirErrorAuth(err.code);
       errorEl.style.display = 'block';
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Iniciar sesión';
+      submitBtn.textContent = t('login.entrar');
     }
   });
 

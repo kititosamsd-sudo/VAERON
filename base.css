@@ -690,6 +690,25 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
 }
 
 /* ─── FAQ (Centro de ayuda) ─── */
+/* ─── Idioma (selector) ─── */
+.idioma-opciones { display: flex; flex-direction: column; gap: 8px; }
+.idioma-opcion {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; text-align: left; font: inherit; cursor: pointer;
+  padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text-1); font-size: 13.5px; font-weight: 600;
+  transition: border-color var(--t), background var(--t);
+}
+.idioma-opcion:hover { border-color: var(--text-3); }
+.idioma-opcion.activo {
+  border-color: var(--accent); background: var(--accent-soft, var(--surface-2));
+  color: var(--accent);
+}
+.idioma-opcion.activo::after {
+  content: '✓'; font-weight: 700;
+}
+
 .faq-list { display: flex; flex-direction: column; gap: 8px; }
 .faq-item {
   border: 1px solid var(--border); border-radius: 10px;

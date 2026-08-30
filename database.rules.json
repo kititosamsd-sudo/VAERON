@@ -1,42 +1,34 @@
 {
   "rules": {
-
     "directorio": {
       "$correoKey": {
         ".read": true,
         ".write": "auth != null && auth.token.email === 'vaeronspa@gmail.com'"
       }
     },
-
     "cuentas": {
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'vaeronspa@gmail.com')",
         ".write": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && newData.child('rol').val() !== 'superadmin' && ((newData.exists() && newData.child('tiendaId').val() === root.child('cuentas').child(auth.uid).child('tiendaId').val()) || (!newData.exists() && data.child('tiendaId').val() === root.child('cuentas').child(auth.uid).child('tiendaId').val()))))"
       }
     },
-
     "eventos": {
       ".read": "auth != null && auth.token.email === 'vaeronspa@gmail.com'",
       ".write": "auth != null && auth.token.email === 'vaeronspa@gmail.com'"
     },
-
     "tiendas": {
       ".read": "auth != null && auth.token.email === 'vaeronspa@gmail.com'",
       ".write": "auth != null && auth.token.email === 'vaeronspa@gmail.com'",
-
       "$tiendaId": {
         ".read": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId)",
-
         "info": {
           ".write": "auth != null && auth.token.email === 'vaeronspa@gmail.com'"
         },
-
         "usuarios": {
           "$uid": {
             ".write": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && auth.uid !== $uid))"
           }
         },
-
         "products": {
           ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
         },
@@ -44,14 +36,19 @@
           ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
         },
         "config": {
-          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
-        },
-        "meta": {
-          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
+          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && data.child('logoUrl').val() === newData.child('logoUrl').val() && data.child('almacenesNombres').val() === newData.child('almacenesNombres').val() && data.child('almacenesActivos').val() === newData.child('almacenesActivos').val()",
+          "logoUrl": {
+            ".write": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId))"
+          },
+          "almacenesNombres": {
+            ".write": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId))"
+          },
+          "almacenesActivos": {
+            ".write": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && (newData.child('alm3').val() !== true || root.child('tiendas').child($tiendaId).child('info').child('plan').val() !== 'basico') && ((newData.child('alm4').val() !== true && newData.child('alm5').val() !== true && newData.child('alm6').val() !== true) || root.child('tiendas').child($tiendaId).child('info').child('plan').val() === 'premium')))"
+          }
         }
       }
     },
-
     "foro": {
       "publicaciones": {
         ".read": true,
@@ -60,6 +57,5 @@
         }
       }
     }
-
   }
 }
