@@ -242,25 +242,75 @@
           <div class="cfg-group">
             <div class="cfg-group-heading"><span class="cfg-chip-dot slate"></span>Soporte</div>
             <div class="cfg-card">
-              <div class="cfg-row">
+              <button type="button" class="cfg-row" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);font:inherit;text-align:left;cursor:pointer;color:inherit" onclick="openModal('faqModal')">
                 <div class="cfg-row-left">
                   <span class="cfg-row-icon slate"><svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></span>
                   <div class="cfg-row-text"><div class="cfg-row-label">Centro de ayuda</div></div>
                 </div>
-                <div class="cfg-row-right"><span class="settings-soon-tag">Próximamente</span></div>
-              </div>
-              <div class="cfg-row">
+                <div class="cfg-row-right" style="color:var(--text-3)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+                </div>
+              </button>
+              <button type="button" class="cfg-row" style="width:100%;background:none;border:none;font:inherit;text-align:left;cursor:pointer;color:inherit" onclick="contactarSoporteWhatsapp()">
                 <div class="cfg-row-left">
                   <span class="cfg-row-icon slate"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg></span>
                   <div class="cfg-row-text"><div class="cfg-row-label">Contactar soporte</div></div>
                 </div>
-                <div class="cfg-row-right"><span class="settings-soon-tag">Próximamente</span></div>
-              </div>
+                <div class="cfg-row-right" style="color:var(--text-3)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+                </div>
+              </button>
             </div>
           </div>
 
         </section>
 
+      </div>
+    </div>
+
+    <!-- ── Modal: Centro de ayuda (FAQ) ── -->
+    <div class="modal-overlay" id="faqModal" onclick="outsideClose(event,'faqModal')">
+      <div class="modal">
+        <div class="modal-header">
+          <div>
+            <h2>Centro de ayuda</h2>
+            <p>Preguntas frecuentes sobre VAERON</p>
+          </div>
+          <button class="modal-close" onclick="closeModal('faqModal')">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="faq-list">
+            <details class="faq-item" open>
+              <summary>¿Cómo agrego un producto nuevo al stock?</summary>
+              <p>Ve a <strong>Stock → Agregar producto</strong>, completa el código, nombre y cantidad, y guarda. También puedes importar varios a la vez desde un archivo con <strong>Importar stock</strong>.</p>
+            </details>
+            <details class="faq-item">
+              <summary>¿Cuál es la diferencia entre los planes Básico, Medio y Premium?</summary>
+              <p>Cada plan habilita distintas secciones y límites del sistema (usuarios, reportes, funciones avanzadas). Si tu tienda necesita algo que aparece bloqueado, contacta a soporte para revisar un cambio de plan.</p>
+            </details>
+            <details class="faq-item">
+              <summary>¿Cómo agrego a un vendedor a mi tienda?</summary>
+              <p>Como administrador, entra a <strong>Registros</strong> y crea la cuenta del vendedor ahí. Va a quedar asociado automáticamente a tu misma tienda, sin ver datos de otras tiendas.</p>
+            </details>
+            <details class="faq-item">
+              <summary>Olvidé mi contraseña, ¿qué hago?</summary>
+              <p>Desde la pantalla de inicio de sesión usa la opción de recuperar contraseña. Si el correo no te llega, contacta a soporte para que un administrador te ayude.</p>
+            </details>
+            <details class="faq-item">
+              <summary>¿Mis datos se comparten con otras tiendas del sistema?</summary>
+              <p>No. Cada tienda tiene su propio espacio de datos (productos, clientes, pedidos, historial); ninguna otra tienda puede leerlos ni escribirlos.</p>
+            </details>
+            <details class="faq-item">
+              <summary>¿Cómo cambio mi nombre o contraseña de cuenta?</summary>
+              <p>Entra a <strong>Perfil</strong> desde el menú lateral: ahí puedes actualizar tu nombre para mostrar y cambiar tu contraseña.</p>
+            </details>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary btn-sm" onclick="closeModal('faqModal')">Cerrar</button>
+        </div>
       </div>
     </div>
   </div>

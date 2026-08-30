@@ -689,6 +689,28 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
   padding: 2px 9px; white-space: nowrap;
 }
 
+/* ─── FAQ (Centro de ayuda) ─── */
+.faq-list { display: flex; flex-direction: column; gap: 8px; }
+.faq-item {
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; background: var(--surface-2);
+}
+.faq-item summary {
+  font-size: 13.5px; font-weight: 650; color: var(--text-1);
+  cursor: pointer; list-style: none; display: flex;
+  align-items: center; justify-content: space-between; gap: 10px;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: '+'; font-size: 16px; color: var(--text-3);
+  flex-shrink: 0; transition: transform var(--t);
+}
+.faq-item[open] summary::after { transform: rotate(45deg); }
+.faq-item p {
+  font-size: 12.5px; color: var(--text-2); line-height: 1.55;
+  margin-top: 8px;
+}
+
 /* ─── Settings card — usada en Perfil y Configuración ──────────
    Reemplaza el bloque genérico de icono+título+botón suelto por
    una tarjeta con jerarquía clara: cabecera, separador, control,

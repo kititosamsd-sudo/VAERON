@@ -81,6 +81,22 @@ function actualizarTemaLabel() {
   if (chevron) label.appendChild(chevron);
 }
 
+/* ── Contactar soporte (WhatsApp) ────────────────────────────────
+   Número fijo del equipo de soporte de VAERON — NO es por tienda.
+   ⚠️ REEMPLAZAR antes de producción: hoy tiene un placeholder que
+   no es un número real. Formato: código de país + número, sin
+   espacios, sin "+" (ej. Perú: 51987654321). */
+const SOPORTE_WHATSAPP_NUMERO = '51929454499';
+
+function contactarSoporteWhatsapp() {
+  if (!SOPORTE_WHATSAPP_NUMERO || SOPORTE_WHATSAPP_NUMERO === 'PENDIENTE-CONFIGURAR') {
+    alert('El número de soporte todavía no está configurado. Contacta al administrador del sistema.');
+    return;
+  }
+  const mensaje = encodeURIComponent('Hola, necesito ayuda con el sistema VAERON.');
+  window.open(`https://wa.me/${SOPORTE_WHATSAPP_NUMERO}?text=${mensaje}`, '_blank');
+}
+
 /* ── Logo de la tienda ───────────────────────────────────────── */
 
 function cargarLogoPreview() {
