@@ -173,7 +173,14 @@ const PROYECTO_COORDINADOR = 'proyecto_a';
 // pasar al siguiente. Subir este número no mueve tiendas que ya
 // existen — solo cambia dónde se crean las tiendas NUEVAS de ahí en
 // adelante.
-const MAX_TIENDAS_POR_PROYECTO = 2;
+//
+// Fijado en 4 a propósito: cada proyecto Firebase está pareado 1 a 1
+// con su propia cuenta Cloudinary (ver cloudinary-accounts.js), y 4
+// tiendas por cuenta deja margen de sobra incluso en el peor caso de
+// 3000 fotos de producto por tienda (~600-960MB de 5GB de cupo). Si
+// subes este número, revisa también cloudinary-accounts.js — cada
+// cuenta Cloudinary tiene el mismo tope.
+const MAX_TIENDAS_POR_PROYECTO = 4;
 
 // Clave usada en localStorage para recordar en qué proyecto(s) vive
 // la sesión activa de este navegador — la usan login.html (al
