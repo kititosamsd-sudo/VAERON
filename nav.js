@@ -179,17 +179,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCROLL_TOP_THRESHOLD = 4; // px — "está arriba del todo" con algo de margen
   const isCompactTopbarViewport = () => window.matchMedia('(max-width: 1280px)').matches;
 
-  // BUG REAL: en una lista corta (ej. Stock filtrado a un almacén con
-  // pocos productos), el alto que libera ocultar los botones puede ser
-  // MAYOR que lo poco que faltaba por scrollear. Al ocultarlos, el
-  // contenido deja de necesitar scroll → el navegador fuerza scrollTop
-  // a 0 automáticamente → eso dispara un scroll "fantasma" con
-  // scrollTop=0 → se vuelven a mostrar los botones → el contenido
-  // vuelve a necesitar ese scroll → se ocultan de nuevo... un ciclo que
-  // se veía como parpadeo constante y que además impedía terminar de
-  // bajar (nunca se estabilizaba). Por eso, antes de ocultar, medimos
-  // cuánto alto liberaría hacerlo y solo se ocultan si, restando ese
-  // alto, sigue quedando scroll real de sobra.
+  // BUG REAL (persistía incluso con el chequeo de más abajo): en
+  // Chrome/Android la barra de direcciones se esconde/reaparece SOLA
+  // mientras se scrollea, y eso cambia la altura real del viewport
+  // (100dvh) en pleno gesto — es decir, main.main crece y encoge sin
+  // que el usuario haya scrolleado nada de más. Con una lista corta
+  // (ej. Almacén 1 con pocos productos) ese solo cambio de alto ya
+  // alcanza para que el contenido pase de "necesita scroll" a "ya no
+  // necesita" y viceversa varias veces por segundo — cada vez que eso
+  // pasa, este listener lo mal-interpretaba como que el usuario subió
+  // o bajó, ocultaba/mostraba los botones, y el clientHeight volvía a
+  // cambiar por eso mismo: un rebote que se autoalimentaba y se sentía
+  // como que la pantalla "se bajaba y se subía sola". La corrección:
+  // si el alto del contenedor cambió desde el evento anterior, este
+  // scroll no es un gesto nuevo del usuario — se ignora ese tick.
+  let lastMainClientHeight = null;
+
+  // Además, incluso descartando esos scrolls "fantasma", en una lista
+  // corta el alto que libera ocultar los botones puede ser MAYOR que
+  // lo poco que faltaba por scrollear — así que aunque el usuario sí
+  // haya scrolleado de verdad, ocultar los dejaría sin necesidad de
+  // scroll, el navegador forzaría scrollTop a 0, eso los volvería a
+  // mostrar, y así de nuevo. Por eso se exige un margen real de sobra
+  // (no solo "más que cero") antes de ocultar — un límite fijo, no el
+  // mismo umbral de 4px que se usa para el estado "arriba del todo".
+  const MARGEN_REAL_MINIMO = 60; // px — más que lo que puede oscilar la barra de direcciones
   function alcanzaScrollRealParaOcultar(target) {
     const actions = document.querySelector('.topbar-actions');
     if (!actions) return true;
@@ -199,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.remove('topbar-scrolling'); // se resuelve de nuevo más abajo con el valor real
     const alturaLiberada = Math.max(0, shownHeight - hiddenHeight);
     const maxScroll = target.scrollHeight - target.clientHeight;
-    return (maxScroll - alturaLiberada) > SCROLL_TOP_THRESHOLD;
+    return (maxScroll - alturaLiberada) > MARGEN_REAL_MINIMO;
   }
 
   document.addEventListener('scroll', e => {
@@ -227,6 +241,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // sirva de referencia, no tiene sentido ocultar nada: se deja el
     // topbar siempre visible en esas vistas.
     if (!document.querySelector('.topbar-actions .search-wrap')) return;
+
+    // Descarta el tick si el alto del contenedor cambió desde el
+    // evento anterior (barra de direcciones animándose) — no es un
+    // scroll real del usuario, ver comentario arriba.
+    const currentClientHeight = target.clientHeight;
+    const alturaCambio = lastMainClientHeight !== null && lastMainClientHeight !== currentClientHeight;
+    lastMainClientHeight = currentClientHeight;
+    if (alturaCambio) return;
 
     const yaOculto = document.body.classList.contains('topbar-scrolling');
     if (!yaOculto && target.scrollTop > SCROLL_TOP_THRESHOLD && !alcanzaScrollRealParaOcultar(target)) {
