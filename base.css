@@ -588,6 +588,12 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
   flex-shrink: 0; z-index: 1;
 }
 .profile-name { font-size: 17px; font-weight: 700; color: var(--text-1); letter-spacing: -0.01em; }
+/* Sin esto, dentro de .profile-card (display:flex) el contenido
+   largo de .profile-info (sobre todo el correo, en font-mono) podía
+   desbordar la tarjeta en vez de truncarse/ajustarse — clásico bug
+   de flex-child sin min-width:0, se detectó en auditoría (la clase
+   se usaba en el HTML sin ninguna regla CSS). */
+.profile-info { flex: 1; min-width: 0; }
 .profile-meta {
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px;
   margin-top: 3px;
@@ -1154,6 +1160,32 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
 .form-group { margin-bottom: 16px; }
 .form-group:last-child { margin-bottom: 0; }
 
+/* ── Detalle informativo dentro de un modal (ej. "RUC actual" /
+   "Ciudad" antes de editarlos, en Notas de Pedido → Editar cliente)
+   — se detectó en auditoría que esta clase se usaba en el HTML sin
+   ninguna regla CSS: se veía como texto plano, sin la caja/etiqueta
+   que sí tiene el resto de la app. */
+.modal-detail-row {
+  display: flex; gap: 10px; margin-bottom: 16px;
+}
+.modal-detail-item {
+  flex: 1; min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+}
+.modal-detail-label {
+  font-size: 11px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.02em;
+  margin-bottom: 2px;
+}
+.modal-detail-value {
+  font-size: 13px; color: var(--text-1);
+  font-family: var(--font-mono);
+  overflow-wrap: break-word;
+}
+
 .form-label {
   display: block; font-size: 12px; font-weight: 600;
   color: var(--text-2); margin-bottom: 6px; letter-spacing: -0.01em;
@@ -1533,8 +1565,12 @@ td { padding: 13px 18px; vertical-align: middle; }
      faltaba: en tablets (601-1280px) el contenido llegaba justo al
      borde, así que el botón final (ej. "Confirmar pedido") quedaba
      inalcanzable por scroll — parecía que el scroll se cortaba antes
-     de llegar, cuando en realidad nunca hubo espacio para mostrarlo. */
-  .page-content { padding: 18px 20px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
+     de llegar, cuando en realidad nunca hubo espacio para mostrarlo.
+     Sin overflow-y/-webkit-overflow-scrolling/overscroll-behavior-y
+     acá: eso ya lo cubre main.main (mismo motivo que en el bloque
+     ≤768px de más abajo — tenerlo en los dos anidados causaba scroll
+     trabado/parpadeando en vez de arreglar nada). */
+  .page-content { padding: 18px 20px 80px; }
 }
 
 /* =========================================================
@@ -1588,16 +1624,19 @@ td { padding: 13px 18px; vertical-align: middle; }
     min-width: 0;
   }
 
-  /* ── Content ── */
+  /* ── Content ──
+     Ya NO tiene su propio scroll acá — desde que main.main pasó a
+     manejar el scroll completo (topbar + contenido juntos, ver el
+     comentario en "── Main ──" arriba, breakpoint ≤1280px), tener
+     overflow-y:auto también acá creaba DOS contenedores scrolleables
+     anidados (main.main Y .page-content) compitiendo por el mismo
+     gesto de deslizar — eso era la causa real de que en móvil el
+     scroll se sintiera trabado/parpadeando y no dejara bajar del
+     todo. Ahora .page-content solo aporta el padding; el scroll (y
+     el overscroll-behavior-y:none que evita el rebote nativo) ya
+     está cubierto por main.main. */
   .page-content {
     padding: 14px 12px 80px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    /* Sin esto, al llegar al final (o al principio) de la lista, el
-       navegador/WebView hacía su "rebote" nativo (y en Chrome podía
-       llegar a interpretarse como un gesto de pull-to-refresh) — se
-       sentía como que la pantalla parpadeaba o se recargaba sola. */
-    overscroll-behavior-y: none;
   }
 
   /* ── Form ── */

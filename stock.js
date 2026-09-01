@@ -435,7 +435,7 @@ function setupStockInfiniteScroll(totalFiltered) {
       stockRenderLimit += STOCK_PAGE_SIZE;
       renderStockPage();
     }
-  }, { root: anchor.closest('.page-content'), rootMargin: '400px' });
+  }, { root: anchor.closest('main.main'), rootMargin: '400px' });
   stockScrollObserver.observe(sentinel);
 }
 

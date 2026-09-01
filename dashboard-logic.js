@@ -176,14 +176,10 @@ window.Dashboard = (function () {
 
   // ══════════════════════════════════════════════════════
   // Panel avanzado (exclusivo Premium) — ABC, valor por almacén,
-  // índice de salud. En Básico la sección entera queda oculta y ni
-  // se calcula. En Medio y Premium sí se calcula siempre con datos
-  // reales de la tienda — lo que cambia según limitePlan('panelAvanzado')
-  // es si el bloque queda nítido (Premium) o con blur + candado
-  // encima (Medio) — ver renderAdvancedPanel() al final de este
-  // grupo. Así Medio ve, literalmente, su propia información
-  // desenfocada — no una maqueta de mentira — que es lo que se
-  // desbloquea al subir a Premium.
+  // índice de salud. En Básico y Medio la sección entera queda
+  // oculta y ni se calcula — solo Premium la ve, nítida, sin
+  // candado ni preview borroso. Ver renderAdvancedPanel() al final
+  // de este grupo.
   // ══════════════════════════════════════════════════════
 
   // ── ABC / Pareto: qué % de los productos concentra el valor ──
@@ -662,21 +658,20 @@ window.Dashboard = (function () {
   }
 
   // ── Orquestador del panel avanzado ──────────────────────
-  // Los sub-paneles se calculan y pintan siempre, con datos
-  // reales — lo único que decide limitePlan('panelAvanzado') es si
-  // el grid queda nítido o tapado por el candado (dashAdvancedLock).
+  // Solo Premium ve este panel. En Básico y Medio la sección entera
+  // queda oculta (display:none, ni se calcula) — antes, en Medio se
+  // mostraba un preview borroso con candado como incentivo para
+  // subir de plan; se quitó a pedido del cliente (VAERON-panel-
+  // avanzado-solo-premium): ahora Medio ve el dashboard exactamente
+  // igual que Básico, sin nada de Premium a la vista.
   function renderAdvancedPanel(products) {
     const section = document.getElementById('dashAdvancedSection');
     const grid = document.getElementById('dashAdvancedGrid');
     const lock = document.getElementById('dashAdvancedLock');
     if (!grid) return; // la vista ya no está montada
 
-    // Básico: la sección entera queda oculta, ni se calcula. El
-    // preview desenfocado con candado (dashAdvancedLock) queda
-    // reservado para Medio, que sí puede ver su propia información
-    // tapada como incentivo para subir a Premium.
-    const plan = (typeof planActual === 'function') ? planActual() : 'basico';
-    if (plan === 'basico') {
+    const habilitado = (typeof limitePlan === 'function') ? limitePlan('panelAvanzado') : false;
+    if (!habilitado) {
       if (section) section.style.display = 'none';
       return;
     }
@@ -693,9 +688,8 @@ window.Dashboard = (function () {
       console.error('[Dashboard] No se pudo cargar la librería de gráficos:', err);
     });
 
-    const habilitado = (typeof limitePlan === 'function') ? limitePlan('panelAvanzado') : false;
-    grid.classList.toggle('is-locked', !habilitado);
-    if (lock) lock.style.display = habilitado ? 'none' : 'flex';
+    grid.classList.remove('is-locked');
+    if (lock) lock.style.display = 'none';
   }
 
   // ── Etiqueta de plan en el topbar ──────────────────────

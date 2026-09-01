@@ -151,7 +151,7 @@ function setupCatalogoInfiniteScroll(totalFiltered) {
       catalogoRenderLimit += CATALOGO_PAGE_SIZE;
       renderCatalogoPage();
     }
-  }, { root: grid.closest('.page-content'), rootMargin: '400px' });
+  }, { root: grid.closest('main.main'), rootMargin: '400px' });
   catalogoScrollObserver.observe(sentinel);
 }
 

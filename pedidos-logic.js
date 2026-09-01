@@ -97,10 +97,15 @@ function renderClientsPage() {
 /* Observa un centinela al final de la tabla; cuando entra en
    pantalla, se cargan 20 clientes más — sin volver a pedirle nada
    a Firebase, ya están todos en clientsCache. root apunta a
-   .page-content (el contenedor que realmente scrollea) en vez de
-   la ventana completa — mismo ajuste que se hizo en Stock, donde
-   root:null nunca detectaba el final porque el scroll real pasa
-   adentro de .page-content, no en la ventana. */
+   main.main (el contenedor que realmente scrollea desde ≤1280px —
+   antes era .page-content, pero desde que main.main pasó a manejar
+   el scroll completo, root:'.page-content' quedó apuntando a un
+   contenedor que ya no scrollea) en vez de la ventana completa —
+   root:null nunca detectaba el final porque el scroll real no pasa
+   en la ventana. En escritorio (>1280px) .page-content sigue siendo
+   el que scrollea, pero main.main sigue siendo un ancestro válido
+   igual (el spec de IntersectionObserver ya resuelve la intersección
+   contra el scrollport real cuando root no es el que clippa). */
 function setupClientsInfiniteScroll(totalFiltered) {
   if (clientsScrollObserver) { clientsScrollObserver.disconnect(); clientsScrollObserver = null; }
   if (clientsRenderLimit >= totalFiltered) return; // ya está todo cargado
@@ -123,7 +128,7 @@ function setupClientsInfiniteScroll(totalFiltered) {
       clientsRenderLimit += CLIENTS_PAGE_SIZE;
       renderClientsPage();
     }
-  }, { root: tbody.closest('.page-content'), rootMargin: '400px' });
+  }, { root: tbody.closest('main.main'), rootMargin: '400px' });
   clientsScrollObserver.observe(sentinel);
 }
 

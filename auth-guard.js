@@ -460,17 +460,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // de Firebase.
 document.addEventListener('DOMContentLoaded', () => {
   const logoutBtn = document.getElementById('logoutBtn');
-  const logoutNavItem = document.getElementById('logoutNavItem');
 
   if (logoutBtn) {
     logoutBtn.addEventListener('click', e => {
       e.stopPropagation(); // evita que el click también dispare el de .user-card
-      logout();
-    });
-  }
-  if (logoutNavItem) {
-    logoutNavItem.addEventListener('click', e => {
-      e.preventDefault();
       logout();
     });
   }

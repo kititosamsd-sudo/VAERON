@@ -140,12 +140,9 @@
          datos: concentración de valor (ABC/Pareto), comparación de
          valor entre almacenes (hasta 6 solo en Premium) e índice de
          salud de inventario. renderAdvancedPanel() en
-         dashboard-logic.js decide qué ve cada plan: en Básico esta
-         sección entera queda oculta (display:none, ni se calcula);
-         en Medio se calcula con datos reales pero queda con blur +
-         candado encima (dashAdvancedLock), para que quede claro que
-         es la propia información de la tienda la que se desbloquea
-         al subir a Premium. -->
+         dashboard-logic.js decide qué ve cada plan: en Básico y
+         Medio esta sección entera queda oculta (display:none, ni se
+         calcula) — solo Premium la ve, nítida y sin candado. -->
     <div class="dash-advanced-section" id="dashAdvancedSection">
       <div class="dash-advanced-header">
         <div class="dash-advanced-eyebrow">

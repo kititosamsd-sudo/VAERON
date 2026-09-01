@@ -165,14 +165,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // usuario scrollea de vuelta arriba del todo (a pedido: reaparecer
   // solos al pausar se sentía como que la pantalla "parpadeaba"). El
   // listener va en el document con "capture" porque el evento
-  // "scroll" no burbujea — así se captura sin importar qué vista
-  // (.page-content) esté montada en cada momento.
+  // "scroll" no burbujea — así se captura sin importar qué vista esté
+  // montada en cada momento.
+  //
+  // Escucha el scroll de main.main, NO de .page-content: hasta hace
+  // poco .page-content tenía su propio overflow-y:auto además del de
+  // main.main — dos contenedores scrolleables anidados al mismo
+  // tiempo, lo que hacía que en móvil el scroll se sintiera trabado y
+  // parpadeando (ver el comentario en base.css, breakpoint ≤1280px).
+  // Se le quitó el scroll propio a .page-content y quedó main.main
+  // como el único contenedor que scrollea — así que este listener
+  // tiene que escuchar A ESE elemento, no al viejo.
   const SCROLL_TOP_THRESHOLD = 4; // px — "está arriba del todo" con algo de margen
   const isCompactTopbarViewport = () => window.matchMedia('(max-width: 1280px)').matches;
 
   document.addEventListener('scroll', e => {
     const target = e.target;
-    if (!target || !target.classList || !target.classList.contains('page-content')) return;
+    if (!target || !target.matches || !target.matches('main.main')) return;
     if (!isCompactTopbarViewport()) return;
     // BUG REAL: al enfocar o escribir en un buscador (ej. "RUC o razón
     // social…" de Notas de Pedido), el teclado virtual aparece/cambia
