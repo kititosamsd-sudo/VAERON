@@ -366,6 +366,29 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
   display: block; font-size: 11px; color: var(--text-3); font-weight: 400;
 }
 
+/* ─── Visor de imagen de producto (Stock/Catálogo) ─────────────
+   La foto va sobre un marco --surface-2, igual que el resto de los
+   contenedores de imagen del sistema (.product-image-preview,
+   .pt-img-thumb) — así no queda flotando suelta contra el blanco
+   del modal, y el borde nunca se recorta si la foto es más clara
+   que el fondo. */
+.image-view-frame {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.image-view-frame img {
+  max-width: 100%;
+  max-height: 55vh;
+  border-radius: var(--r-sm);
+  object-fit: contain;
+  display: block;
+}
+
 /* ─── Columna "Img" (primera) de la tabla de Stock ────────────── */
 .col-img { width: 44px; }
 .pt-img-thumb {

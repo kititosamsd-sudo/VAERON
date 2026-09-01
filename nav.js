@@ -179,6 +179,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCROLL_TOP_THRESHOLD = 4; // px — "está arriba del todo" con algo de margen
   const isCompactTopbarViewport = () => window.matchMedia('(max-width: 1280px)').matches;
 
+  // BUG REAL: en una lista corta (ej. Stock filtrado a un almacén con
+  // pocos productos), el alto que libera ocultar los botones puede ser
+  // MAYOR que lo poco que faltaba por scrollear. Al ocultarlos, el
+  // contenido deja de necesitar scroll → el navegador fuerza scrollTop
+  // a 0 automáticamente → eso dispara un scroll "fantasma" con
+  // scrollTop=0 → se vuelven a mostrar los botones → el contenido
+  // vuelve a necesitar ese scroll → se ocultan de nuevo... un ciclo que
+  // se veía como parpadeo constante y que además impedía terminar de
+  // bajar (nunca se estabilizaba). Por eso, antes de ocultar, medimos
+  // cuánto alto liberaría hacerlo y solo se ocultan si, restando ese
+  // alto, sigue quedando scroll real de sobra.
+  function alcanzaScrollRealParaOcultar(target) {
+    const actions = document.querySelector('.topbar-actions');
+    if (!actions) return true;
+    const shownHeight = actions.getBoundingClientRect().height;
+    document.body.classList.add('topbar-scrolling');
+    const hiddenHeight = actions.getBoundingClientRect().height;
+    document.body.classList.remove('topbar-scrolling'); // se resuelve de nuevo más abajo con el valor real
+    const alturaLiberada = Math.max(0, shownHeight - hiddenHeight);
+    const maxScroll = target.scrollHeight - target.clientHeight;
+    return (maxScroll - alturaLiberada) > SCROLL_TOP_THRESHOLD;
+  }
+
   document.addEventListener('scroll', e => {
     const target = e.target;
     if (!target || !target.matches || !target.matches('main.main')) return;
@@ -204,6 +227,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // sirva de referencia, no tiene sentido ocultar nada: se deja el
     // topbar siempre visible en esas vistas.
     if (!document.querySelector('.topbar-actions .search-wrap')) return;
+
+    const yaOculto = document.body.classList.contains('topbar-scrolling');
+    if (!yaOculto && target.scrollTop > SCROLL_TOP_THRESHOLD && !alcanzaScrollRealParaOcultar(target)) {
+      return; // no hay margen real para ocultar sin generar el rebote descrito arriba
+    }
 
     document.body.classList.toggle('topbar-scrolling', target.scrollTop > SCROLL_TOP_THRESHOLD);
   }, true);

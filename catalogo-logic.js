@@ -59,15 +59,16 @@ function catalogoItemHtml(p) {
   const image = p.image || '';
   const category = p.category || 'Sin categoría';
   const escapedName = escapeJsAttr(name);
+  const escapedCode = escapeJsAttr(code);
   const stock = getDisplayStock(p);
   const price = p.price !== undefined ? p.price : 0;
   const currency = p.currency === 'USD' ? 'USD' : 'PEN';
   const priceHtml = price > 0 ? fmtMoney(price, currency) : '—';
 
   const media = image
-    ? `<div class="catalogo-thumb-wrap" onclick="openImageView('${escapeJsAttr(image)}','${escapedName}')">
+    ? `<div class="catalogo-thumb-wrap" onclick="openImageView('${escapeJsAttr(image)}','${escapedName}','${escapedCode}')">
          <img src="${image}" alt="">
-         <button class="catalogo-quickview" onclick="event.stopPropagation();openImageView('${escapeJsAttr(image)}','${escapedName}')" aria-label="Ver imagen">
+         <button class="catalogo-quickview" onclick="event.stopPropagation();openImageView('${escapeJsAttr(image)}','${escapedName}','${escapedCode}')" aria-label="Ver imagen">
            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
          </button>
        </div>`

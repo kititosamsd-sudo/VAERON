@@ -211,7 +211,7 @@ function productCardHtml(p) {
   const stock = getDisplayStock(p);
   const stockBajo = stock <= 6;
   const imgCellHtml = p.image
-    ? `<div class="pc-img-thumb" onclick="event.stopPropagation();openImageView('${escapeJsAttr(p.image)}','${escapeJsAttr(name)}')"><img src="${p.image}" alt=""></div>`
+    ? `<div class="pc-img-thumb" onclick="event.stopPropagation();openImageView('${escapeJsAttr(p.image)}','${escapeJsAttr(name)}','${escapedCode}')"><img src="${p.image}" alt=""></div>`
     : `<div class="pc-img-thumb pc-img-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
   return `
     <div class="product-card${isChecked ? ' selected' : ''}" data-code="${escapeHtml(code)}">
@@ -251,7 +251,7 @@ function productRowHtml(p) {
   const showCheckbox = typeof currentUserRole !== 'undefined' && currentUserRole !== 'vendedor';
   const editOnclick = `openEditStock('${escapedCode}')`;
   const imgCellHtml = p.image
-    ? `<div class="pt-img-thumb"><img src="${p.image}" alt="" onclick="openImageView('${escapeJsAttr(p.image)}','${escapeJsAttr(name)}')"></div>`
+    ? `<div class="pt-img-thumb"><img src="${p.image}" alt="" onclick="openImageView('${escapeJsAttr(p.image)}','${escapeJsAttr(name)}','${escapedCode}')"></div>`
     : `<div class="pt-img-thumb pt-img-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
   const stock = getDisplayStock(p);
   const stockBajo = stock <= 6;
@@ -291,11 +291,16 @@ function cloudinaryDownloadUrl(url) {
 
 let imageViewActual = { url: '', name: '' };
 
-function openImageView(url, name) {
+// code es opcional (Catálogo/Stock ya lo tienen a mano en cada card;
+// si algún llamador viejo no lo pasa, el subtítulo simplemente no
+// aparece en vez de romper nada).
+function openImageView(url, name, code) {
   if (!url) return;
   imageViewActual = { url, name: name || 'Imagen' };
   document.getElementById('imageViewImg').src = url;
   document.getElementById('imageViewName').textContent = name || 'Imagen';
+  const codeEl = document.getElementById('imageViewCode');
+  if (codeEl) codeEl.textContent = code ? displayProductCode(code) : '';
   const dl = document.getElementById('imageViewDownload');
   dl.href = cloudinaryDownloadUrl(url);
   openModal('imageViewModal');
