@@ -389,6 +389,37 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
   display: block;
 }
 
+/* ─── Autocompletado de Nueva Nota (cliente / producto) ────────
+   No había ningún patrón de "buscar y elegir de una lista" en el
+   resto de la app — se arma con los mismos tokens que ya usan las
+   tarjetas y modales (surface, border, radio, sombra chica) en vez
+   de un componente visual nuevo. */
+.nota-autocomplete {
+  max-width: 420px;
+  margin-top: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  max-height: 240px;
+  overflow-y: auto;
+}
+.nota-autocomplete-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-1);
+  border-bottom: 1px solid var(--border);
+}
+.nota-autocomplete-item:last-child { border-bottom: none; }
+.nota-autocomplete-item:hover { background: var(--surface-2); }
+.nota-autocomplete-item span {
+  display: block; font-size: 11.5px; color: var(--text-3); margin-top: 2px;
+}
+.nota-autocomplete-empty {
+  padding: 10px 14px; font-size: 12.5px; color: var(--text-3);
+}
+
 /* ─── Columna "Img" (primera) de la tabla de Stock ────────────── */
 .col-img { width: 44px; }
 .pt-img-thumb {

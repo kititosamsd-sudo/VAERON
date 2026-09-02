@@ -35,6 +35,9 @@
         "clients": {
           ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
         },
+        "orders": {
+          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
+        },
         "config": {
           ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && data.child('logoUrl').val() === newData.child('logoUrl').val() && data.child('almacenesNombres').val() === newData.child('almacenesNombres').val() && data.child('almacenesActivos').val() === newData.child('almacenesActivos').val()",
           "logoUrl": {

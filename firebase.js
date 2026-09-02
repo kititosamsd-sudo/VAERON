@@ -192,6 +192,7 @@ function scopedRef(nombreColeccion) {
 
 const refProducts = scopedRef('products');
 const refClients  = scopedRef('clients');
+const refOrders   = scopedRef('orders');
 const refUsers    = scopedRef('usuarios');
 // Ajustes propios de la tienda que ella misma puede editar (a
 // diferencia de refTiendas/info, que es del súper-admin) — por ahora
@@ -1410,6 +1411,26 @@ function deleteClient(ruc) {
 
 function getClient(ruc) {
   return refClients.child(ruc).get().then(snap => snap.val());
+}
+
+// =========================================================
+// NOTAS DE PEDIDO (orders)
+// =========================================================
+// A diferencia de clientes (clave natural: RUC), cada nota no tiene
+// una clave de negocio propia — se guarda con push() como el resto
+// de los eventos de la app (ver refEventos más arriba).
+function saveOrder(data) {
+  return refOrders.push({ ...data, creadoEn: firebase.database.ServerValue.TIMESTAMP });
+}
+
+// N° de nota correlativo por tienda, guardado junto al resto de la
+// configuración propia de la tienda (mismo cajón que
+// stockBajoUmbral — ver getTiendaConfig). Una transacción evita que
+// dos notas creadas casi al mismo tiempo por dos vendedores distintos
+// terminen con el mismo número.
+function siguienteCorrelativoNota() {
+  return refConfig.child('notaCorrelativo').transaction(actual => (actual || 0) + 1)
+    .then(res => res.snapshot.val());
 }
 
 // (Antes acá vivía un bloque de SEED de datos de ejemplo que se
