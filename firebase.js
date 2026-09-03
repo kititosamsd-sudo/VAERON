@@ -328,7 +328,7 @@ function setTiendaLogo(url) {
 // plan-limits.js):
 //   - Básico:  alm1 y alm2 siempre activos, con nombre fijo. El resto
 //              no existe para esta tienda (queda oculto).
-//   - Medio:   hasta 3 (alm1 fijo, alm2/alm3 se pueden renombrar,
+//   - Medio:   hasta 4 (alm1 fijo, alm2/alm3/alm4 se pueden renombrar,
 //              agregar o eliminar).
 //   - Premium: hasta 6, mismo mecanismo.
 // alm1 NUNCA se puede desactivar/eliminar (siempre tiene que quedar
@@ -1337,6 +1337,31 @@ function addWarehouseStock(code, whId, qty) {
     return Promise.all([almUpdate, stockUpdate, touch]);
   });
 }
+
+// Mueve `qty` unidades de un almacén a otro para el mismo producto,
+// sin tocar /stock (es el mismo total, solo cambia dónde está
+// guardado). Resta primero del origen — si no alcanza, la propia
+// transacción se cancela (retornar undefined) y no llega a tocar el
+// destino, así nunca se "crea" stock de la nada si algo falla a
+// mitad de camino.
+function moveWarehouseStock(code, fromWh, toWh, qty) {
+  if (fromWh === toWh) return Promise.reject(new Error('El almacén de origen y destino no pueden ser el mismo.'));
+  if (!(qty > 0)) return Promise.reject(new Error('La cantidad a mover debe ser mayor a 0.'));
+
+  const productRef = refProducts.child(code);
+  return productRef.child('almacenes').child(fromWh).transaction(current => {
+    const actual = current || 0;
+    if (actual < qty) return; // undefined → Firebase cancela la transacción
+    return actual - qty;
+  }).then(result => {
+    if (!result.committed) {
+      throw new Error('No hay suficiente stock en el almacén de origen.');
+    }
+    return productRef.child('almacenes').child(toWh).transaction(current => (current || 0) + qty)
+      .then(() => productRef.update({ updatedAt: firebase.database.ServerValue.TIMESTAMP }).catch(() => {}));
+  });
+}
+
 
 // =========================================================
 // CLIENTES

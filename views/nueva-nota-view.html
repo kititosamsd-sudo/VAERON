@@ -2,10 +2,10 @@
 <main class="main">
   <div class="topbar">
     <div class="topbar-title">
-      <h1>Nota de pedido</h1>
-      <p id="notaSubtitulo">Nueva</p>
+      <h1>Nueva Nota de Pedido</h1>
     </div>
     <div class="topbar-actions">
+      <span class="nota-numero-badge" id="notaSubtitulo">Nueva</span>
       <button class="btn btn-ghost" onclick="Router.go('pedidos')">
         <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         Volver
@@ -14,51 +14,92 @@
   </div>
 
   <div class="page-content">
-    <div class="settings-card" style="margin-bottom:16px">
-      <h3 style="margin:0;font-size:14px;font-weight:700;color:var(--text-1)">Cliente</h3>
+    <div class="nota-grid">
+      <div class="nota-main">
 
-      <div id="notaClienteBuscador">
-        <div class="search-wrap" style="max-width:420px">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="notaClienteSearch" placeholder="Buscar por RUC o razón social…" oninput="buscarClienteNota(this.value)" autocomplete="off">
+        <div class="settings-card nota-cliente-card">
+          <div id="notaClienteBuscador" style="width:100%">
+            <div class="search-wrap" style="max-width:420px">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="notaClienteSearch" placeholder="Buscar cliente por RUC o razón social…" oninput="buscarClienteNota(this.value)" autocomplete="off">
+            </div>
+            <div id="notaClienteResultados" class="nota-autocomplete" style="display:none"></div>
+          </div>
+
+          <div id="notaClienteInfo" class="nota-cliente-info-row" style="display:none">
+            <div class="nota-cliente-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div class="nota-cliente-textos">
+              <div class="nota-cliente-nombre" id="notaClienteNombre"></div>
+              <div class="nota-cliente-ruc">RUC: <span id="notaClienteRuc"></span></div>
+            </div>
+            <button class="btn btn-ghost" style="height:30px;padding:0 12px;font-size:12px" onclick="quitarClienteNota()">Cambiar</button>
+          </div>
         </div>
-        <div id="notaClienteResultados" class="nota-autocomplete" style="display:none"></div>
-      </div>
 
-      <div id="notaClienteInfo" style="display:none;align-items:center;gap:10px;font-size:13px;color:var(--text-2)">
-        <div>
-          <strong id="notaClienteNombre" style="color:var(--text-1)"></strong><br>
-          RUC <span id="notaClienteRuc" style="font-family:var(--font-mono)"></span> · <span id="notaClienteCiudad"></span>
+        <div class="settings-card">
+          <h3 class="cfg-group-heading">Agregar artículo</h3>
+          <div class="nota-add-row">
+            <div class="nota-add-field nota-add-producto">
+              <label class="form-label">Producto</label>
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="notaProductoSearch" placeholder="Buscar por nombre o código…" oninput="buscarProductoNota(this.value)" autocomplete="off">
+              </div>
+              <div id="notaProductoResultados" class="nota-autocomplete" style="display:none"></div>
+            </div>
+            <div class="nota-add-field">
+              <label class="form-label">Cantidad</label>
+              <input class="form-input" id="notaCantidadInput" type="number" min="1" step="1" value="1">
+            </div>
+            <div class="nota-add-field">
+              <label class="form-label">Precio unit.</label>
+              <input class="form-input" id="notaPrecioInput" type="number" min="0" step="0.01" placeholder="0.00">
+            </div>
+            <button class="btn btn-primary" onclick="anadirItemNota()">+ Añadir</button>
+          </div>
         </div>
-        <button class="btn btn-ghost" style="height:28px;padding:0 12px;font-size:12px" onclick="quitarClienteNota()">Cambiar</button>
-      </div>
-    </div>
 
-    <div class="settings-card">
-      <h3 style="margin:0;font-size:14px;font-weight:700;color:var(--text-1)">Productos</h3>
+        <div class="settings-card">
+          <div class="nota-section-head">
+            <h3 class="cfg-group-heading">Artículos del pedido</h3>
+            <span class="nota-count-badge" id="notaItemCount">0</span>
+          </div>
 
-      <div>
-        <div class="search-wrap" style="max-width:420px">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="notaProductoSearch" placeholder="Buscar producto o código…" oninput="buscarProductoNota(this.value)" autocomplete="off">
+          <div id="notaEmptyItems" class="nota-empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <p>Aún no hay artículos. Agrega un producto para comenzar.</p>
+          </div>
+          <div id="notaItemsList" style="display:none"></div>
         </div>
-        <div id="notaProductoResultados" class="nota-autocomplete" style="display:none"></div>
+
       </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Código</th><th>Producto</th><th style="width:90px">Cant.</th><th style="width:120px">Precio</th><th style="width:120px">Subtotal</th><th></th></tr>
-          </thead>
-          <tbody id="notaItemsBody"></tbody>
-        </table>
-      </div>
-      <div id="notaEmptyItems" style="padding:24px;text-align:center;color:var(--text-3);font-size:13px">Todavía no agregaste productos.</div>
+      <div class="nota-sidebar">
+        <div class="settings-card nota-resumen-card">
+          <h3 class="cfg-group-heading">Resumen del pedido</h3>
+          <div class="nota-resumen-row"><span>Subtotal</span><span id="notaSubtotal">S/ 0.00</span></div>
+          <div class="nota-resumen-row nota-resumen-total"><span>Total</span><span id="notaTotal">S/ 0.00</span></div>
 
-      <div style="display:flex;justify-content:flex-end;align-items:center;gap:16px;padding-top:16px;border-top:1px solid var(--border)">
-        <div style="font-size:15px;font-weight:700;color:var(--text-1)">Total: S/ <span id="notaTotal">0.00</span></div>
-        <button class="btn btn-primary" id="btnGuardarNota" onclick="guardarNota()">Guardar y exportar PDF</button>
+          <div class="nota-descuento-block">
+            <h4 class="cfg-group-heading">Descuento</h4>
+            <div class="nota-descuento-pills">
+              <button type="button" class="nota-pill" data-pct="5" onclick="setDescuentoNota(5)">5%</button>
+              <button type="button" class="nota-pill" data-pct="10" onclick="setDescuentoNota(10)">10%</button>
+              <button type="button" class="nota-pill" data-pct="15" onclick="setDescuentoNota(15)">15%</button>
+              <button type="button" class="nota-pill" data-pct="20" onclick="setDescuentoNota(20)">20%</button>
+            </div>
+            <div class="nota-descuento-custom">
+              <input class="form-input" id="notaDescuentoInput" type="number" min="0" max="100" step="0.1" value="0" oninput="setDescuentoNota(this.value)">
+              <span>%</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary nota-confirm-btn" id="btnGuardarNota" onclick="guardarNota()">Confirmar pedido</button>
+        </div>
       </div>
+
     </div>
   </div>
 </main>

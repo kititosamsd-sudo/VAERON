@@ -215,6 +215,40 @@
   </div>
 </div>
 
+<!-- ── Modal: Mover stock entre almacenes ── -->
+<div class="modal-overlay" id="moveStockModal" onclick="outsideClose(event,'moveStockModal')">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div>
+        <h2 id="moveStockTitle">Mover stock</h2>
+        <p id="moveStockCode" style="font-family:var(--font-mono);font-size:12px;color:var(--text-3);margin-top:3px"></p>
+      </div>
+      <button class="modal-close" onclick="closeModal('moveStockModal')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Desde</label>
+        <select class="form-input" id="moveStockOrigen"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hacia</label>
+        <select class="form-input" id="moveStockDestino"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cantidad a mover</label>
+        <input class="form-input" id="moveStockCantidad" type="number" min="1" step="1">
+      </div>
+      <p id="moveStockError" style="display:none;font-size:12.5px;color:var(--red);margin-top:4px"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('moveStockModal')">Cancelar</button>
+      <button class="btn btn-primary" id="btnConfirmMoveStock" onclick="confirmMoveStock()">Mover</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Modal: Agregar ── -->
 <div class="modal-overlay" id="addModal" onclick="outsideClose(event,'addModal')">
   <div class="modal">

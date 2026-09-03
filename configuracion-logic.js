@@ -9,7 +9,7 @@
 //      la tarjeta/lista de "Stock bajo" (antes era un "≤ 5" fijo en
 //      el código; ver dashboard-logic.js). Bloqueada en plan Básico.
 //   3) Almacenes — nombres de los almacenes del Catálogo. En Básico
-//      son 2, fijos ("Almacén 1"/"Almacén 2"). En Medio (hasta 3) y
+//      son 2, fijos ("Almacén 1"/"Almacén 2"). En Medio (hasta 4) y
 //      Premium (hasta 6) se pueden renombrar, agregar y eliminar
 //      (menos Almacén 1, que siempre existe) — ver plan-limits.js,
 //      eliminarAlmacen() en firebase.js y aplicarConfigAlmacenes() en

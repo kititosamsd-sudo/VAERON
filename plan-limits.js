@@ -41,7 +41,7 @@ const PLAN_LIMITES = {
   },
   medio: {
     maxVendedores: 2,
-    maxAlmacenes: 3,
+    maxAlmacenes: 4,
     almacenesEditable: true,
     almacenesEliminables: true,
     logoPersonalizable: true,

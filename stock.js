@@ -21,9 +21,31 @@ let WAREHOUSE_LABELS = {
   alm4: 'Almacén 4', alm5: 'Almacén 5', alm6: 'Almacén 6',
 };
 
+// Se recalcula en cada renderProducts() (ver más abajo) — le dice a
+// productCardHtml/productRowHtml si vale la pena mostrar el desglose
+// por almacén. Con un solo almacén activo, decir "está en Almacén 1"
+// en cada fila no aporta nada — solo aparece cuando hay más de uno.
+let multiAlmacenActivo = false;
+
 function getDisplayStock(p) {
   if (!currentWarehouse) return p.stock !== undefined ? p.stock : 0;
   return (p.almacenes && p.almacenes[currentWarehouse]) || 0;
+}
+
+// Solo tiene sentido en "Todos los almacenes" (parado en un almacén
+// puntual ya se sabe en cuál se está mirando). Con varios almacenes
+// activos, muestra dónde está guardada la cantidad total — para que
+// importar/mover a un almacén puntual se vea reflejado acá, y no
+// parezca que todo cae en un mismo montón sin distinción.
+function warehouseBreakdownHtml(p) {
+  if (currentWarehouse || !multiAlmacenActivo) return '';
+  const alm = p.almacenes || {};
+  const partes = Object.keys(alm)
+    .filter(wh => alm[wh] > 0)
+    .sort()
+    .map(wh => `${WAREHOUSE_LABELS[wh] || wh}: ${alm[wh]}`);
+  if (partes.length === 0) return '';
+  return `<div class="stock-wh-breakdown">${escapeHtml(partes.join(' · '))}</div>`;
 }
 
 function switchWarehouse(whId) {
@@ -223,6 +245,7 @@ function productCardHtml(p) {
       <div class="pc-info">
         <div class="pc-name">${escapeHtml(name)}</div>
         <div class="pc-code">${escapeHtml(displayProductCode(code))}</div>
+        ${warehouseBreakdownHtml(p)}
       </div>
       <div class="pc-meta">
         <span class="pc-qty-badge ${stockBajo ? 'stock-low' : 'stock-ok'}">${stock} und</span>
@@ -235,6 +258,12 @@ function productCardHtml(p) {
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
         </svg>
       </button>
+      ${multiAlmacenActivo ? `<button class="btn-icon-edit" title="Mover a otro almacén" onclick="event.stopPropagation();openMoveStock('${escapedCode}')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 3 21 3 21 8"/><line x1="21" y1="3" x2="10" y2="14"/>
+          <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
+        </svg>
+      </button>` : ''}
     </div>
   `;
 }
@@ -261,7 +290,7 @@ function productRowHtml(p) {
       <td class="col-img">${imgCellHtml}</td>
       <td class="pt-code">${escapeHtml(displayProductCode(code))}</td>
       <td class="pt-name">${escapeHtml(name)}</td>
-      <td class="pt-stock"${stockBajo ? ' style="color:var(--red);font-weight:600"' : ''}>${stock}</td>
+      <td class="pt-stock"${stockBajo ? ' style="color:var(--red);font-weight:600"' : ''}>${stock}${warehouseBreakdownHtml(p)}</td>
       <td class="pt-price">${fmtMoney(price, currency)}${precioMayorHtml}</td>
       <td>
         <button class="btn btn-ghost btn-sm stock-edit-btn" title="Editar"
@@ -273,6 +302,13 @@ function productRowHtml(p) {
           </svg>
           Editar
         </button>
+        ${multiAlmacenActivo ? `<button class="btn btn-ghost btn-sm" title="Mover a otro almacén" onclick="openMoveStock('${escapedCode}')">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 3 21 3 21 8"/><line x1="21" y1="3" x2="10" y2="14"/>
+            <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
+          </svg>
+          Mover
+        </button>` : ''}
       </td>
     </tr>
   `;
@@ -447,6 +483,8 @@ function setupStockInfiniteScroll(totalFiltered) {
 /* ── Render: lista de cards ── */
 function renderProducts() {
   stockRenderLimit = STOCK_PAGE_SIZE; // el catálogo cambió (Firebase) — se vuelve a empezar desde la primera página
+  const tabsActivos = document.querySelectorAll('#warehouseTabs .warehouse-tab[data-wh]:not([data-wh=""])');
+  multiAlmacenActivo = tabsActivos.length > 1;
   renderStockPage();
   updateStats();
 }
@@ -647,6 +685,79 @@ function openEditStock(code) {
     resetImagePreview('editImagePreview');
   }
   openModal('editModal');
+}
+
+/* ── Mover stock entre almacenes ── */
+function activeWarehouseIds() {
+  return Array.from(document.querySelectorAll('#warehouseTabs .warehouse-tab[data-wh]:not([data-wh=""])'))
+    .map(btn => btn.dataset.wh);
+}
+
+let movingStockCode = '';
+
+function openMoveStock(code) {
+  const p = productsCache.find(x => x.code === code);
+  if (!p) return;
+  movingStockCode = code;
+
+  document.getElementById('moveStockTitle').textContent = p.name || '';
+  document.getElementById('moveStockCode').textContent = displayProductCode(code);
+
+  const conStock = activeWarehouseIds().filter(wh => (p.almacenes && p.almacenes[wh] > 0));
+  const origenSel = document.getElementById('moveStockOrigen');
+  origenSel.innerHTML = conStock.length
+    ? conStock.map(wh => `<option value="${wh}">${escapeHtml(WAREHOUSE_LABELS[wh] || wh)} — ${p.almacenes[wh]} und</option>`).join('')
+    : `<option value="">Sin stock en ningún almacén</option>`;
+  origenSel.onchange = poblarMoveStockDestino;
+
+  poblarMoveStockDestino();
+  document.getElementById('moveStockCantidad').value = '';
+  document.getElementById('moveStockError').style.display = 'none';
+  openModal('moveStockModal');
+}
+
+function poblarMoveStockDestino() {
+  const origen = document.getElementById('moveStockOrigen').value;
+  const opciones = activeWarehouseIds().filter(wh => wh !== origen);
+  document.getElementById('moveStockDestino').innerHTML =
+    opciones.map(wh => `<option value="${wh}">${escapeHtml(WAREHOUSE_LABELS[wh] || wh)}</option>`).join('');
+}
+
+function confirmMoveStock() {
+  const p = productsCache.find(x => x.code === movingStockCode);
+  const errorEl = document.getElementById('moveStockError');
+  errorEl.style.display = 'none';
+
+  const origen = document.getElementById('moveStockOrigen').value;
+  const destino = document.getElementById('moveStockDestino').value;
+  const cantidad = parseInt(document.getElementById('moveStockCantidad').value, 10);
+
+  if (!origen || !destino) {
+    errorEl.textContent = 'Elige almacén de origen y destino.'; errorEl.style.display = 'block'; return;
+  }
+  if (origen === destino) {
+    errorEl.textContent = 'El origen y el destino no pueden ser el mismo almacén.'; errorEl.style.display = 'block'; return;
+  }
+  if (!(cantidad > 0)) {
+    errorEl.textContent = 'Ingresa una cantidad válida.'; errorEl.style.display = 'block'; return;
+  }
+  const disponible = (p && p.almacenes && p.almacenes[origen]) || 0;
+  if (cantidad > disponible) {
+    errorEl.textContent = `Solo hay ${disponible} unidad(es) en ese almacén.`; errorEl.style.display = 'block'; return;
+  }
+
+  const btn = document.getElementById('btnConfirmMoveStock');
+  btn.disabled = true;
+  moveWarehouseStock(movingStockCode, origen, destino, cantidad)
+    .then(() => {
+      closeModal('moveStockModal');
+      if (typeof refreshProductsNow === 'function') refreshProductsNow().catch(() => {});
+    })
+    .catch(err => {
+      errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+    })
+    .finally(() => { btn.disabled = false; });
 }
 
 function saveStock() {
