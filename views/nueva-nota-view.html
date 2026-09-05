@@ -74,8 +74,12 @@
               <div class="search-wrap">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" id="notaProductoSearch" placeholder="Buscar por nombre o código…" oninput="buscarProductoNota(this.value)" autocomplete="off">
+                <button type="button" class="nota-producto-clear" id="notaProductoClear" style="display:none" onmousedown="event.preventDefault()" onclick="limpiarProductoNota()" aria-label="Limpiar producto" title="Limpiar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
               </div>
               <div id="notaProductoResultados" class="nota-autocomplete" style="display:none"></div>
+              <div class="nota-stock-hint" id="notaStockHint" style="display:none"></div>
             </div>
             <div class="nota-add-field">
               <label class="form-label">Cantidad</label>
@@ -84,6 +88,10 @@
             <div class="nota-add-field">
               <label class="form-label">Precio unit.</label>
               <input class="form-input" id="notaPrecioInput" type="number" min="0" step="0.01" placeholder="0.00">
+            </div>
+            <div class="nota-add-field" style="max-width:90px">
+              <label class="form-label">Desc. %</label>
+              <input class="form-input" id="notaDescInput" type="number" min="0" max="100" step="0.5" value="0">
             </div>
             <button class="btn btn-primary" onclick="anadirItemNota()">+ Añadir</button>
           </div>
@@ -103,6 +111,7 @@
             <span class="nota-item-info">Producto</span>
             <span>Cant.</span>
             <span>Precio unit.</span>
+            <span>Desc. %</span>
             <span class="nota-item-subtotal">Subtotal</span>
             <span style="width:26px"></span>
           </div>

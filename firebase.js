@@ -1448,6 +1448,20 @@ function saveOrder(data) {
   return refOrders.push({ ...data, creadoEn: firebase.database.ServerValue.TIMESTAMP });
 }
 
+// Edita una nota ya guardada (ver Historial > Ver > Editar, en
+// nueva-nota-logic.js modo edición). No toca creadoEn ni el
+// número/numeroFormateado originales — solo los campos que
+// realmente pueden cambiar al editar.
+function updateOrder(id, data) {
+  return refOrders.child(id).update(data);
+}
+
+// Elimina una nota del historial (ver Historial > Ver > Eliminar).
+// Irreversible: no hay papelera ni soft-delete.
+function deleteOrder(id) {
+  return refOrders.child(id).remove();
+}
+
 // Historial de notas — lista completa, en vivo. No usa
 // watchCollectionWithCache (pensada para /products, que sí necesita
 // caché local y resync incremental por updatedAt); acá alcanza con
@@ -1640,6 +1654,13 @@ async function createVendorAccount(usuario, password, nombre, correo) {
       nombre: nombre || usuarioNormalizado,
       usuario: usuarioNormalizado,
       correo: correo || '',   // solo informativo (contacto / recuperar clave) — no se usa para iniciar sesión
+      // Copia en texto plano de la contraseña — necesaria porque el
+      // SDK de Auth del cliente nunca permite leer ni resetear la
+      // contraseña de OTRO usuario sin volver a autenticarse como
+      // él (ver updateVendorAccount más abajo, mismo truco de
+      // instancia secundaria). Coherente con que el campo al crear
+      // la cuenta ya es type="text" a la vista del admin, no oculto.
+      passwordActual: password,
       rol: 'vendedor',
       activo: true,
       creadoEn: Date.now(),
@@ -1651,6 +1672,33 @@ async function createVendorAccount(usuario, password, nombre, correo) {
     return uid;
   } finally {
     // Pase lo que pase (éxito o error), no dejar la instancia secundaria colgada.
+    await secondaryApp.delete().catch(() => {});
+  }
+}
+
+// Edita nombre/correo de un vendedor y, opcionalmente, le cambia la
+// contraseña — sin tocar la sesión del admin (mismo truco de
+// instancia secundaria que createVendorAccount). Para cambiar la
+// contraseña de OTRO usuario, el SDK de cliente exige volver a
+// autenticarse como ese usuario primero; por eso se necesita su
+// contraseña actual (guardada en passwordActual desde que se creó
+// la cuenta), no hay forma de "resetearla a ciegas" sin backend.
+async function updateVendorAccount(uid, usuario, passwordActual, nombre, correo, nuevaPassword) {
+  const authEmail = usernameToAuthEmail(usuario);
+  const secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary-' + Date.now());
+  try {
+    const updates = { nombre: nombre || usuario };
+    if (correo !== undefined) updates.correo = correo || '';
+
+    if (nuevaPassword) {
+      const cred = await secondaryApp.auth().signInWithEmailAndPassword(authEmail, passwordActual);
+      await cred.user.updatePassword(nuevaPassword);
+      await secondaryApp.auth().signOut();
+      updates.passwordActual = nuevaPassword;
+    }
+
+    await refUsers.child(uid).update(updates);
+  } finally {
     await secondaryApp.delete().catch(() => {});
   }
 }

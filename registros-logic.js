@@ -55,7 +55,11 @@ function renderRegistros() {
             <span class="reg-status-label ${activo ? 'activo' : 'inactivo'}">${activo ? 'Activo' : 'Inactivo'}</span>
           </div>
         </td>
-        <td class="col-acts">${esUno ? '' : `<button class="btn-reg-delete" onclick="onDeleteUser('${escapeJsAttr(u.uid)}', '${escapeJsAttr(u.nombre || u.usuario || '')}')" title="Eliminar cuenta" style="display:inline-flex;align-items:center;gap:5px">
+        <td class="col-acts">
+          ${u.rol === 'vendedor' ? `<button class="btn btn-ghost btn-sm" onclick="openEditVendor('${escapeJsAttr(u.uid)}')" title="Editar cuenta" style="display:inline-flex;align-items:center;gap:5px;margin-right:6px">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar
+        </button>` : ''}${esUno ? '' : `<button class="btn-reg-delete" onclick="onDeleteUser('${escapeJsAttr(u.uid)}', '${escapeJsAttr(u.nombre || u.usuario || '')}')" title="Eliminar cuenta" style="display:inline-flex;align-items:center;gap:5px">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           Eliminar
         </button>`}</td>
@@ -182,10 +186,85 @@ function traducirErrorNuevoVendedor(code) {
   return map[code];
 }
 
+// ── Modal: editar cuenta (solo vendedores — el admin edita su
+// propio perfil desde la pantalla de Perfil, que usa correo real en
+// vez de usuario/contraseña-en-texto-plano) ───────────────────────
+let editVendorUid = null;
+
+function openEditVendor(uid) {
+  const u = usersCache.find(x => x.uid === uid);
+  if (!u) return;
+  editVendorUid = uid;
+  document.getElementById('editVendorNombre').value = u.nombre || '';
+  document.getElementById('editVendorEmail').value = u.correo || '';
+  document.getElementById('editVendorCurrentPass').value = u.passwordActual || '';
+  document.getElementById('editVendorCurrentPass').type = 'password';
+  document.getElementById('editVendorEyeIcon').innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  document.getElementById('editVendorPassword').value = '';
+  document.getElementById('editVendorError').style.display = 'none';
+  document.getElementById('editVendorOverlay').classList.add('open');
+}
+function closeEditVendor() {
+  document.getElementById('editVendorOverlay').classList.remove('open');
+  editVendorUid = null;
+}
+
+function toggleEditVendorPasswordVisibility() {
+  const input = document.getElementById('editVendorCurrentPass');
+  const icon = document.getElementById('editVendorEyeIcon');
+  const oculto = input.type === 'password';
+  input.type = oculto ? 'text' : 'password';
+  icon.innerHTML = oculto
+    ? '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+async function submitEditVendor() {
+  if (!editVendorUid) return;
+  const u = usersCache.find(x => x.uid === editVendorUid);
+  if (!u) return;
+
+  const nombre = document.getElementById('editVendorNombre').value.trim();
+  const correo = document.getElementById('editVendorEmail').value.trim();
+  const nuevaPassword = document.getElementById('editVendorPassword').value;
+  const errorEl = document.getElementById('editVendorError');
+  const submitBtn = document.getElementById('editVendorSubmit');
+  errorEl.style.display = 'none';
+
+  if (!nombre) {
+    errorEl.textContent = 'El nombre no puede quedar vacío.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (nuevaPassword && nuevaPassword.length < 6) {
+    errorEl.textContent = 'La contraseña debe tener al menos 6 caracteres (mínimo que exige Firebase).';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Guardando…';
+  try {
+    await updateVendorAccount(editVendorUid, u.usuario, u.passwordActual, nombre, correo, nuevaPassword || null);
+    closeEditVendor();
+    await loadRegistros();
+  } catch (err) {
+    errorEl.textContent = traducirErrorNuevoVendedor(err.code) || err.message || 'No se pudo guardar los cambios.';
+    errorEl.style.display = 'block';
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Guardar cambios';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const overlay = document.getElementById('newVendorOverlay');
   if (overlay) {
     overlay.addEventListener('click', e => { if (e.target === overlay) closeNewVendor(); });
+  }
+  const editOverlay = document.getElementById('editVendorOverlay');
+  if (editOverlay) {
+    editOverlay.addEventListener('click', e => { if (e.target === editOverlay) closeEditVendor(); });
   }
 });
 

@@ -7,12 +7,13 @@
 // =========================================================
 
 let notaCliente = null;   // { ruc, nombre, ciudad } o null si no se eligió todavía
-let notaItems   = [];     // [{ codigo, nombre, cantidad, precio }]
+let notaItems   = [];     // [{ codigo, nombre, cantidad, precio, descPct }]
 let notaProductoSeleccionado = null; // { codigo, nombre } — el que está en el mini-formulario de "Agregar artículo"
 let notaDescuentoPct = 0;
 let notaGuardando = false;
 let notaNumero = null;    // correlativo ya reservado al entrar a la vista (ver init)
 let notaAnio = null;
+let notaEditandoId = null; // id de /orders si se entró a editar una nota ya guardada (ver Historial); null = nota nueva
 
 // "NP-2026-187". El correlativo se reserva ni bien se abre la
 // pantalla (ver init) para poder mostrarlo de entrada en el badge del
@@ -164,25 +165,48 @@ function elegirProductoNota(code) {
   document.getElementById('notaProductoResultados').style.display = 'none';
   document.getElementById('notaCantidadInput').value = 1;
   document.getElementById('notaPrecioInput').value = Number(p.price) || 0;
+  document.getElementById('notaProductoClear').style.display = 'flex';
+
+  const cant = p.stock !== undefined ? p.stock : 0;
+  const hint = document.getElementById('notaStockHint');
+  hint.style.display = 'flex';
+  hint.classList.toggle('sin-stock', cant <= 0);
+  hint.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>${cant} en stock</span>`;
+}
+
+// Limpia la selección actual del buscador de productos (botón × del
+// campo) sin necesidad de borrar el texto letra por letra.
+function limpiarProductoNota() {
+  notaProductoSeleccionado = null;
+  document.getElementById('notaProductoSearch').value = '';
+  document.getElementById('notaProductoResultados').style.display = 'none';
+  document.getElementById('notaProductoClear').style.display = 'none';
+  document.getElementById('notaStockHint').style.display = 'none';
+  document.getElementById('notaProductoSearch').focus();
 }
 
 function anadirItemNota() {
   if (!notaProductoSeleccionado) return alert('Busca y elige un producto primero.');
   const cantidad = Math.max(1, parseInt(document.getElementById('notaCantidadInput').value, 10) || 1);
   const precio   = Math.max(0, parseFloat(document.getElementById('notaPrecioInput').value) || 0);
+  const descPct  = Math.min(100, Math.max(0, parseFloat(document.getElementById('notaDescInput').value) || 0));
 
   const existente = notaItems.find(it => it.codigo === notaProductoSeleccionado.codigo);
   if (existente) {
     existente.cantidad += cantidad;
     existente.precio = precio; // el precio de la fila queda con el último que se tecleó
+    existente.descPct = descPct;
   } else {
-    notaItems.push({ codigo: notaProductoSeleccionado.codigo, nombre: notaProductoSeleccionado.nombre, cantidad, precio });
+    notaItems.push({ codigo: notaProductoSeleccionado.codigo, nombre: notaProductoSeleccionado.nombre, cantidad, precio, descPct });
   }
 
   notaProductoSeleccionado = null;
   document.getElementById('notaProductoSearch').value = '';
   document.getElementById('notaCantidadInput').value = 1;
   document.getElementById('notaPrecioInput').value = '';
+  document.getElementById('notaDescInput').value = 0;
+  document.getElementById('notaProductoClear').style.display = 'none';
+  document.getElementById('notaStockHint').style.display = 'none';
   renderNotaItems();
 }
 
@@ -196,13 +220,19 @@ function actualizarPrecioNota(idx, valor) {
   renderNotaItems();
 }
 
+function actualizarDescNota(idx, valor) {
+  notaItems[idx].descPct = Math.min(100, Math.max(0, Number(valor) || 0));
+  renderNotaItems();
+}
+
 function quitarItemNota(idx) {
   notaItems.splice(idx, 1);
   renderNotaItems();
 }
 
 function notaItemRowHtml(item, idx) {
-  const subtotal = item.cantidad * item.precio;
+  const descPct = item.descPct || 0;
+  const subtotal = item.cantidad * item.precio * (1 - descPct / 100);
   return `
     <div class="nota-item-row">
       <div class="nota-item-info">
@@ -211,6 +241,7 @@ function notaItemRowHtml(item, idx) {
       </div>
       <input type="number" min="1" step="1" class="form-input" value="${item.cantidad}" onchange="actualizarCantidadNota(${idx}, this.value)">
       <input type="number" min="0" step="0.01" class="form-input" value="${item.precio}" onchange="actualizarPrecioNota(${idx}, this.value)">
+      <input type="number" min="0" max="100" step="0.5" class="form-input" value="${descPct}" onchange="actualizarDescNota(${idx}, this.value)">
       <div class="nota-item-subtotal">S/ ${fmtPrice(subtotal)}</div>
       <div class="nota-item-remove" onclick="quitarItemNota(${idx})" title="Quitar">✕</div>
     </div>`;
@@ -239,7 +270,7 @@ function renderNotaItems() {
   emptyEl.style.display = hayItems ? 'none' : 'flex';
   document.getElementById('notaItemCount').textContent = notaItems.length;
 
-  const subtotal = notaItems.reduce((sum, it) => sum + it.cantidad * it.precio, 0);
+  const subtotal = notaItems.reduce((sum, it) => sum + it.cantidad * it.precio * (1 - (it.descPct || 0) / 100), 0);
   const total = subtotal * (1 - notaDescuentoPct / 100);
   document.getElementById('notaSubtotal').textContent = `S/ ${fmtPrice(subtotal)}`;
   document.getElementById('notaTotal').textContent = `S/ ${fmtPrice(total)}`;
@@ -308,22 +339,35 @@ async function guardarNota() {
   btn.textContent = 'Guardando…';
 
   try {
-    const subtotal = notaItems.reduce((sum, it) => sum + it.cantidad * it.precio, 0);
+    const subtotal = notaItems.reduce((sum, it) => sum + it.cantidad * it.precio * (1 - (it.descPct || 0) / 100), 0);
     const total = subtotal * (1 - notaDescuentoPct / 100);
 
-    await saveOrder({
-      numero: notaNumero,
-      numeroFormateado: formatNotaNumero(notaNumero, notaAnio),
-      cliente: notaCliente,
-      items: notaItems,
-      descuentoPct: notaDescuentoPct,
-      subtotal,
-      total,
-      vendedorUid: (typeof currentUserUid !== 'undefined') ? currentUserUid : null,
-      vendedorNombre: (typeof currentUserName !== 'undefined') ? currentUserName : null
-    });
+    if (notaEditandoId) {
+      // Editando una nota ya guardada (ver Historial > Ver > Editar):
+      // se actualiza el registro existente, sin tocar su N° ni
+      // consumir un correlativo nuevo.
+      await updateOrder(notaEditandoId, {
+        cliente: notaCliente,
+        items: notaItems,
+        descuentoPct: notaDescuentoPct,
+        subtotal,
+        total
+      });
+    } else {
+      await saveOrder({
+        numero: notaNumero,
+        numeroFormateado: formatNotaNumero(notaNumero, notaAnio),
+        cliente: notaCliente,
+        items: notaItems,
+        descuentoPct: notaDescuentoPct,
+        subtotal,
+        total,
+        vendedorUid: (typeof currentUserUid !== 'undefined') ? currentUserUid : null,
+        vendedorNombre: (typeof currentUserName !== 'undefined') ? currentUserName : null
+      });
+    }
 
-    Router.go('pedidos', { force: true });
+    Router.go(notaEditandoId ? 'historial' : 'pedidos', { force: true });
   } catch (err) {
     mostrarNotaAlert('No se pudo guardar la nota: ' + err.message, false);
   } finally {
@@ -371,11 +415,12 @@ async function generarPdfNota(numeroFmt, cliente, items, descuentoPct, subtotal,
 
   y += 28;
   const cols = [
-    { label: 'Código',   w: 80 },
-    { label: 'Producto', w: 215 },
-    { label: 'Cant.',    w: 50 },
-    { label: 'Precio',   w: 85 },
-    { label: 'Subtotal', w: 85 }
+    { label: 'Código',   w: 65 },
+    { label: 'Producto', w: 190 },
+    { label: 'Cant.',    w: 40 },
+    { label: 'Precio',   w: 65 },
+    { label: 'Desc. %',  w: 55 },
+    { label: 'Subtotal', w: 60 }
   ];
   const anchoTabla = cols.reduce((s, c) => s + c.w, 0);
 
@@ -390,10 +435,11 @@ async function generarPdfNota(numeroFmt, cliente, items, descuentoPct, subtotal,
   doc.setFont('helvetica', 'normal');
   items.forEach(item => {
     if (y > 760) { doc.addPage(); y = 50; }
-    const itemSubtotal = item.cantidad * item.precio;
+    const descPct = item.descPct || 0;
+    const itemSubtotal = item.cantidad * item.precio * (1 - descPct / 100);
     const valores = [
       displayProductCode(item.codigo), item.nombre, String(item.cantidad),
-      'S/ ' + fmtPrice(item.precio), 'S/ ' + fmtPrice(itemSubtotal)
+      'S/ ' + fmtPrice(item.precio), descPct > 0 ? `${descPct}%` : '—', 'S/ ' + fmtPrice(itemSubtotal)
     ];
     x = marginX;
     valores.forEach((v, i) => {
@@ -460,6 +506,7 @@ window.NuevaNota = {
     notaDescuentoPct = 0;
     notaNumero = null;
     notaAnio = new Date().getFullYear();
+    notaEditandoId = null;
 
     document.getElementById('notaClienteBuscador').style.display = 'block';
     document.getElementById('notaClienteInfo').style.display = 'none';
@@ -480,13 +527,39 @@ window.NuevaNota = {
       seleccionarClienteNota(params.clienteRuc);
     }
 
+    // Editando una nota ya guardada (llega desde Historial > Ver >
+    // Editar, ver historial-logic.js): se precargan sus datos y NO
+    // se reserva un N° nuevo — la nota conserva el suyo.
+    if (params && params.editNota) {
+      const n = params.editNota;
+      notaEditandoId = params.editId;
+      notaCliente = n.cliente || null;
+      notaItems = (n.items || []).map(it => ({ ...it }));
+      notaDescuentoPct = n.descuentoPct || 0;
+      notaNumero = n.numero;
+      document.getElementById('notaSubtitulo').textContent =
+        (n.numeroFormateado || String(n.numero || '')) + ' · editando';
+      if (notaCliente) {
+        document.getElementById('notaClienteBuscador').style.display = 'none';
+        mostrarClienteInfoNota();
+      }
+      document.getElementById('notaDescuentoInput').value = notaDescuentoPct;
+      document.querySelectorAll('.nota-pill').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.pct) === notaDescuentoPct);
+      });
+      renderNotaItems();
+      const btnGuardar = document.getElementById('btnGuardarNota');
+      if (btnGuardar) { btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar cambios'; }
+      return;
+    }
+
     // El N° se reserva apenas se entra a la pantalla (ver comentario
     // en formatNotaNumero). Se deshabilita "Confirmar pedido" hasta
     // que quede asignado — así, si falla (por ejemplo sin conexión),
     // el usuario ve el aviso con "Reintentar" de una vez, en vez de
     // completar todo el formulario y recién enterarse al final.
     const btnGuardar = document.getElementById('btnGuardarNota');
-    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnGuardar) { btnGuardar.disabled = true; btnGuardar.textContent = 'Confirmar pedido'; }
     asignarNumeroNota();
   }
 };

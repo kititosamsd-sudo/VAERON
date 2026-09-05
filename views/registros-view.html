@@ -74,3 +74,46 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: editar cuenta / cambiar contraseña -->
+<div class="modal-overlay" id="editVendorOverlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div>
+        <h2>Editar cuenta</h2>
+      </div>
+      <button class="modal-close" onclick="closeEditVendor()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre</label>
+        <input type="text" id="editVendorNombre" class="form-input" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correo <span style="font-weight:400;color:var(--text-3)">(opcional, solo de contacto)</span></label>
+        <input type="email" id="editVendorEmail" class="form-input" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña actual</label>
+        <div style="position:relative">
+          <input type="text" id="editVendorCurrentPass" class="form-input" readonly tabindex="-1" style="cursor:default;padding-right:40px">
+          <button type="button" id="editVendorTogglePass" onclick="toggleEditVendorPasswordVisibility()" title="Ver contraseña"
+            style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);display:flex;align-items:center;padding:4px">
+            <svg id="editVendorEyeIcon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nueva contraseña <span style="font-weight:400;color:var(--text-3)">(déjalo vacío para no cambiarla)</span></label>
+        <input type="text" id="editVendorPassword" class="form-input" placeholder="Mínimo 6 caracteres" autocomplete="off">
+      </div>
+      <p id="editVendorError" class="dcm-subtitle" style="color:var(--red);display:none"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEditVendor()">Cancelar</button>
+      <button class="btn btn-primary" id="editVendorSubmit" onclick="submitEditVendor()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
