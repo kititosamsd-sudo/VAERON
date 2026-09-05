@@ -14,6 +14,12 @@
   </div>
 
   <div class="page-content">
+
+    <div id="notaAlertBox" style="display:none;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding:10px 14px;background:var(--red-bg);border:1px solid #FECACA;border-radius:var(--r-sm);font-size:12.5px;color:var(--red)">
+      <span id="notaAlertMsg"></span>
+      <button type="button" class="btn btn-ghost" id="notaAlertRetryBtn" style="height:26px;padding:0 10px;font-size:11.5px;flex-shrink:0" onclick="reintentarNumeroNota()">Reintentar</button>
+    </div>
+
     <div class="nota-grid">
       <div class="nota-main">
 
@@ -24,6 +30,28 @@
               <input type="text" id="notaClienteSearch" placeholder="Buscar cliente por RUC o razón social…" oninput="buscarClienteNota(this.value)" autocomplete="off">
             </div>
             <div id="notaClienteResultados" class="nota-autocomplete" style="display:none"></div>
+
+            <div class="nota-cliente-o"><span>o</span></div>
+
+            <button class="btn btn-ghost" id="btnAbrirCrearClienteNota" onclick="abrirCrearClienteNota()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Crear con nombre, RUC o DNI
+            </button>
+
+            <div id="notaClienteCrearForm" style="display:none;margin-top:10px">
+              <div class="nota-descuento-pills" style="margin-bottom:8px">
+                <button type="button" class="nota-pill" data-tipo="nombre" onclick="setTipoClienteNota('nombre')">Nombre</button>
+                <button type="button" class="nota-pill" data-tipo="ruc" onclick="setTipoClienteNota('ruc')">RUC</button>
+                <button type="button" class="nota-pill" data-tipo="dni" onclick="setTipoClienteNota('dni')">DNI</button>
+              </div>
+              <div class="search-wrap" style="max-width:420px">
+                <input type="text" id="notaClienteValorInput" placeholder="Elige un dato arriba primero…" disabled>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button class="btn btn-ghost" style="height:32px;padding:0 14px;font-size:12.5px" onclick="cancelarCrearClienteNota()">Cancelar</button>
+                <button class="btn btn-primary" style="height:32px;padding:0 14px;font-size:12.5px" onclick="confirmarCrearClienteNota()">Usar este cliente</button>
+              </div>
+            </div>
           </div>
 
           <div id="notaClienteInfo" class="nota-cliente-info-row" style="display:none">
@@ -32,7 +60,7 @@
             </div>
             <div class="nota-cliente-textos">
               <div class="nota-cliente-nombre" id="notaClienteNombre"></div>
-              <div class="nota-cliente-ruc">RUC: <span id="notaClienteRuc"></span></div>
+              <div class="nota-cliente-ruc" id="notaClienteSubinfo"></div>
             </div>
             <button class="btn btn-ghost" style="height:30px;padding:0 12px;font-size:12px" onclick="quitarClienteNota()">Cambiar</button>
           </div>
@@ -70,6 +98,13 @@
           <div id="notaEmptyItems" class="nota-empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             <p>Aún no hay artículos. Agrega un producto para comenzar.</p>
+          </div>
+          <div id="notaItemsHeader" class="nota-item-row-header" style="display:none">
+            <span class="nota-item-info">Producto</span>
+            <span>Cant.</span>
+            <span>Precio unit.</span>
+            <span class="nota-item-subtotal">Subtotal</span>
+            <span style="width:26px"></span>
           </div>
           <div id="notaItemsList" style="display:none"></div>
         </div>

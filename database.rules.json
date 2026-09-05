@@ -30,16 +30,18 @@
           }
         },
         "products": {
+          ".indexOn": "updatedAt",
           ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
         },
         "clients": {
+          ".indexOn": "updatedAt",
           ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
         },
         "orders": {
           ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
         },
         "config": {
-          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && data.child('logoUrl').val() === newData.child('logoUrl').val() && data.child('almacenesNombres').val() === newData.child('almacenesNombres').val() && data.child('almacenesActivos').val() === newData.child('almacenesActivos').val()",
+          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && data.child('logoUrl').val() === newData.child('logoUrl').val() && data.child('almacenesNombres').child('alm1').val() === newData.child('almacenesNombres').child('alm1').val() && data.child('almacenesNombres').child('alm2').val() === newData.child('almacenesNombres').child('alm2').val() && data.child('almacenesNombres').child('alm3').val() === newData.child('almacenesNombres').child('alm3').val() && data.child('almacenesNombres').child('alm4').val() === newData.child('almacenesNombres').child('alm4').val() && data.child('almacenesNombres').child('alm5').val() === newData.child('almacenesNombres').child('alm5').val() && data.child('almacenesNombres').child('alm6').val() === newData.child('almacenesNombres').child('alm6').val() && data.child('almacenesActivos').child('alm1').val() === newData.child('almacenesActivos').child('alm1').val() && data.child('almacenesActivos').child('alm2').val() === newData.child('almacenesActivos').child('alm2').val() && data.child('almacenesActivos').child('alm3').val() === newData.child('almacenesActivos').child('alm3').val() && data.child('almacenesActivos').child('alm4').val() === newData.child('almacenesActivos').child('alm4').val() && data.child('almacenesActivos').child('alm5').val() === newData.child('almacenesActivos').child('alm5').val() && data.child('almacenesActivos').child('alm6').val() === newData.child('almacenesActivos').child('alm6').val()",
           "logoUrl": {
             ".write": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId))"
           },
@@ -47,7 +49,7 @@
             ".write": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId))"
           },
           "almacenesActivos": {
-            ".write": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && (newData.child('alm3').val() !== true || root.child('tiendas').child($tiendaId).child('info').child('plan').val() !== 'basico') && ((newData.child('alm4').val() !== true && newData.child('alm5').val() !== true && newData.child('alm6').val() !== true) || root.child('tiendas').child($tiendaId).child('info').child('plan').val() === 'premium')))"
+            ".write": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && (newData.child('alm3').val() !== true || root.child('tiendas').child($tiendaId).child('info').child('plan').val() !== 'basico') && (newData.child('alm4').val() !== true || root.child('tiendas').child($tiendaId).child('info').child('plan').val() === 'medio' || root.child('tiendas').child($tiendaId).child('info').child('plan').val() === 'premium') && (newData.child('alm5').val() !== true || root.child('tiendas').child($tiendaId).child('info').child('plan').val() === 'premium') && (newData.child('alm6').val() !== true || root.child('tiendas').child($tiendaId).child('info').child('plan').val() === 'premium')))"
           }
         }
       }

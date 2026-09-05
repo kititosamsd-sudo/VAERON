@@ -452,6 +452,12 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
 .nota-cliente-ruc { font-size: 12.5px; color: var(--text-3); margin-top: 2px; font-family: var(--font-mono); }
 .nota-cliente-info-row { display: flex; align-items: center; gap: 14px; width: 100%; }
 .nota-cliente-info-row .nota-cliente-textos { flex: 1; min-width: 0; }
+.nota-cliente-o {
+  display: flex; align-items: center; gap: 10px; margin: 10px 0;
+  font-size: 11.5px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em;
+  max-width: 420px;
+}
+.nota-cliente-o::before, .nota-cliente-o::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
 .nota-add-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
 .nota-add-field { display: flex; flex-direction: column; gap: 6px; position: relative; }
@@ -472,6 +478,13 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
 .nota-empty-state svg { width: 40px; height: 40px; opacity: 0.5; }
 .nota-empty-state p { font-size: 13px; margin: 0; }
 
+.nota-item-row-header {
+  display: flex; align-items: center; gap: 10px; padding: 0 0 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+  color: var(--text-3);
+}
+.nota-item-row-header span:not(.nota-item-info):not(.nota-item-subtotal) { width: 64px; text-align: center; }
 .nota-item-row {
   display: flex; align-items: center; gap: 10px; padding: 10px 0;
   border-bottom: 1px solid var(--border);

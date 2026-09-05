@@ -209,7 +209,31 @@ function createFakeFirebase() {
       push() {
         pushCounter += 1;
         const id = '-fake' + String(pushCounter).padStart(8, '0');
-        return makeRef([...parts, id]);
+        const newRef = makeRef([...parts, id]);
+        if (arguments.length > 0) {
+          // Firebase real: ref.push(valor) escribe el valor Y devuelve
+          // algo que es a la vez una ref y una promesa (se le puede
+          // encadenar .then()/.catch()). Antes esto ignoraba el valor
+          // por completo y nunca guardaba nada — igual bug que ya se
+          // había encontrado y arreglado en mock-sdk.js para
+          // registrarEvento(); acá faltaba el mismo arreglo.
+          //
+          // OJO con esto: la promesa NO debe resolver con `newRef`
+          // (como si "esperara a sí misma") — igual que el SDK real,
+          // resuelve con lo que resuelva el propio set() (undefined).
+          // Resolver con newRef crea un ciclo: newRef.then termina
+          // siendo la función que se usa para resolver la promesa que
+          // a su vez decide el valor de newRef — Node lo detecta como
+          // "ciclo de encadenamiento" y la promesa se queda colgada
+          // para siempre. Nadie en este código usa el valor resuelto
+          // de un push() (siempre se usa newRef.key desde la variable
+          // de afuera), así que resolver con undefined no rompe nada.
+          const value = arguments[0];
+          const p = newRef.set(value);
+          newRef.then = p.then.bind(p);
+          newRef.catch = p.catch.bind(p);
+        }
+        return newRef;
       },
 
       set(value) {

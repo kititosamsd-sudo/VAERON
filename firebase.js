@@ -1448,6 +1448,53 @@ function saveOrder(data) {
   return refOrders.push({ ...data, creadoEn: firebase.database.ServerValue.TIMESTAMP });
 }
 
+// Historial de notas — lista completa, en vivo. No usa
+// watchCollectionWithCache (pensada para /products, que sí necesita
+// caché local y resync incremental por updatedAt); acá alcanza con
+// un listener directo, las notas no se editan después de creadas.
+// Historial de notas — lista completa, en vivo. Sigue el mismo
+// patrón que watchProducts/watchClients (child_added/child_changed/
+// child_removed sobre el nodo, ver comentario más arriba en este
+// archivo) en vez de un simple .on('value') — así también se entera
+// de cambios sin tener que releer todo el nodo en cada aviso.
+function watchOrders(callback) {
+  const itemsMap = new Map();
+  const emit = () => callback(Array.from(itemsMap.values()));
+
+  refOrders.off('child_added');
+  refOrders.off('child_changed');
+  refOrders.off('child_removed');
+
+  refOrders.on('child_added', snap => {
+    itemsMap.set(snap.key, { id: snap.key, ...snap.val() });
+    emit();
+  });
+  refOrders.on('child_changed', snap => {
+    itemsMap.set(snap.key, { id: snap.key, ...snap.val() });
+    emit();
+  });
+  refOrders.on('child_removed', snap => {
+    itemsMap.delete(snap.key);
+    emit();
+  });
+}
+
+// Una nota puede tener cliente con RUC (búsqueda normal), o creado al
+// vuelo con un solo dato (nombre, RUC o DNI — ver "Crear" en Nueva
+// Nota). Este helper arma un texto legible para cualquiera de esos
+// casos, para no repetir esta lógica en nueva-nota-logic.js e
+// historial-logic.js.
+function formatClienteOrden(cliente) {
+  cliente = cliente || {};
+  if (cliente.nombre) {
+    const extra = cliente.ruc ? `RUC ${cliente.ruc}` : (cliente.dni ? `DNI ${cliente.dni}` : '');
+    return extra ? `${cliente.nombre} (${extra})` : cliente.nombre;
+  }
+  if (cliente.ruc) return `RUC ${cliente.ruc}`;
+  if (cliente.dni) return `DNI ${cliente.dni}`;
+  return 'Cliente sin datos';
+}
+
 // N° de nota correlativo por tienda, guardado junto al resto de la
 // configuración propia de la tienda (mismo cajón que
 // stockBajoUmbral — ver getTiendaConfig). Una transacción evita que

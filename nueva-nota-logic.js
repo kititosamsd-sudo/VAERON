@@ -46,19 +46,83 @@ function buscarClienteNota(q) {
 function seleccionarClienteNota(ruc) {
   const c = (typeof clientsCache !== 'undefined' ? clientsCache : []).find(c => c.ruc === ruc);
   if (!c) return;
-  notaCliente = { ruc: c.ruc, nombre: c.nombre, ciudad: c.ciudad || '' };
+  notaCliente = { ruc: c.ruc, nombre: c.nombre, dni: '', ciudad: c.ciudad || '' };
   document.getElementById('notaClienteBuscador').style.display = 'none';
   document.getElementById('notaClienteResultados').style.display = 'none';
   document.getElementById('notaClienteSearch').value = '';
-  document.getElementById('notaClienteNombre').textContent = c.nombre;
-  document.getElementById('notaClienteRuc').textContent = c.ruc;
-  document.getElementById('notaClienteInfo').style.display = 'flex';
+  mostrarClienteInfoNota();
 }
 
 function quitarClienteNota() {
   notaCliente = null;
   document.getElementById('notaClienteInfo').style.display = 'none';
   document.getElementById('notaClienteBuscador').style.display = 'block';
+  cancelarCrearClienteNota();
+}
+
+// ── Cliente "al vuelo": crear solo con nombre, RUC o DNI ──
+// Para cuando no hay un cliente ya registrado en Pedidos — por
+// ejemplo una venta puntual a alguien nuevo. Solo pide UN dato (el
+// que se elija), no obliga a llenar los tres.
+let notaTipoClienteNuevo = null; // 'nombre' | 'ruc' | 'dni'
+
+function abrirCrearClienteNota() {
+  document.getElementById('notaClienteCrearForm').style.display = 'block';
+  document.getElementById('btnAbrirCrearClienteNota').style.display = 'none';
+}
+
+function cancelarCrearClienteNota() {
+  document.getElementById('notaClienteCrearForm').style.display = 'none';
+  document.getElementById('btnAbrirCrearClienteNota').style.display = 'inline-flex';
+  notaTipoClienteNuevo = null;
+  document.querySelectorAll('#notaClienteCrearForm .nota-pill').forEach(btn => btn.classList.remove('active'));
+  const input = document.getElementById('notaClienteValorInput');
+  input.value = '';
+  input.disabled = true;
+  input.placeholder = 'Elige un dato arriba primero…';
+}
+
+function setTipoClienteNota(tipo) {
+  notaTipoClienteNuevo = tipo;
+  document.querySelectorAll('#notaClienteCrearForm .nota-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tipo === tipo);
+  });
+  const input = document.getElementById('notaClienteValorInput');
+  input.disabled = false;
+  input.value = '';
+  input.placeholder = tipo === 'nombre' ? 'Nombre completo…'
+    : tipo === 'ruc' ? 'Número de RUC…'
+    : 'Número de DNI…';
+  input.focus();
+}
+
+function confirmarCrearClienteNota() {
+  if (!notaTipoClienteNuevo) return alert('Elige si vas a usar nombre, RUC o DNI.');
+  const valor = document.getElementById('notaClienteValorInput').value.trim();
+  if (!valor) return alert('Ingresa el dato del cliente.');
+
+  notaCliente = { nombre: '', ruc: '', dni: '', ciudad: '' };
+  notaCliente[notaTipoClienteNuevo] = valor;
+
+  document.getElementById('notaClienteBuscador').style.display = 'none';
+  mostrarClienteInfoNota();
+  cancelarCrearClienteNota(); // deja el mini-formulario limpio para la próxima vez que se abra
+}
+
+// Pinta el panel "cliente elegido" tanto si vino de la búsqueda
+// (ruc + nombre + ciudad) como si vino de "Crear" (un solo dato).
+function mostrarClienteInfoNota() {
+  document.getElementById('notaClienteNombre').textContent =
+    notaCliente.nombre || (notaCliente.ruc ? `RUC ${notaCliente.ruc}` : (notaCliente.dni ? `DNI ${notaCliente.dni}` : 'Cliente'));
+
+  const sub = [];
+  if (notaCliente.nombre && notaCliente.ruc) sub.push(`RUC: ${notaCliente.ruc}`);
+  if (notaCliente.nombre && notaCliente.dni) sub.push(`DNI: ${notaCliente.dni}`);
+  if (notaCliente.ciudad) sub.push(notaCliente.ciudad);
+  if (sub.length === 0 && !notaCliente.nombre) sub.push('Sin más datos');
+  document.getElementById('notaClienteSubinfo').textContent = sub.join(' · ');
+
+  document.getElementById('notaClienteInfo').style.display = 'flex';
 }
 
 // ── Agregar artículo (buscar → completa el mini-formulario → Añadir) ──
@@ -72,11 +136,19 @@ function buscarProductoNota(q) {
     .slice(0, 8);
 
   box.innerHTML = matches.length
-    ? matches.map(p => `
+    ? matches.map(p => {
+        // Cantidad disponible en stock total — mismo campo que usa
+        // Stock (ver getDisplayStock en stock.js) para no vender por
+        // encima de lo que realmente hay. Se muestra en rojo cuando
+        // ya no queda nada.
+        const cant = p.stock !== undefined ? p.stock : 0;
+        const cantClase = cant > 0 ? '' : ' style="color:var(--red)"';
+        return `
         <div class="nota-autocomplete-item" onclick="elegirProductoNota('${escapeJsAttr(p.code)}')">
           ${escapeHtml(p.name || '')}
-          <span>${escapeHtml(displayProductCode(p.code || ''))} · S/ ${fmtPrice(p.price)}</span>
-        </div>`).join('')
+          <span>${escapeHtml(displayProductCode(p.code || ''))} · S/ ${fmtPrice(p.price)} · <span${cantClase}>${cant} en stock</span></span>
+        </div>`;
+      }).join('')
     : `<div class="nota-autocomplete-empty">Sin productos que coincidan.</div>`;
   box.style.display = 'block';
 }
@@ -155,13 +227,15 @@ function setDescuentoNota(pct) {
 }
 
 function renderNotaItems() {
-  const listEl  = document.getElementById('notaItemsList');
-  const emptyEl = document.getElementById('notaEmptyItems');
+  const listEl   = document.getElementById('notaItemsList');
+  const emptyEl  = document.getElementById('notaEmptyItems');
+  const headerEl = document.getElementById('notaItemsHeader');
   if (!listEl) return; // la vista no está montada
 
   listEl.innerHTML = notaItems.map(notaItemRowHtml).join('');
   const hayItems = notaItems.length > 0;
   listEl.style.display = hayItems ? 'block' : 'none';
+  if (headerEl) headerEl.style.display = hayItems ? 'flex' : 'none';
   emptyEl.style.display = hayItems ? 'none' : 'flex';
   document.getElementById('notaItemCount').textContent = notaItems.length;
 
@@ -171,12 +245,61 @@ function renderNotaItems() {
   document.getElementById('notaTotal').textContent = `S/ ${fmtPrice(total)}`;
 }
 
+// ── Alerta de la pantalla (reemplaza los alert() nativos del
+// navegador para errores de esta vista — menos invasiva y permite
+// ofrecer un botón de acción, como "Reintentar" cuando falla la
+// asignación del N° de nota). ──
+function mostrarNotaAlert(msg, conReintentar) {
+  const box = document.getElementById('notaAlertBox');
+  if (!box) return;
+  document.getElementById('notaAlertMsg').textContent = msg;
+  document.getElementById('notaAlertRetryBtn').style.display = conReintentar ? 'inline-flex' : 'none';
+  box.style.display = 'flex';
+}
+
+function ocultarNotaAlert() {
+  const box = document.getElementById('notaAlertBox');
+  if (box) box.style.display = 'none';
+}
+
+// Reserva el correlativo de la nota. Se usa tanto al entrar a la
+// pantalla como desde el botón "Reintentar" de notaAlertBox si la
+// primera vez falló (por ejemplo, sin conexión). Mientras no haya
+// número asignado, no se puede confirmar el pedido — así el usuario
+// no llena todo el formulario para toparse recién al final con que
+// no se puede guardar.
+function asignarNumeroNota() {
+  const btnGuardar = document.getElementById('btnGuardarNota');
+  if (typeof siguienteCorrelativoNota !== 'function') {
+    mostrarNotaAlert('No se pudo preparar el número de nota.', false);
+    return;
+  }
+  ocultarNotaAlert();
+  siguienteCorrelativoNota().then(numero => {
+    notaNumero = numero;
+    document.getElementById('notaSubtitulo').textContent = formatNotaNumero(numero, notaAnio);
+    if (btnGuardar) btnGuardar.disabled = false;
+    ocultarNotaAlert();
+  }).catch(() => {
+    notaNumero = null;
+    if (btnGuardar) btnGuardar.disabled = true;
+    mostrarNotaAlert('No se pudo generar el número de nota. Revisa tu conexión e inténtalo de nuevo.', true);
+  });
+}
+
+function reintentarNumeroNota() {
+  asignarNumeroNota();
+}
+
 // ── Guardar + exportar PDF ───────────────────────────────
 async function guardarNota() {
   if (notaGuardando) return;
   if (!notaCliente) return alert('Elige un cliente para la nota.');
   if (notaItems.length === 0) return alert('Agrega al menos un producto.');
-  if (notaNumero === null) return alert('No se pudo asignar un número de nota — vuelve a entrar a esta pantalla.');
+  if (notaNumero === null) {
+    mostrarNotaAlert('No se pudo generar el número de nota. Revisa tu conexión e inténtalo de nuevo.', true);
+    return;
+  }
 
   notaGuardando = true;
   const btn = document.getElementById('btnGuardarNota');
@@ -200,11 +323,9 @@ async function guardarNota() {
       vendedorNombre: (typeof currentUserName !== 'undefined') ? currentUserName : null
     });
 
-    await generarPdfNota(notaNumero, notaAnio, notaCliente, notaItems, notaDescuentoPct, subtotal, total);
-
     Router.go('pedidos', { force: true });
   } catch (err) {
-    alert('No se pudo guardar la nota: ' + err.message);
+    mostrarNotaAlert('No se pudo guardar la nota: ' + err.message, false);
   } finally {
     notaGuardando = false;
     btn.disabled = false;
@@ -212,12 +333,17 @@ async function guardarNota() {
   }
 }
 
-async function generarPdfNota(numero, anio, cliente, items, descuentoPct, subtotal, total) {
+// Genera y descarga el PDF de una nota ya armada. Se usa tanto
+// desde Historial (botón "Descargar PDF" por fila, con los datos
+// ya guardados en /orders) como podría reusarse a futuro desde
+// Nueva Nota si se agrega un botón explícito — pero YA NO se llama
+// automáticamente al confirmar el pedido (antes forzaba una
+// descarga en cada guardado, sin que el usuario lo pidiera).
+async function generarPdfNota(numeroFmt, cliente, items, descuentoPct, subtotal, total) {
   await loadScriptExport('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const marginX = 40;
-  const numeroFmt = formatNotaNumero(numero, anio);
   let y = 50;
 
   doc.setFont('helvetica', 'bold');
@@ -240,7 +366,8 @@ async function generarPdfNota(numero, anio, cliente, items, descuentoPct, subtot
   doc.text('Cliente', marginX, y);
   doc.setFont('helvetica', 'normal');
   y += 14;
-  doc.text(`${cliente.nombre}  ·  RUC ${cliente.ruc}${cliente.ciudad ? '  ·  ' + cliente.ciudad : ''}`, marginX, y);
+  const lineaCliente = (typeof formatClienteOrden === 'function') ? formatClienteOrden(cliente) : (cliente.nombre || '');
+  doc.text(`${lineaCliente}${cliente.ciudad ? '  ·  ' + cliente.ciudad : ''}`, marginX, y);
 
   y += 28;
   const cols = [
@@ -338,6 +465,7 @@ window.NuevaNota = {
     document.getElementById('notaClienteInfo').style.display = 'none';
     document.getElementById('notaClienteSearch').value = '';
     document.getElementById('notaClienteResultados').style.display = 'none';
+    cancelarCrearClienteNota();
     document.getElementById('notaProductoSearch').value = '';
     document.getElementById('notaProductoResultados').style.display = 'none';
     document.getElementById('notaCantidadInput').value = 1;
@@ -345,6 +473,7 @@ window.NuevaNota = {
     document.getElementById('notaDescuentoInput').value = 0;
     document.querySelectorAll('.nota-pill').forEach(btn => btn.classList.remove('active'));
     document.getElementById('notaSubtitulo').textContent = 'Nueva';
+    ocultarNotaAlert();
     renderNotaItems();
 
     if (params && params.clienteRuc) {
@@ -352,14 +481,12 @@ window.NuevaNota = {
     }
 
     // El N° se reserva apenas se entra a la pantalla (ver comentario
-    // en formatNotaNumero). Si todavía no hay tienda/autenticación
-    // lista (carrera rara al abrir con doble clic), se deja "Nueva"
-    // en el badge en vez de romper la pantalla.
-    if (typeof siguienteCorrelativoNota === 'function') {
-      siguienteCorrelativoNota().then(numero => {
-        notaNumero = numero;
-        document.getElementById('notaSubtitulo').textContent = formatNotaNumero(numero, notaAnio);
-      }).catch(() => {});
-    }
+    // en formatNotaNumero). Se deshabilita "Confirmar pedido" hasta
+    // que quede asignado — así, si falla (por ejemplo sin conexión),
+    // el usuario ve el aviso con "Reintentar" de una vez, en vez de
+    // completar todo el formulario y recién enterarse al final.
+    const btnGuardar = document.getElementById('btnGuardarNota');
+    if (btnGuardar) btnGuardar.disabled = true;
+    asignarNumeroNota();
   }
 };

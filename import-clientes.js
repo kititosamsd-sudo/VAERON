@@ -257,15 +257,45 @@ async function saveImportedClientes(rows) {
   }
   var btn = document.getElementById('btnProcesarImport');
   if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+  // Antes: un solo Promise.all sobre TODAS las filas de una — si UNA
+  // fallaba (ej. un rebote de Firebase a mitad de un import grande),
+  // Promise.all rechazaba de inmediato y se cortaba ahí mismo (mismo
+  // bug que ya se había encontrado y arreglado en la importación de
+  // Stock — ver el comentario en processImportStock(), import-stock.js).
+  // El usuario solo veía "Error al guardar: ..." sin saber cuántos
+  // clientes SÍ habían quedado guardados antes del corte (Promise.all
+  // no cancela lo que ya se disparó, solo deja de esperar el resto).
+  // Ahora cada fila tiene su propio try/catch: una que falla no frena
+  // a las demás, y al final se reporta cuántas se guardaron de verdad
+  // y cuáles RUC no se pudieron guardar.
+  var batchSize = 25;
+  var saved = 0, failed = 0;
+  var failedRucs = [];
+
   try {
-    await Promise.all(rows.map(function(r) {
-      return saveClient(r.ruc, { nombre: r.nombre, ciudad: r.ciudad || '' });
-    }));
-    var msg = rows.length + ' cliente' + (rows.length !== 1 ? 's' : '') + ' importado' + (rows.length !== 1 ? 's' : '') + ' correctamente.';
+    for (var i = 0; i < rows.length; i += batchSize) {
+      var chunk = rows.slice(i, i + batchSize);
+      await Promise.all(chunk.map(async function(r) {
+        try {
+          await saveClient(r.ruc, { nombre: r.nombre, ciudad: r.ciudad || '' });
+          saved++;
+        } catch (err) {
+          failed++;
+          failedRucs.push(r.ruc);
+        }
+      }));
+    }
+
+    var msg = saved + ' cliente' + (saved !== 1 ? 's' : '') + ' importado' + (saved !== 1 ? 's' : '') + ' correctamente.';
     if (omitted > 0) msg += ' Se omitieron ' + omitted + ' duplicado' + (omitted !== 1 ? 's' : '') + '.';
+    if (failed > 0) {
+      msg += ' ' + failed + ' no se ' + (failed !== 1 ? 'pudieron' : 'pudo') + ' guardar (RUC: '
+        + failedRucs.slice(0, 10).join(', ') + (failedRucs.length > 10 ? '…' : '') + ') — puedes volver a intentar solo con esos.';
+    }
     document.getElementById('importDoneMsg').textContent = msg;
     showImportStep('stepDone');
-  } catch(err) {
+  } catch (err) {
     alert('Error al guardar: ' + err.message);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Procesar importación'; }

@@ -200,7 +200,14 @@
         // — quien llamaba a push(valor).catch(...) (ej. registrarEvento
         // en firebase.js) tronaba con "catch is not a function" y el
         // evento de auditoría se perdía en silencio.
-        const p = newRef.set(value).then(() => newRef);
+        //
+        // OJO: la promesa resuelve con lo que resuelve set() (undefined),
+        // NO con newRef. Si resolviera con newRef, y newRef.then es la
+        // función que resuelve esa misma promesa, queda un ciclo de
+        // encadenamiento (la promesa "se espera a sí misma") y nunca
+        // se resuelve — nadie acá usa el valor resuelto de un push(),
+        // siempre se usa newRef.key desde la variable de afuera.
+        const p = newRef.set(value);
         newRef.then = p.then.bind(p);
         newRef.catch = p.catch.bind(p);
         return newRef;

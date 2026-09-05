@@ -36,6 +36,7 @@ const FILES = {
   'foro':       'views/foro-view.html',
   'pedidos':    'views/pedidos-view.html',
   'nueva-nota': 'views/nueva-nota-view.html',
+  'historial':  'views/historial-view.html',
   'registros':  'views/registros-view.html',
   'configuracion': 'views/configuracion-view.html',
   'config-sistema': 'views/config-sistema-view.html',

@@ -1,0 +1,50 @@
+<!-- ── Main: Historial de Notas ── -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">
+      <h1>Historial de notas</h1>
+      <p>Notas de pedido creadas</p>
+    </div>
+    <div class="topbar-actions">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="historialNotasSearch" placeholder="Buscar por cliente o N° de nota…" oninput="filtrarHistorialNotas(this.value)" autocomplete="off">
+      </div>
+      <button class="btn btn-ghost" onclick="Router.go('pedidos')">
+        <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Volver
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <div class="stock-stats" id="historialStatsRow">
+      <div class="stat-card">
+        <div class="stat-label">Notas creadas</div>
+        <div class="stat-value" id="statHistorialCantidad">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total facturado</div>
+        <div class="stat-value" id="statHistorialTotal">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Promedio por nota</div>
+        <div class="stat-value" id="statHistorialPromedio">—</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Ítems</th><th>Total</th><th>Vendedor</th><th>Acciones</th></tr>
+        </thead>
+        <tbody id="historialNotasBody"></tbody>
+      </table>
+    </div>
+    <div id="historialNotasEmpty" class="nota-empty-state" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+      <p>Todavía no se creó ninguna nota de pedido.</p>
+    </div>
+  </div>
+</main>

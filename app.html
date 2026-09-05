@@ -102,6 +102,10 @@
         <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
         <span data-i18n="nav.pedidos">Pedidos</span>
       </a>
+      <a class="nav-item nav-tienda-only nav-plan-pago nav-mobile-overflow" data-page="historial" href="#historial">
+        <svg viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+        <span data-i18n="nav.historial">Historial</span>
+      </a>
       <a class="nav-item nav-tienda-only nav-plan-pago nav-mobile-overflow" data-page="foro" href="#foro">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span data-i18n="nav.foro">Foro</span>
@@ -139,6 +143,10 @@
          "reales" de arriba, así que el Router (setActiveNavItem) y el
          click-to-navigate de nav.js los reconocen sin código aparte. -->
     <div class="nav-more-panel" id="navMorePanel">
+      <a class="nav-item" data-page="historial" href="#historial">
+        <svg viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+        Historial
+      </a>
       <a class="nav-item" data-page="foro" href="#foro">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Foro
@@ -214,6 +222,7 @@
 <script src="import-stock.js" defer></script>
 <script src="pedidos-logic.js" defer></script>
 <script src="nueva-nota-logic.js" defer></script>
+<script src="historial-logic.js" defer></script>
 <script src="import-clientes.js" defer></script>
 <script src="registros-logic.js" defer></script>
 <script src="configuracion-logic.js" defer></script>
