@@ -122,6 +122,15 @@ window.Router = (function() {
 
     try {
       root.innerHTML = html;
+      // Retriggerar la animación de entrada en cada navegación — sin
+      // esto, la @keyframes de #viewRoot.view-anim-enter solo jugaría
+      // una vez al cargar la página, porque una animación CSS no se
+      // repite sola si la clase nunca se quita y se vuelve a poner.
+      // El forzado de reflow (offsetWidth) es lo que hace que el
+      // navegador "olvide" que la clase ya estaba puesta.
+      root.classList.remove('view-anim-enter');
+      void root.offsetWidth;
+      root.classList.add('view-anim-enter');
       if (window.aplicarIdioma) aplicarIdioma(root);
       currentPage = page;
       setActiveNavItem(page);

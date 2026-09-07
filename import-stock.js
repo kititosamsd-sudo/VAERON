@@ -88,7 +88,7 @@ function selectImportMode(mode) {
 }
 
 async function downloadStockTemplate() {
-  await loadScriptStock('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  await loadScriptStock('vendor/xlsx.full.min.js');
   var cfg = IMPORT_MODE_CONFIG[importStockMode];
   var data = [cfg.templateHeader].concat(cfg.templateRows);
   var ws = XLSX.utils.aoa_to_sheet(data);
@@ -209,7 +209,7 @@ function showImportStockStep(step) {
 async function onImportStockFile(input) {
   var file = input.files[0];
   if (!file) return;
-  await loadScriptStock('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  await loadScriptStock('vendor/xlsx.full.min.js');
 
   var mode = importStockMode;
   var reader = new FileReader();

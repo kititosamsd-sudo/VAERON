@@ -141,8 +141,12 @@ function buscarProductoNota(q) {
         // Cantidad disponible en stock total — mismo campo que usa
         // Stock (ver getDisplayStock en stock.js) para no vender por
         // encima de lo que realmente hay. Se muestra en rojo cuando
-        // ya no queda nada.
-        const cant = p.stock !== undefined ? p.stock : 0;
+        // ya no queda nada. Number(...) es a propósito: p.stock viene
+        // de /products, que cualquier cuenta de la tienda puede
+        // escribir (ver auditoría de Firebase Rules) — sin forzarlo a
+        // número, un valor manipulado ahí se podría inyectar tal
+        // cual en este HTML.
+        const cant = Number(p.stock) || 0;
         const cantClase = cant > 0 ? '' : ' style="color:var(--red)"';
         return `
         <div class="nota-autocomplete-item" onclick="elegirProductoNota('${escapeJsAttr(p.code)}')">
@@ -167,7 +171,7 @@ function elegirProductoNota(code) {
   document.getElementById('notaPrecioInput').value = Number(p.price) || 0;
   document.getElementById('notaProductoClear').style.display = 'flex';
 
-  const cant = p.stock !== undefined ? p.stock : 0;
+  const cant = Number(p.stock) || 0;
   const hint = document.getElementById('notaStockHint');
   hint.style.display = 'flex';
   hint.classList.toggle('sin-stock', cant <= 0);
@@ -231,16 +235,25 @@ function quitarItemNota(idx) {
 }
 
 function notaItemRowHtml(item, idx) {
-  const descPct = item.descPct || 0;
-  const subtotal = item.cantidad * item.precio * (1 - descPct / 100);
+  // Blindaje contra XSS almacenado: cantidad/precio/desc pueden
+  // venir de datos ya guardados en Firebase (modo edición) que no
+  // necesariamente pasaron por los <input type="number"> del
+  // formulario — por ejemplo si alguien escribió directo a /orders
+  // sin pasar por la UI. Se fuerza a número ANTES de insertarlos en
+  // el HTML, así una cadena con comillas/tags nunca llega a romper
+  // el atributo value="...".
+  const cantidad = Number(item.cantidad) || 0;
+  const precio = Number(item.precio) || 0;
+  const descPct = Number(item.descPct) || 0;
+  const subtotal = cantidad * precio * (1 - descPct / 100);
   return `
     <div class="nota-item-row">
       <div class="nota-item-info">
         <div class="nota-item-name">${escapeHtml(item.nombre)}</div>
         <div class="nota-item-code">${escapeHtml(displayProductCode(item.codigo))}</div>
       </div>
-      <input type="number" min="1" step="1" class="form-input" value="${item.cantidad}" onchange="actualizarCantidadNota(${idx}, this.value)">
-      <input type="number" min="0" step="0.01" class="form-input" value="${item.precio}" onchange="actualizarPrecioNota(${idx}, this.value)">
+      <input type="number" min="1" step="1" class="form-input" value="${cantidad}" onchange="actualizarCantidadNota(${idx}, this.value)">
+      <input type="number" min="0" step="0.01" class="form-input" value="${precio}" onchange="actualizarPrecioNota(${idx}, this.value)">
       <input type="number" min="0" max="100" step="0.5" class="form-input" value="${descPct}" onchange="actualizarDescNota(${idx}, this.value)">
       <div class="nota-item-subtotal">S/ ${fmtPrice(subtotal)}</div>
       <div class="nota-item-remove" onclick="quitarItemNota(${idx})" title="Quitar">✕</div>
@@ -384,7 +397,9 @@ async function guardarNota() {
 // automáticamente al confirmar el pedido (antes forzaba una
 // descarga en cada guardado, sin que el usuario lo pidiera).
 async function generarPdfNota(numeroFmt, cliente, items, descuentoPct, subtotal, total) {
-  await loadScriptExport('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  // Ver comentario en loadXlsxLib() (stock.js) sobre por qué esto ya
+  // no apunta a un CDN externo.
+  await loadScriptExport('vendor/jspdf.umd.min.js');
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const marginX = 40;

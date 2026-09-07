@@ -137,6 +137,23 @@ function closeNewVendor() {
   document.getElementById('newVendorOverlay').classList.remove('open');
 }
 
+// Política mínima de contraseñas para vendedores. Firebase Auth por
+// sí solo solo exige 6 caracteres (y ni siquiera eso lo podemos
+// endurecer desde el cliente, es un mínimo fijo del SDK) — esto es
+// una capa extra, propia de la app, para no dejar pasar contraseñas
+// como "123456" o "aaaaaaaa" sin que nadie lo note. No sustituye
+// configurar una política de contraseñas en la consola de Firebase
+// (Authentication > Settings), que es más fuerte por venir del lado
+// del servidor — esto es un complemento, no el único candado.
+function passwordEsDebil(password) {
+  if (password.length < 8) return 'Usa al menos 8 caracteres.';
+  if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return 'Combina letras y números.';
+  if (/^(.)\1+$/.test(password)) return 'No repitas el mismo carácter todo el tiempo.';
+  const debiles = ['12345678', 'password', 'contraseña', 'qwerty123', 'abc12345'];
+  if (debiles.includes(password.toLowerCase())) return 'Esa contraseña es demasiado común — elige otra.';
+  return null; // null = está bien
+}
+
 async function submitNewVendor() {
   const nombre = document.getElementById('newVendorNombre').value.trim();
   const usuario = document.getElementById('newVendorUsuario').value.trim();
@@ -156,8 +173,9 @@ async function submitNewVendor() {
     errorEl.style.display = 'block';
     return;
   }
-  if (password.length < 6) {
-    errorEl.textContent = 'La contraseña debe tener al menos 6 caracteres (mínimo que exige Firebase).';
+  const motivoDebil = passwordEsDebil(password);
+  if (motivoDebil) {
+    errorEl.textContent = motivoDebil;
     errorEl.style.display = 'block';
     return;
   }
@@ -191,22 +209,28 @@ function traducirErrorNuevoVendedor(code) {
 // vez de usuario/contraseña-en-texto-plano) ───────────────────────
 let editVendorUid = null;
 
-function openEditVendor(uid) {
+let editVendorPasswordActual = null; // cargada aparte al abrir el modal — ver comentario en refVendorSecrets (firebase.js)
+
+async function openEditVendor(uid) {
   const u = usersCache.find(x => x.uid === uid);
   if (!u) return;
   editVendorUid = uid;
   document.getElementById('editVendorNombre').value = u.nombre || '';
   document.getElementById('editVendorEmail').value = u.correo || '';
-  document.getElementById('editVendorCurrentPass').value = u.passwordActual || '';
+  document.getElementById('editVendorCurrentPass').value = '';
   document.getElementById('editVendorCurrentPass').type = 'password';
   document.getElementById('editVendorEyeIcon').innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
   document.getElementById('editVendorPassword').value = '';
   document.getElementById('editVendorError').style.display = 'none';
   document.getElementById('editVendorOverlay').classList.add('open');
+
+  editVendorPasswordActual = await getVendorPassword(uid);
+  document.getElementById('editVendorCurrentPass').value = editVendorPasswordActual || '';
 }
 function closeEditVendor() {
   document.getElementById('editVendorOverlay').classList.remove('open');
   editVendorUid = null;
+  editVendorPasswordActual = null;
 }
 
 function toggleEditVendorPasswordVisibility() {
@@ -236,16 +260,19 @@ async function submitEditVendor() {
     errorEl.style.display = 'block';
     return;
   }
-  if (nuevaPassword && nuevaPassword.length < 6) {
-    errorEl.textContent = 'La contraseña debe tener al menos 6 caracteres (mínimo que exige Firebase).';
-    errorEl.style.display = 'block';
-    return;
+  if (nuevaPassword) {
+    const motivoDebil = passwordEsDebil(nuevaPassword);
+    if (motivoDebil) {
+      errorEl.textContent = motivoDebil;
+      errorEl.style.display = 'block';
+      return;
+    }
   }
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Guardando…';
   try {
-    await updateVendorAccount(editVendorUid, u.usuario, u.passwordActual, nombre, correo, nuevaPassword || null);
+    await updateVendorAccount(editVendorUid, u.usuario, editVendorPasswordActual, nombre, correo, nuevaPassword || null);
     closeEditVendor();
     await loadRegistros();
   } catch (err) {

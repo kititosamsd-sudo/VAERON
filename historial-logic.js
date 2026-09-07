@@ -93,13 +93,18 @@ function abrirVerNotaHistorial(id) {
   }
 
   document.getElementById('verNotaBody').innerHTML = items.map(it => {
-    const desc = it.descPct || 0;
-    const itemSubtotal = it.cantidad * it.precio * (1 - desc / 100);
+    // Mismo blindaje que notaItemRowHtml (nueva-nota-logic.js): forzar
+    // a número antes de insertar en el HTML, no confiar en que
+    // cantidad/precio/descPct ya guardados sean válidos.
+    const cantidad = Number(it.cantidad) || 0;
+    const precio = Number(it.precio) || 0;
+    const desc = Number(it.descPct) || 0;
+    const itemSubtotal = cantidad * precio * (1 - desc / 100);
     return `<tr>
       <td>${escapeHtml(displayProductCode(it.codigo || ''))}</td>
       <td>${escapeHtml(it.nombre || '')}</td>
-      <td class="right">S/ ${fmtPrice(it.precio)}</td>
-      <td class="right">${it.cantidad}</td>
+      <td class="right">S/ ${fmtPrice(precio)}</td>
+      <td class="right">${cantidad}</td>
       <td class="right">${desc > 0 ? desc + '%' : '—'}</td>
       <td class="right">S/ ${fmtPrice(itemSubtotal)}</td>
     </tr>`;
@@ -141,8 +146,9 @@ function editarNotaHistorial() {
   if (!verNotaActualId) return;
   const n = historialNotasCache.find(x => x.id === verNotaActualId);
   if (!n) return;
+  const id = verNotaActualId; // guardarlo ANTES de cerrar el modal, que limpia verNotaActualId
   cerrarVerNotaHistorial();
-  Router.go('nueva-nota', { params: { editId: verNotaActualId, editNota: n } });
+  Router.go('nueva-nota', { params: { editId: id, editNota: n } });
 }
 
 // ── Eliminar ──────────────────────────────────────────────

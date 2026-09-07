@@ -362,7 +362,9 @@ async function exportClientes() {
       : `clientes-filtrados-${today()}.xlsx`;
   }
 
-  await loadScriptExport('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  // Ver comentario en loadXlsxLib() (stock.js) sobre por qué esto ya
+  // no apunta a un CDN externo.
+  await loadScriptExport('vendor/xlsx.full.min.js');
 
   const data = [
     ['RUC', 'Cliente', 'Ciudad'],

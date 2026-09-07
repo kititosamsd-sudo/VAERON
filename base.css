@@ -2516,3 +2516,24 @@ td { padding: 13px 18px; vertical-align: middle; }
   background: none; border: none; cursor: pointer; color: var(--text-1); font-family: var(--font-ui);
 }
 .ver-nota-download-menu button:hover { background: var(--surface-2); }
+
+/* ── Transición entre pantallas ────────────────────────────
+   Antes el contenido de #viewRoot se reemplazaba de golpe
+   (root.innerHTML = html), lo cual se siente como una página web
+   plana recargándose. Esta clase se agrega y se retira en cada
+   navegación (ver goToPageContent() en router.js) para que la
+   vista nueva entre con un fade + un pequeño deslizamiento hacia
+   arriba, el mismo lenguaje visual que una transición de pantalla
+   en una app nativa — sin retrasar en nada la navegación real. */
+#viewRoot.view-anim-enter {
+  animation: view-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes view-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* Quien prefiera menos movimiento en su sistema (accesibilidad) no
+   debería recibir la animación. */
+@media (prefers-reduced-motion: reduce) {
+  #viewRoot.view-anim-enter { animation: none; }
+}

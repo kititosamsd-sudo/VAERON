@@ -14,7 +14,7 @@ function loadScriptClientes(url) {
 
 // Plantilla de ejemplo
 async function downloadClientTemplate() {
-  await loadScriptClientes('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  await loadScriptClientes('vendor/xlsx.full.min.js');
   var data = [
     ['RUC', 'Cliente', 'Ciudad'],
     ['20123456789', 'Instrumentos del Sur S.A.C.', 'Lima'],
@@ -66,7 +66,7 @@ function showImportStep(step) {
 async function onImportClientesFile(input) {
   var file = input.files[0];
   if (!file) return;
-  await loadScriptClientes('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  await loadScriptClientes('vendor/xlsx.full.min.js');
 
   var reader = new FileReader();
   reader.onload = function(e) {

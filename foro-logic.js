@@ -208,7 +208,7 @@ function foroCardHtml(p) {
     : '';
   const fecha = p.createdAt ? new Date(p.createdAt).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' }) : '';
   const borrarHtml = esPropia
-    ? `<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#FECACA;margin-top:8px" onclick="borrarPublicacionForoUI('${p.proyecto}','${p.id}','${p.tiendaId}')">Eliminar</button>`
+    ? `<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#FECACA;margin-top:8px" onclick="borrarPublicacionForoUI('${escapeJsAttr(p.proyecto)}','${escapeJsAttr(p.id)}','${escapeJsAttr(p.tiendaId)}')">Eliminar</button>`
     : '';
 
   return `

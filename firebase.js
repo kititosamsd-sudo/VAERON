@@ -194,6 +194,29 @@ const refProducts = scopedRef('products');
 const refClients  = scopedRef('clients');
 const refOrders   = scopedRef('orders');
 const refUsers    = scopedRef('usuarios');
+// Contraseñas de vendedores en texto plano, separadas de /usuarios a
+// propósito. OJO: esto NO puede vivir en tiendas/{tid}/vendorSecrets
+// como cualquier otro nodo de scopedRef() — las reglas de Firebase
+// CASCADEAN el permiso de lectura de todo el subárbol de una tienda
+// (root.child('cuentas')...tiendaId===$tiendaId, ver database.rules.json)
+// hacia todo lo que cuelgue debajo, así que una regla más estricta
+// puesta ahí adentro NO alcanza a bloquear nada — un vendedor
+// igual podría leerlo por la regla del padre. Por eso vive en un
+// nodo hermano de /tiendas en la raíz (vendorSecrets/{tiendaId}/{uid}),
+// sin ningún ancestro que otorgue lectura de más.
+function scopedVendorSecretsRef() {
+  return new Proxy({}, {
+    get(_target, prop) {
+      if (!currentTiendaId) {
+        throw new Error('Intento de usar "vendorSecrets" sin una tienda activa.');
+      }
+      const real = db.ref('vendorSecrets/' + currentTiendaId);
+      const valor = real[prop];
+      return typeof valor === 'function' ? valor.bind(real) : valor;
+    }
+  });
+}
+const refVendorSecrets = scopedVendorSecretsRef();
 // Ajustes propios de la tienda que ella misma puede editar (a
 // diferencia de refTiendas/info, que es del súper-admin) — por ahora
 // solo la tasa de cambio USD → Sol, ver getTiendaConfig/setTasaCambio.
@@ -1654,17 +1677,17 @@ async function createVendorAccount(usuario, password, nombre, correo) {
       nombre: nombre || usuarioNormalizado,
       usuario: usuarioNormalizado,
       correo: correo || '',   // solo informativo (contacto / recuperar clave) — no se usa para iniciar sesión
-      // Copia en texto plano de la contraseña — necesaria porque el
-      // SDK de Auth del cliente nunca permite leer ni resetear la
-      // contraseña de OTRO usuario sin volver a autenticarse como
-      // él (ver updateVendorAccount más abajo, mismo truco de
-      // instancia secundaria). Coherente con que el campo al crear
-      // la cuenta ya es type="text" a la vista del admin, no oculto.
-      passwordActual: password,
       rol: 'vendedor',
       activo: true,
       creadoEn: Date.now(),
     });
+    // Copia en texto plano de la contraseña — necesaria porque el
+    // SDK de Auth del cliente nunca permite leer ni resetear la
+    // contraseña de OTRO usuario sin volver a autenticarse como él
+    // (ver updateVendorAccount más abajo, mismo truco de instancia
+    // secundaria). Va en /vendorSecrets, NO en /usuarios — ver el
+    // comentario en la declaración de refVendorSecrets más arriba.
+    await refVendorSecrets.child(uid).set(password);
     // Sin esto, el vendedor no podría iniciar sesión: es lo que le
     // dice al login a qué tienda pertenece (ver auth-guard.js).
     await refCuentas.child(uid).set({ rol: 'vendedor', tiendaId: currentTiendaId });
@@ -1694,11 +1717,20 @@ async function updateVendorAccount(uid, usuario, passwordActual, nombre, correo,
       const cred = await secondaryApp.auth().signInWithEmailAndPassword(authEmail, passwordActual);
       await cred.user.updatePassword(nuevaPassword);
       await secondaryApp.auth().signOut();
-      updates.passwordActual = nuevaPassword;
+      await refVendorSecrets.child(uid).set(nuevaPassword); // ver comentario en refVendorSecrets
     }
 
     await refUsers.child(uid).update(updates);
   } finally {
     await secondaryApp.delete().catch(() => {});
   }
+}
+
+// Ver comentario en refVendorSecrets: solo admin de la misma tienda
+// puede leer esto — las Reglas de Firebase son las que de verdad lo
+// hacen cumplir, esto solo evita pedirle a Firebase algo que sabemos
+// que va a rechazar si quien llama no es admin.
+async function getVendorPassword(uid) {
+  const snap = await refVendorSecrets.child(uid).get();
+  return snap.exists() ? snap.val() : null;
 }

@@ -31,14 +31,16 @@
         },
         "products": {
           ".indexOn": "updatedAt",
-          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
+          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && (newData.exists() || root.child('cuentas').child(auth.uid).child('rol').val() === 'admin')"
         },
         "clients": {
           ".indexOn": "updatedAt",
-          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
+          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && (newData.exists() || root.child('cuentas').child(auth.uid).child('rol').val() === 'admin')"
         },
         "orders": {
-          ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId"
+          "$orderId": {
+            ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' || !data.exists() || data.child('vendedorUid').val() === auth.uid) && (!newData.exists() || (newData.child('total').val() >= 0 && newData.child('subtotal').val() >= 0 && newData.child('total').val() <= newData.child('subtotal').val() + 0.01))"
+          }
         },
         "config": {
           ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && data.child('logoUrl').val() === newData.child('logoUrl').val() && data.child('almacenesNombres').child('alm1').val() === newData.child('almacenesNombres').child('alm1').val() && data.child('almacenesNombres').child('alm2').val() === newData.child('almacenesNombres').child('alm2').val() && data.child('almacenesNombres').child('alm3').val() === newData.child('almacenesNombres').child('alm3').val() && data.child('almacenesNombres').child('alm4').val() === newData.child('almacenesNombres').child('alm4').val() && data.child('almacenesNombres').child('alm5').val() === newData.child('almacenesNombres').child('alm5').val() && data.child('almacenesNombres').child('alm6').val() === newData.child('almacenesNombres').child('alm6').val() && data.child('almacenesActivos').child('alm1').val() === newData.child('almacenesActivos').child('alm1').val() && data.child('almacenesActivos').child('alm2').val() === newData.child('almacenesActivos').child('alm2').val() && data.child('almacenesActivos').child('alm3').val() === newData.child('almacenesActivos').child('alm3').val() && data.child('almacenesActivos').child('alm4').val() === newData.child('almacenesActivos').child('alm4').val() && data.child('almacenesActivos').child('alm5').val() === newData.child('almacenesActivos').child('alm5').val() && data.child('almacenesActivos').child('alm6').val() === newData.child('almacenesActivos').child('alm6').val()",
@@ -59,6 +61,14 @@
         ".read": true,
         "$postId": {
           ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() != null && (!data.exists() || data.child('tiendaId').val() === root.child('cuentas').child(auth.uid).child('tiendaId').val()) && (!newData.exists() || newData.child('tiendaId').val() === root.child('cuentas').child(auth.uid).child('tiendaId').val())"
+        }
+      }
+    },
+    "vendorSecrets": {
+      "$tiendaId": {
+        "$uid": {
+          ".read": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId))",
+          ".write": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId))"
         }
       }
     }

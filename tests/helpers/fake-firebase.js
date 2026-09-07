@@ -296,7 +296,7 @@ function createFakeFirebase() {
   const fakeDb = { ref: p => makeRef(p ? String(p).split('/').filter(Boolean) : []) };
 
   let authUidCounter = 0;
-  const registeredEmails = new Set();
+  const registeredEmails = new Map(); // email normalizado -> { uid, password }
 
   function makeAuthFor() {
     // currentUser en null: en las pruebas nunca se llama a
@@ -311,19 +311,50 @@ function createFakeFirebase() {
       onAuthStateChanged(cb) { cb(this.currentUser); return () => {}; },
       Auth: { Persistence: { LOCAL: 'local', SESSION: 'session' } },
       setPersistence() { return Promise.resolve(); },
-      createUserWithEmailAndPassword(email, _password) {
+      createUserWithEmailAndPassword(email, password) {
         const normalized = String(email).trim().toLowerCase();
         if (registeredEmails.has(normalized)) {
           const err = new Error('The email address is already in use by another account.');
           err.code = 'auth/email-already-in-use';
           return Promise.reject(err);
         }
-        registeredEmails.add(normalized);
         authUidCounter += 1;
         const uid = 'fake-uid-' + authUidCounter;
-        return Promise.resolve({ user: { uid, email: normalized } });
+        const rec = { uid, password };
+        registeredEmails.set(normalized, rec);
+        return Promise.resolve({ user: makeUserHandle(normalized, rec) });
+      },
+      // Usado por updateVendorAccount (firebase.js) para volver a
+      // autenticarse como OTRO usuario antes de poder cambiarle la
+      // contraseña — el SDK de cliente lo exige así, no hay forma de
+      // "resetear a ciegas" sin backend.
+      signInWithEmailAndPassword(email, password) {
+        const normalized = String(email).trim().toLowerCase();
+        const rec = registeredEmails.get(normalized);
+        if (!rec) {
+          const err = new Error('No existe esa cuenta.');
+          err.code = 'auth/user-not-found';
+          return Promise.reject(err);
+        }
+        if (rec.password !== password) {
+          const err = new Error('Contraseña incorrecta.');
+          err.code = 'auth/wrong-password';
+          return Promise.reject(err);
+        }
+        return Promise.resolve({ user: makeUserHandle(normalized, rec) });
       },
       signOut() { return Promise.resolve(); },
+    };
+  }
+
+  function makeUserHandle(normalizedEmail, rec) {
+    return {
+      uid: rec.uid,
+      email: normalizedEmail,
+      updatePassword(newPassword) {
+        rec.password = newPassword;
+        return Promise.resolve();
+      },
     };
   }
 

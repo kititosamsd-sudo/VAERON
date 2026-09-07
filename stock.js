@@ -861,7 +861,13 @@ async function loadXlsxLib() {
   await new Promise((resolve, reject) => {
     if (window.XLSX) { resolve(); return; }
     const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    // Empaquetado dentro del proyecto (vendor/), no cargado desde un
+    // CDN externo en cada uso: un script de terceros sin integrity ni
+    // pin de versión es una puerta de entrada de cadena de suministro
+    // — si cdnjs (o esa versión puntual del archivo) se viera
+    // comprometido, ese código correría con los mismos privilegios
+    // que la sesión de quien tenga la app abierta en ese momento.
+    s.src = 'vendor/xlsx.full.min.js';
     s.onload = resolve; s.onerror = reject;
     document.head.appendChild(s);
   });
@@ -1174,7 +1180,7 @@ async function exportStock() {
   await new Promise((resolve, reject) => {
     if (window.XLSX) { resolve(); return; }
     const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.src = 'vendor/xlsx.full.min.js';
     s.onload = resolve; s.onerror = reject;
     document.head.appendChild(s);
   });
