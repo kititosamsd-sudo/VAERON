@@ -15,8 +15,6 @@ function historialNotaRowHtml(n) {
       <td data-label="N°"><span class="ruc-num">${escapeHtml(numeroTexto)}</span></td>
       <td data-label="Fecha">${escapeHtml(fecha)}</td>
       <td data-label="Cliente"><div class="client-name">${escapeHtml(formatClienteOrden(cliente))}</div></td>
-      <td data-label="Ítems">${(n.items || []).length}</td>
-      <td data-label="Total"><strong class="text-mono">S/ ${fmtPrice(n.total !== undefined ? n.total : 0)}</strong></td>
       <td data-label="Vendedor">${escapeHtml(n.vendedorNombre || '—')}</td>
       <td data-label="Acciones"><button type="button" class="btn-ver-detalle" onclick="abrirVerNotaHistorial('${escapeJsAttr(n.id)}')">Ver</button></td>
     </tr>`;

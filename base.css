@@ -415,27 +415,42 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
    tarjetas y modales (surface, border, radio, sombra chica) en vez
    de un componente visual nuevo. */
 .nota-autocomplete {
-  max-width: 420px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
   margin-top: 4px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md, var(--shadow-sm));
   max-height: 240px;
   overflow-y: auto;
 }
 .nota-autocomplete-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   padding: 10px 14px;
   cursor: pointer;
-  font-size: 13px;
-  color: var(--text-1);
   border-bottom: 1px solid var(--border);
 }
 .nota-autocomplete-item:last-child { border-bottom: none; }
 .nota-autocomplete-item:hover { background: var(--surface-2); }
-.nota-autocomplete-item span {
-  display: block; font-size: 11.5px; color: var(--text-3); margin-top: 2px;
+.nota-autocomplete-item-main { min-width: 0; flex: 1; }
+.nota-autocomplete-item-name {
+  font-size: 13px; color: var(--text-1); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.nota-autocomplete-item-meta { font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
+.nota-autocomplete-item-stock {
+  flex-shrink: 0; font-size: 11px; font-weight: 600; padding: 3px 8px;
+  border-radius: 999px; background: var(--surface-2); color: var(--text-2);
+  white-space: nowrap;
+}
+.nota-autocomplete-item-stock.sin-stock { background: var(--red-bg); color: var(--red); }
 .nota-autocomplete-empty {
   padding: 10px 14px; font-size: 12.5px; color: var(--text-3);
 }

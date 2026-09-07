@@ -37,8 +37,10 @@ function buscarClienteNota(q) {
   box.innerHTML = matches.length
     ? matches.map(c => `
         <div class="nota-autocomplete-item" onclick="seleccionarClienteNota('${escapeJsAttr(c.ruc)}')">
-          ${escapeHtml(c.nombre)}
-          <span>RUC ${escapeHtml(c.ruc)}${c.ciudad ? ' · ' + escapeHtml(c.ciudad) : ''}</span>
+          <div class="nota-autocomplete-item-main">
+            <div class="nota-autocomplete-item-name">${escapeHtml(c.nombre)}</div>
+            <div class="nota-autocomplete-item-meta">RUC ${escapeHtml(c.ruc)}${c.ciudad ? ' · ' + escapeHtml(c.ciudad) : ''}</div>
+          </div>
         </div>`).join('')
     : `<div class="nota-autocomplete-empty">Sin clientes que coincidan.</div>`;
   box.style.display = 'block';
@@ -147,11 +149,14 @@ function buscarProductoNota(q) {
         // número, un valor manipulado ahí se podría inyectar tal
         // cual en este HTML.
         const cant = Number(p.stock) || 0;
-        const cantClase = cant > 0 ? '' : ' style="color:var(--red)"';
+        const sinStock = cant <= 0 ? ' sin-stock' : '';
         return `
         <div class="nota-autocomplete-item" onclick="elegirProductoNota('${escapeJsAttr(p.code)}')">
-          ${escapeHtml(p.name || '')}
-          <span>${escapeHtml(displayProductCode(p.code || ''))} · S/ ${fmtPrice(p.price)} · <span${cantClase}>${cant} en stock</span></span>
+          <div class="nota-autocomplete-item-main">
+            <div class="nota-autocomplete-item-name">${escapeHtml(p.name || '')}</div>
+            <div class="nota-autocomplete-item-meta">${escapeHtml(displayProductCode(p.code || ''))} · S/ ${fmtPrice(p.price)}</div>
+          </div>
+          <span class="nota-autocomplete-item-stock${sinStock}">${cant} en stock</span>
         </div>`;
       }).join('')
     : `<div class="nota-autocomplete-empty">Sin productos que coincidan.</div>`;
