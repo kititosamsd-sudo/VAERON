@@ -257,9 +257,15 @@ function notaItemRowHtml(item, idx) {
         <div class="nota-item-name">${escapeHtml(item.nombre)}</div>
         <div class="nota-item-code">${escapeHtml(displayProductCode(item.codigo))}</div>
       </div>
-      <input type="number" min="1" step="1" class="form-input" value="${cantidad}" onchange="actualizarCantidadNota(${idx}, this.value)">
-      <input type="number" min="0" step="0.01" class="form-input" value="${precio}" onchange="actualizarPrecioNota(${idx}, this.value)">
-      <input type="number" min="0" max="100" step="0.5" class="form-input" value="${descPct}" onchange="actualizarDescNota(${idx}, this.value)">
+      <div class="nota-item-field" data-label="Cant.">
+        <input type="number" min="1" step="1" class="form-input" value="${cantidad}" onchange="actualizarCantidadNota(${idx}, this.value)">
+      </div>
+      <div class="nota-item-field" data-label="Precio">
+        <input type="number" min="0" step="0.01" class="form-input" value="${precio}" onchange="actualizarPrecioNota(${idx}, this.value)">
+      </div>
+      <div class="nota-item-field" data-label="Desc. %">
+        <input type="number" min="0" max="100" step="0.5" class="form-input" value="${descPct}" onchange="actualizarDescNota(${idx}, this.value)">
+      </div>
       <div class="nota-item-subtotal">S/ ${fmtPrice(subtotal)}</div>
       <div class="nota-item-remove" onclick="quitarItemNota(${idx})" title="Quitar">✕</div>
     </div>`;

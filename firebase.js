@@ -1691,6 +1691,11 @@ async function createVendorAccount(usuario, password, nombre, correo) {
     // Sin esto, el vendedor no podría iniciar sesión: es lo que le
     // dice al login a qué tienda pertenece (ver auth-guard.js).
     await refCuentas.child(uid).set({ rol: 'vendedor', tiendaId: currentTiendaId });
+    // Igual que con el admin en crearTienda(): sin esta entrada en el
+    // directorio del coordinador, el login nunca sabría en qué
+    // proyecto probar la contraseña de este vendedor y siempre
+    // fallaría con "No existe esa cuenta", aunque la cuenta sí exista.
+    await registrarEnDirectorio(authEmail, proyectoActivo);
     await secondaryApp.auth().signOut();
     return uid;
   } finally {

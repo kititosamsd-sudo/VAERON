@@ -44,7 +44,7 @@ function renderRegistros() {
       <tr data-uid="${escapeHtml(u.uid)}">
         <td>${escapeHtml(u.nombre || '—')}${esUno ? ' <span style="color:var(--text-3);font-size:11px">(tú)</span>' : ''}</td>
         <td style="color:var(--text-3);font-size:12.5px">${escapeHtml(u.rol === 'admin' ? (u.correo || '—') : (u.usuario || '—'))}</td>
-        <td class="col-city"><span class="reg-role-badge ${u.rol === 'admin' ? 'admin' : ''}">${u.rol === 'admin' ? 'Admin' : 'Tienda'}</span></td>
+        <td class="col-city"><span class="reg-role-badge ${u.rol === 'admin' ? 'admin' : ''}">${u.rol === 'admin' ? 'Admin' : 'Vendedor'}</span></td>
         <td class="col-city">
           <div class="reg-status-cell">
             <label class="status-toggle">

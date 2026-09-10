@@ -61,8 +61,8 @@ const I18N_DICT = {
     // ── login.html ──
     'login.bienvenida': 'Bienvenido de nuevo',
     'login.subtitulo': 'Inicia sesión para continuar',
-    'login.correo': 'Correo electrónico',
-    'login.correoPlaceholder': 'ejemplo@empresa.com',
+    'login.correo': 'Correo o usuario',
+    'login.correoPlaceholder': 'ejemplo@empresa.com o tu usuario',
     'login.clave': 'Contraseña',
     'login.clavePlaceholder': 'Ingresa tu contraseña',
     'login.mostrarClave': 'Mostrar/ocultar contraseña',
@@ -121,8 +121,8 @@ const I18N_DICT = {
     // ── login.html ──
     'login.bienvenida': 'Welcome back',
     'login.subtitulo': 'Sign in to continue',
-    'login.correo': 'Email',
-    'login.correoPlaceholder': 'example@company.com',
+    'login.correo': 'Email or username',
+    'login.correoPlaceholder': 'example@company.com or your username',
     'login.clave': 'Password',
     'login.clavePlaceholder': 'Enter your password',
     'login.mostrarClave': 'Show/hide password',

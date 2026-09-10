@@ -130,6 +130,11 @@ nav.sidebar-nav { flex: 1; padding: 14px 10px; overflow-y: auto; }
   stroke: currentColor; fill: none;
   stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
+/* En escritorio el ícono no necesita chip propio — el sidebar ya
+   resuelve el estado activo con el bloque de fondo en .nav-item.active.
+   El wrapper .nav-icon solo se convierte en una chip real en la barra
+   inferior móvil (ver breakpoint más abajo). */
+.nav-icon { display: contents; }
 
 .nav-badge {
   margin-left: auto;
@@ -521,6 +526,14 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
 .nota-item-name { font-size: 13.5px; font-weight: 600; color: var(--text-1); }
 .nota-item-code { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); margin-top: 1px; }
 .nota-item-row input[type="number"] { width: 64px; text-align: center; }
+/* Los inputs de Cant./Precio/Desc. van envueltos en .nota-item-field
+   (ver nueva-nota-logic.js) para poder ponerles una etiqueta con
+   data-label en móvil, igual que .table-wrap td[data-label] en el
+   resto de la app. En escritorio/tablet display:contents hace que el
+   wrapper "desaparezca" del layout — el input sigue siendo un hijo
+   flex directo de .nota-item-row, sin cambiar nada de cómo se veía
+   antes. En móvil (≤768px) se sobreescribe con un display real. */
+.nota-item-row .nota-item-field { display: contents; }
 .nota-item-subtotal { font-size: 13.5px; font-weight: 600; color: var(--text-1); width: 90px; text-align: right; }
 .nota-item-remove {
   width: 26px; height: 26px; border-radius: var(--r-sm); border: 1px solid var(--border);
@@ -1575,8 +1588,8 @@ td { padding: 13px 18px; vertical-align: middle; }
   .nav-item {
     flex: 1 1 0;
     flex-direction: column;
-    gap: 4px;
-    padding: 6px 8px;
+    gap: 3px;
+    padding: 7px 4px 6px;
     margin-bottom: 0;
     font-size: 10px;
     font-weight: 600;
@@ -1592,18 +1605,33 @@ td { padding: 13px 18px; vertical-align: middle; }
   /* El texto del nav item SÍ se muestra (a diferencia del sidebar
      lateral de escritorio, acá siempre hay lugar para el label) */
   .nav-item svg {
-    width: 20px; height: 20px;
+    width: 19px; height: 19px;
   }
-  /* Activo: solo color de acento + más peso — sin caja de fondo
-     detrás (se ve genérico/administrativo, no como un tab bar real). */
+  /* La chip detrás del ícono es lo que le da peso real a la barra:
+     un tab bar plano donde "activo" solo cambia el color del texto
+     se siente genérico. Acá el wrapper .nav-icon (ver .nav-icon en
+     el bloque base para escritorio, donde es un no-op) se convierte
+     en un bloque propio, y el ítem activo se resuelve con la misma
+     chip sólida y de alto contraste que ya usa el sidebar de
+     escritorio (.nav-item.active), no con un color de acento suelto. */
+  .nav-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 26px;
+    border-radius: var(--r-sm);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
   .nav-item.active {
     background: none;
-    color: var(--accent);
+    color: var(--ink);
     font-weight: 700;
+  }
+  .nav-item.active .nav-icon {
+    background: var(--ink);
+    color: #fff;
   }
   .nav-badge {
     position: absolute;
-    top: 2px; right: 8px;
+    top: 0; right: 6px;
     margin-left: 0;
     font-size: 9px; padding: 1px 4px; min-width: 14px;
   }
@@ -1620,6 +1648,17 @@ td { padding: 13px 18px; vertical-align: middle; }
      clase) y "Más" aparecía en cualquier plan, incluido Básico. */
   .nav-more-toggle { display: none; }
   html:not(.plan-basico) .nav-more-toggle { display: flex; }
+  /* El botón "Más" abre una hoja, no navega — por eso lleva su
+     propia chip siempre visible (tenue en reposo), a diferencia de
+     los demás ítems donde la chip solo aparece al estar activos.
+     Así se distingue de un tab de navegación más sin agregar texto
+     ni íconos extra. Al abrirse, la chip se invierte a sólida y la
+     flecha rota 180° — confirma la acción en vez de solo decorar. */
+  .nav-more-toggle .nav-icon { background: var(--surface-2); color: var(--text-2); }
+  .nav-more-toggle .nav-icon svg { transition: transform 0.22s cubic-bezier(.32,.72,0,1); }
+  body.nav-more-open .nav-more-toggle { color: var(--ink); font-weight: 700; }
+  body.nav-more-open .nav-more-toggle .nav-icon { background: var(--ink); color: #fff; }
+  body.nav-more-open .nav-more-toggle .nav-icon svg { transform: rotate(180deg); }
   html:not(.plan-basico) .nav-item.nav-mobile-overflow { display: none; }
   /* El súper-admin no tiene botón "Más" (es exclusivo de cuentas de
      tienda — ver .nav-tienda-only en el botón de arriba), así que
@@ -1636,54 +1675,113 @@ td { padding: 13px 18px; vertical-align: middle; }
 
   .nav-more-panel {
     display: flex;
-    position: fixed;
-    right: 10px; bottom: 78px;
-    width: 208px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    box-shadow: var(--shadow-lg);
-    padding: 6px;
-    z-index: 101;
     flex-direction: column;
-    gap: 1px;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--surface);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    box-shadow: var(--shadow-lg);
+    padding: 10px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+    z-index: 101;
     opacity: 0;
-    transform: translateY(6px) scale(0.98);
+    transform: translateY(100%);
     pointer-events: none;
-    transition: opacity 0.12s ease, transform 0.12s ease;
+    transition: opacity 0.18s ease, transform 0.22s cubic-bezier(.32,.72,0,1);
   }
   body.nav-more-open .nav-more-panel {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
     pointer-events: auto;
   }
-  /* Los ítems DENTRO del panel se ven como fila de menú (ícono +
-     texto en horizontal), no como botón de tab bar (ícono arriba,
-     texto abajo) — son cosas distintas aunque reutilicen .nav-item
-     para heredar el click-to-navigate y el resaltado de "activo". */
-  .nav-more-panel .nav-item {
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 12px;
-    min-width: 0;
-    border-radius: 9px;
-    font-size: 13.5px;
-    font-weight: 600;
-    white-space: nowrap;
+  .nav-more-handle {
+    width: 36px; height: 4px; border-radius: 999px;
+    background: var(--border-strong);
+    margin: 2px auto 2px;
   }
-  .nav-more-panel .nav-item:active { background: var(--surface-2); }
-  .nav-more-panel .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-  .nav-more-panel .nav-item.active { background: var(--accent-soft); }
+  /* Título + cierre explícito — antes la hoja abría directo en la
+     grilla, sin encabezado ni forma de cerrarla que no fuera adivinar
+     que el fondo oscurecido o el handle eran tocables. */
+  .nav-more-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 2px 16px;
+  }
+  .nav-more-title {
+    margin: 0; font-size: 15px; font-weight: 700; color: var(--ink);
+  }
+  .nav-more-close {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: none; background: var(--surface-2); color: var(--text-2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .nav-more-close svg { width: 15px; height: 15px; }
+  .nav-more-close:active { background: var(--border); }
+
+  /* Grilla de íconos, no lista — mismo lenguaje que un panel de apps
+     nativo (ícono arriba, etiqueta abajo) en vez de una fila de menú
+     de escritorio. 3 columnas: con 4-5 ítems agrupados nunca deja una
+     fila casi vacía. */
+  .nav-more-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .nav-more-grid .nav-item {
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 6px 14px;
+    border-radius: var(--r-lg);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.1s ease, border-color 0.15s ease;
+  }
+  .nav-more-grid .nav-item:active { transform: scale(0.96); background: var(--surface-2); }
+  /* Cada sección lleva el ícono en su propia chip de color — el
+     mismo lenguaje que ya usan las tarjetas de Configuración
+     (.cfg-row-icon) para distinguir secciones, en vez de que las 5
+     tarjetas de acá se vean como copias idénticas de una sola. */
+  .nav-more-grid .nav-icon {
+    width: 42px; height: 42px;
+    border-radius: var(--r);
+    background: var(--icon-gray-bg); color: var(--icon-gray);
+  }
+  .nav-more-grid .nav-icon svg {
+    width: 20px; height: 20px; flex-shrink: 0;
+    stroke-width: 1.7;
+  }
+  .nav-more-grid .nav-icon-slate  { background: var(--icon-gray-bg);   color: var(--icon-gray); }
+  .nav-more-grid .nav-icon-purple { background: var(--icon-purple-bg); color: var(--icon-purple); }
+  .nav-more-grid .nav-icon-blue   { background: var(--icon-blue-bg);   color: var(--icon-blue); }
+  .nav-more-grid .nav-icon-amber  { background: var(--icon-amber-bg);  color: var(--icon-amber); }
+  .nav-more-grid .nav-icon-accent { background: var(--accent-soft);    color: var(--accent); }
+  /* La sección activa no cambia de color de chip (cada una ya tiene
+     el suyo) — se marca con un anillo y el label en tinta fuerte,
+     para no chocar con los 5 colores de identidad de arriba. */
+  .nav-more-grid .nav-item.active {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .nav-more-grid .nav-item.active .nav-icon {
+    box-shadow: inset 0 0 0 1.5px var(--surface), 0 0 0 3px var(--ink);
+  }
 
   .nav-more-backdrop {
     display: block;
     position: fixed; inset: 0; z-index: 99;
-    background: transparent;
+    background: rgba(11,17,32,0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
     visibility: hidden;
+    transition: opacity 0.18s ease;
   }
-  body.nav-more-open .nav-more-backdrop { visibility: visible; }
+  body.nav-more-open .nav-more-backdrop { opacity: 1; visibility: visible; }
 
   .nav-item-logout {
     display: flex;
@@ -1768,15 +1866,33 @@ td { padding: 13px 18px; vertical-align: middle; }
   html, body { overflow-x: hidden; overscroll-behavior-y: none; }
   body { font-size: 13px; }
 
-  /* ── Topbar ── */
+  /* ── Topbar ──
+     En móvil, arriba dice el nombre de la sección Y abajo la pestaña
+     activa de la tab bar también — texto duplicado, puro ruido. La
+     regla no es "ocultar el título en todos lados" (eso deja una
+     barra vacía y rara en las vistas que además tienen buscador o
+     botones): el topbar se gana su espacio por tener ACCIONES
+     reales, no por el título. Si al sacar el título no le queda
+     nada — ni botón, ni input, ni la etiqueta de plan (Dashboard/
+     Configuración, que empieza oculta y aparece según el plan) — la
+     barra entera desaparece y el contenido sube; la pestaña activa
+     ya dice dónde estás. Si sí le queda algo, se queda esa fila,
+     compacta, solo para eso. */
   .topbar {
     padding: 10px 14px;
     height: auto;
     flex-wrap: wrap;
     gap: 8px;
   }
-  .topbar-title h1 { font-size: 15px; }
-  .topbar-title p  { font-size: 11px; color: var(--text-3); }
+  .topbar-title { display: none; }
+  .topbar:not(:has(button)):not(:has(input)):not(:has(.dash-plan-tag:not([style*="display:none"]))) {
+    display: none;
+  }
+  /* Foro: su botón "+ Nueva publicación" no vive dentro de
+     .topbar-actions (es hijo directo de .topbar) — sin el título al
+     lado, que ocupe todo el ancho como cualquier otro botón de
+     acción en vez de quedar flotando a la izquierda. */
+  .topbar > .btn { width: 100%; justify-content: center; }
 
   .topbar-actions {
     width: 100%;
@@ -1947,6 +2063,85 @@ td { padding: 13px 18px; vertical-align: middle; }
 }
 
 /* =========================================================
+   RESPONSIVE — Nueva Nota de Pedido (≤ 768px)
+   El grid principal ya pasaba a 1 columna desde 900px, pero adentro
+   quedaban 3 cosas rotas en teléfono: la tarjeta de cliente (icono +
+   nombre + botón "Cambiar" apretados en una sola fila), la fila de
+   "Agregar artículo" (inputs de ancho fijo que no dejaban espacio
+   para el botón "+ Añadir") y, la más grave, la lista de artículos
+   ya agregados: era una fila tipo tabla (nombre + 3 inputs + subtotal
+   + botón quitar) sin wrap, así que en pantallas angostas los campos
+   quedaban minúsculos o cortados. Se convierte en tarjeta apilada con
+   etiquetas, igual que .table-wrap ya lo hace en el resto de la app.
+   ========================================================= */
+@media (max-width: 768px) {
+  /* ── Tarjeta de cliente ── */
+  .nota-cliente-card { flex-direction: column; align-items: stretch; text-align: center; }
+  .nota-cliente-icon { align-self: center; }
+  .nota-cliente-info-row { flex-direction: column; text-align: center; gap: 10px; }
+  .nota-cliente-info-row .btn { width: 100%; justify-content: center; }
+  #notaClienteBuscador .search-wrap,
+  .nota-cliente-o,
+  #notaClienteCrearForm .search-wrap {
+    max-width: 100% !important;
+  }
+  #notaClienteCrearForm > div[style*="display:flex"] { flex-direction: column; }
+
+  /* ── Agregar artículo ── */
+  .nota-add-row { flex-direction: column; align-items: stretch; gap: 12px; }
+  .nota-add-field.nota-add-producto { min-width: 0; }
+  .nota-add-field { max-width: none !important; }
+  .nota-add-field input[type="number"] { width: 100%; }
+  .nota-add-row > .btn { width: 100%; justify-content: center; }
+
+  /* ── Lista de artículos: fila → tarjeta ── */
+  .nota-item-row-header { display: none; }
+  .nota-item-row {
+    flex-direction: column;
+    align-items: stretch;
+    position: relative;
+    gap: 8px;
+    padding: 12px 34px 12px 0;
+  }
+  .nota-item-row .nota-item-info { padding-right: 4px; }
+  .nota-item-row .nota-item-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+  }
+  .nota-item-row .nota-item-field::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .nota-item-row .nota-item-field input[type="number"] {
+    width: 100px;
+    text-align: right;
+  }
+  .nota-item-row .nota-item-subtotal {
+    width: auto;
+    text-align: left;
+    font-size: 14px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+  .nota-item-row .nota-item-remove {
+    position: absolute;
+    top: 10px;
+    right: 0;
+  }
+
+  /* ── Resumen / descuento ── */
+  .nota-descuento-custom input { width: 100%; }
+}
+
+/* =========================================================
    RESPONSIVE — Móvil pequeño (≤ 390px)
    ========================================================= */
 @media (max-width: 390px) {
@@ -1961,8 +2156,6 @@ td { padding: 13px 18px; vertical-align: middle; }
      rediseño y afectando también a Tiendas, que reusa la misma clase
      para sus 3 tarjetas (Tiendas registradas/Activas/Suspendidas). */
   .hist-stats  { grid-template-columns: 1fr 1fr !important; }
-
-  .topbar-title h1 { font-size: 14px; }
 }
 /* ─── Registros: switch de activo/inactivo por cuenta ─── */
 .status-toggle {
