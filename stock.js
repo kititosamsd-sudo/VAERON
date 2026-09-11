@@ -64,11 +64,11 @@ function switchWarehouse(whId) {
   const importWh = document.getElementById('btnImportWarehouse');
   const exportWh = document.getElementById('btnExportWarehouse');
   const showDefault = !currentWarehouse;
-  const isVendedor = typeof currentUserRole !== 'undefined' && currentUserRole === 'vendedor';
-  if (importDefault) importDefault.style.display = (showDefault && !isVendedor) ? '' : 'none';
-  if (exportDefault) exportDefault.style.display = (showDefault && !isVendedor) ? '' : 'none';
-  if (importWh) importWh.style.display = (!showDefault && !isVendedor) ? '' : 'none';
-  if (exportWh) exportWh.style.display = (!showDefault && !isVendedor) ? '' : 'none';
+  const puedeEditar = typeof puedeEditarStock === 'function' && puedeEditarStock();
+  if (importDefault) importDefault.style.display = (showDefault && puedeEditar) ? '' : 'none';
+  if (exportDefault) exportDefault.style.display = (showDefault && puedeEditar) ? '' : 'none';
+  if (importWh) importWh.style.display = (!showDefault && puedeEditar) ? '' : 'none';
+  if (exportWh) exportWh.style.display = (!showDefault && puedeEditar) ? '' : 'none';
 
   stockRenderLimit = STOCK_PAGE_SIZE;
   renderProducts();
@@ -229,7 +229,7 @@ function productCardHtml(p) {
   const currency = p.currency === 'USD' ? 'USD' : 'PEN';
   const escapedCode = escapeJsAttr(code);
   const isChecked = (typeof selectedStockCodes !== 'undefined' && selectedStockCodes.has(code)) ? 'checked' : '';
-  const esAdminVista = typeof isAdmin === 'function' && isAdmin();
+  const esAdminVista = typeof puedeEditarStock === 'function' && puedeEditarStock();
   const editOnclick = `openEditStock('${escapedCode}')`;
   const stock = getDisplayStock(p);
   const stockBajo = stock <= 6;
@@ -278,8 +278,8 @@ function productRowHtml(p) {
   const currency = p.currency === 'USD' ? 'USD' : 'PEN';
   const escapedCode = escapeJsAttr(code);
   const isChecked = (typeof selectedStockCodes !== 'undefined' && selectedStockCodes.has(code)) ? 'checked' : '';
-  const showCheckbox = typeof currentUserRole !== 'undefined' && currentUserRole !== 'vendedor';
-  const esAdminVista = typeof isAdmin === 'function' && isAdmin();
+  const showCheckbox = typeof puedeEditarStock === 'function' && puedeEditarStock();
+  const esAdminVista = showCheckbox;
   const editOnclick = `openEditStock('${escapedCode}')`;
   const imgCellHtml = p.image
     ? `<div class="pt-img-thumb"><img src="${p.image}" alt="" onclick="openImageView('${escapeJsAttr(p.image)}','${escapeJsAttr(name)}','${escapedCode}')"></div>`
@@ -624,7 +624,7 @@ function resetImagePreview(previewId) {
 let monedaPrincipalCache = 'PEN';
 
 function openAddModal() {
-  if (!isAdmin()) return; // el vendedor no ve el botón, esto es por si acaso (ej. atajo de teclado)
+  if (!puedeEditarStock()) return; // el vendedor no ve el botón, esto es por si acaso (ej. atajo de teclado)
   pendingImageData.add = '';
   resetImagePreview('addImagePreview');
   const currencyEl = document.getElementById('addCurrency');
@@ -692,7 +692,7 @@ function openEditStock(code) {
   // pero no editar nada — los botones de guardar/eliminar ya están
   // ocultos por CSS (.admin-only-action), y acá además se deshabilitan
   // los campos para que quede claro que es solo lectura.
-  const soloLectura = !isAdmin();
+  const soloLectura = !puedeEditarStock();
   document.querySelectorAll('#editModal input, #editModal select, #editModal textarea').forEach(el => {
     el.disabled = soloLectura;
   });
@@ -708,7 +708,7 @@ function activeWarehouseIds() {
 let movingStockCode = '';
 
 function openMoveStock(code) {
-  if (!isAdmin()) return;
+  if (!puedeEditarStock()) return;
   const p = productsCache.find(x => x.code === code);
   if (!p) return;
   movingStockCode = code;
@@ -774,7 +774,7 @@ function confirmMoveStock() {
 }
 
 function saveStock() {
-  if (!isAdmin()) return; // defensa extra — el botón ya está oculto y el campo, deshabilitado
+  if (!puedeEditarStock()) return; // defensa extra — el botón ya está oculto y el campo, deshabilitado
   const name  = document.getElementById('editName').value.trim();
   const price = parseFloat(document.getElementById('editPrice').value) || 0;
   // Costo y Precio mayor: campos opcionales según el plan (ver
@@ -843,7 +843,7 @@ function saveStock() {
 }
 
 function deleteCurrentProduct() {
-  if (!isAdmin()) return;
+  if (!puedeEditarStock()) return;
   if (!editingCode) return;
   if (!confirm(`¿Eliminar el producto ${editingCode}? Esta acción no se puede deshacer.`)) return;
   deleteProduct(editingCode)
@@ -988,7 +988,7 @@ async function exportWarehouseStock() {
 
 /* ── Agregar ── */
 function addProduct() {
-  if (!isAdmin()) return;
+  if (!puedeEditarStock()) return;
   const name  = document.getElementById('addName').value.trim();
   const code  = normalizeProductCode(document.getElementById('addCode').value);
   const stock = parseFloat(document.getElementById('addStock').value) || 0;
@@ -1079,8 +1079,8 @@ const stockSelection = createSelectionMode({
   }
 });
 
-function setSelectionMode(on) { if (on && !isAdmin()) return; stockSelection.set(on); }
-function toggleSelectionMode() { if (!isAdmin()) return; stockSelection.toggle(); }
+function setSelectionMode(on) { if (on && !puedeEditarStock()) return; stockSelection.set(on); }
+function toggleSelectionMode() { if (!puedeEditarStock()) return; stockSelection.toggle(); }
 
 // Un mismo producto puede tener checkbox en la tabla (desktop) y en la
 // tarjeta (mobile) a la vez; al marcar uno se sincroniza el otro.
@@ -1139,7 +1139,7 @@ function updateBulkStock() {
 
 /* ── Eliminar seleccionados / todo ── */
 function deleteSelectedStock() {
-  if (!isAdmin()) return;
+  if (!puedeEditarStock()) return;
   const count = selectedStockCodes.size;
   if (count === 0) return;
   if (!confirm(`¿Eliminar ${count} producto${count !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return;
@@ -1237,38 +1237,99 @@ async function exportStock() {
 // Antes vivía en un <script> aparte dentro de stock.html. En la
 // SPA se movió aquí para poder llamarla desde Stock.init() cada
 // vez que se muestra esta vista.
+// A diferencia del modelo viejo (todo vendedor bloqueado, sin
+// excepción), esto ahora se recalcula cada vez que se llama — no solo
+// una vez al entrar a Stock — porque el admin puede prender/apagar el
+// permiso "Editar Stock" (Configuración → Permisos del equipo)
+// MIENTRAS el vendedor ya tiene la vista abierta (ver
+// watchPermisosVendedor() en firebase.js → aplicarPermisosVendedor()
+// en nav.js → acá). Por eso cada rama de abajo pone AMBOS estados
+// (mostrar u ocultar), nunca solo uno.
 function applyStockRoleRestrictions() {
-  if (currentUserRole !== 'vendedor') return;
+  if (currentUserRole !== 'vendedor') return; // admin/súper-admin: nunca restringido, no toca nada
 
+  const puedeEditar = typeof puedeEditarStock === 'function' && puedeEditarStock();
+  const oculto = !puedeEditar;
+
+  // El valor de inventario (S/ o $) es información sensible aparte de
+  // poder editar — se mantiene oculta para cualquier vendedor, tenga
+  // o no el permiso de editar Stock.
   const statsRow = document.getElementById('stockStatsRow');
   if (statsRow) statsRow.style.display = 'none';
 
   const btnImport = document.querySelector('.btn-import');
-  if (btnImport) btnImport.style.display = 'none';
+  if (btnImport) btnImport.style.display = oculto ? 'none' : '';
 
   const btnExport = document.getElementById('btnExportStock');
-  if (btnExport) btnExport.style.display = 'none';
+  if (btnExport) btnExport.style.display = oculto ? 'none' : '';
 
   const btnSelect = document.getElementById('btnSelectMode');
-  if (btnSelect) btnSelect.style.display = 'none';
+  if (btnSelect) btnSelect.style.display = oculto ? 'none' : '';
 
   const btnAdd = document.querySelector('.btn-new-item');
-  if (btnAdd) btnAdd.style.display = 'none';
+  if (btnAdd) btnAdd.style.display = oculto ? 'none' : '';
+
+  // Botones/checkbox marcados con la clase .stock-edit-action en el
+  // HTML (Seleccionar, Importar, Agregar producto, barra de acciones
+  // masivas, Cambiar imagen, Eliminar producto, Guardar cambios — ver
+  // views/stock-view.html) — ver también .role-vendedor
+  // .stock-edit-action en base.css, que los deja ocultos por defecto
+  // hasta que esto corre.
+  document.querySelectorAll('.stock-edit-action').forEach(el => {
+    el.style.display = oculto ? 'none' : '';
+  });
+
+  // Importar/Exportar "de Todos los almacenes" (importMenuWrap,
+  // btnExportStock) y de UN almacén puntual (btnImportWarehouse,
+  // btnExportWarehouse) dependen ADEMÁS de en qué pestaña se está
+  // parado — el bucle de arriba (y las líneas de btnImport/btnExport
+  // de más arriba) solo miran el permiso, así que acá se corrige para
+  // los cuatro juntos, con la misma condición que switchWarehouse().
+  const showDefaultTab = !currentWarehouse;
+  if (btnImport) btnImport.style.display = (showDefaultTab && puedeEditar) ? '' : 'none';
+  if (btnExport) btnExport.style.display = (showDefaultTab && puedeEditar) ? '' : 'none';
+
+  // Importar/Exportar de UN almacén puntual (btnImportWarehouse,
+  // btnExportWarehouse) son un caso aparte: además del permiso,
+  // dependen de en qué pestaña de almacén se está parado (ver
+  // switchWarehouse más arriba) — btnImportWarehouse ya quedó
+  // marcado con .stock-edit-action y el bucle de arriba lo toca, pero
+  // sin mirar currentWarehouse, así que acá se corrige para los dos
+  // juntos, con la misma condición que switchWarehouse().
+  const mostrarBotonesAlmacen = !!currentWarehouse && puedeEditar;
+  const btnImportWh = document.getElementById('btnImportWarehouse');
+  const btnExportWh = document.getElementById('btnExportWarehouse');
+  if (btnImportWh) btnImportWh.style.display = mostrarBotonesAlmacen ? '' : 'none';
+  if (btnExportWh) btnExportWh.style.display = mostrarBotonesAlmacen ? '' : 'none';
 
   // Este estilo se agregaba una sola vez por página en el modelo
-  // viejo. En la SPA, si ya existe (de una visita anterior a esta
-  // vista), no hace falta agregarlo de nuevo.
-  if (!document.getElementById('stockRoleStyle')) {
-    const style = document.createElement('style');
-    style.id = 'stockRoleStyle';
-    // Para vendedor, productRowHtml() nunca agrega la celda de
-    // checkbox en el <tbody>. Si dejamos visible el <th class="col-check">
-    // del encabezado, la tabla queda con una columna de más y todo el
-    // contenido se desplaza una posición (bug reportado). Se oculta
-    // también el encabezado para que headers y celdas vuelvan a alinear.
-    style.textContent = '.btn-icon-edit, .stock-edit-btn, .product-table .col-check { display: none !important; }';
-    document.head.appendChild(style);
+  // viejo. Ahora, en vez de solo agregarlo, también lo QUITA cuando
+  // el permiso pasa a estar activo — si no, un vendedor al que le
+  // acaban de dar el permiso seguiría sin ver los botones "Editar"
+  // de cada fila hasta recargar.
+  let style = document.getElementById('stockRoleStyle');
+  if (oculto) {
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'stockRoleStyle';
+      // productRowHtml()/productCardHtml() ya deciden por su cuenta
+      // si agregan o no la celda de checkbox (ver showCheckbox más
+      // arriba) — este estilo es la defensa extra para el botón de
+      // fila y, si dejáramos visible el <th class="col-check"> del
+      // encabezado sin la celda correspondiente en el <tbody>, la
+      // tabla quedaría con una columna de más y todo desalineado.
+      style.textContent = '.btn-icon-edit, .stock-edit-btn, .product-table .col-check { display: none !important; }';
+      document.head.appendChild(style);
+    }
+  } else if (style) {
+    style.remove();
   }
+
+  // Las filas/cards ya renderizadas decidieron su checkbox y su
+  // botón "Editar"/"Ver" con el permiso vigente EN ESE MOMENTO — si
+  // el admin lo cambia en vivo, hace falta repintar para que se note
+  // sin recargar.
+  if (typeof renderProducts === 'function' && typeof productsCache !== 'undefined') renderProducts();
 }
 
 // ── Punto de entrada que llama el Router cada vez que se

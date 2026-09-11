@@ -114,6 +114,15 @@ let currentTiendaPlan = null;
 // Foro para firmar publicaciones como "Guitarras Lima" en vez de
 // "Juan Pérez": la tienda publica, no el empleado.
 let currentTiendaNombre = null;
+// Permisos configurables que el admin de la tienda le da a sus
+// vendedores desde Configuración → Permisos del equipo (ver
+// getPermisosVendedor/setPermisosVendedor/watchPermisosVendedor en
+// firebase.js). Arranca en todo false — el default de siempre — y se
+// carga de verdad más abajo, dentro de authReady, para cuentas de
+// tienda (admin o vendedor; el admin también lo necesita para poder
+// leer/editar los toggles). Lo consumen puedeVerDashboard(),
+// puedeVerForo() y puedeEditarStock(), más abajo en este archivo.
+let currentPermisosVendedor = { verDashboard: false, verForo: false, editarStock: false };
 // currentTiendaId ya está declarado en firebase.js (null si es
 // súper-admin, o si esta página no cargó firebase.js todavía).
 
@@ -207,6 +216,18 @@ const authReady = new Promise(resolve => {
       currentTiendaPlan = (tiendaInfo && tiendaInfo.plan) || 'basico';
       currentTiendaNombre = (tiendaInfo && tiendaInfo.nombre) || currentUserName;
 
+      // Permisos del equipo (ver arriba) — se cargan acá, ANTES de
+      // resolve(authReady), para que router.js ya los tenga
+      // disponibles en la primera navegación (ej. decidir si un
+      // vendedor arranca en "dashboard" o en "stock"). Si falla (sin
+      // red), se queda con los defaults declarados arriba — todo en
+      // false, el comportamiento de siempre.
+      if (typeof getPermisosVendedor === 'function') {
+        try {
+          currentPermisosVendedor = await getPermisosVendedor();
+        } catch (err) { /* se queda con los defaults */ }
+      }
+
       // Antes acá se llamaba a seedIfEmpty() para armarle a cada tienda
       // nueva un catálogo/cartera de "ejemplo" (MODO DEMO). Se quitó:
       // toda tienda nueva debe arrancar 100% vacía — sin datos
@@ -221,6 +242,10 @@ const authReady = new Promise(resolve => {
     if (currentTiendaId && typeof currentTiendaPlan === 'string') {
       document.documentElement.classList.add('plan-' + currentTiendaPlan);
     }
+    // Aplica los permisos del equipo ya cargados arriba (nav de
+    // Dashboard/Foro, edición de Stock) — ver aplicarPermisosVendedor()
+    // en nav.js. No hace nada si currentUserRole no es 'vendedor'.
+    if (typeof aplicarPermisosVendedor === 'function') aplicarPermisosVendedor();
     hideAuthOverlay();
 
     // Vigilancia en tiempo real: si te desactivan (o suspenden tu
@@ -283,6 +308,19 @@ const authReady = new Promise(resolve => {
           }
         }
       });
+
+      // Permisos del equipo en vivo: si el admin prende/apaga algo
+      // en Configuración mientras el vendedor ya tiene la app
+      // abierta (en otra pestaña, u otra persona en la misma
+      // tienda), se aplica al toque — sin recargar ni esperar a que
+      // el vendedor navegue. Ver watchPermisosVendedor() en
+      // firebase.js y aplicarPermisosVendedor() en nav.js.
+      if (typeof watchPermisosVendedor === 'function') {
+        watchPermisosVendedor(permisos => {
+          currentPermisosVendedor = permisos;
+          if (typeof aplicarPermisosVendedor === 'function') aplicarPermisosVendedor();
+        });
+      }
     }
 
     // Si la página tiene la tarjeta de usuario del sidebar, la
@@ -332,6 +370,25 @@ function isAdmin() {
 
 function isSuperAdmin() {
   return currentUserRole === 'superadmin';
+}
+
+// ── Permisos configurables del vendedor ─────────────────────────
+// Admin/súper-admin siempre pueden — estas funciones solo agregan
+// una puerta EXTRA para el vendedor, nunca le quitan nada a un
+// admin. Es lo que de verdad consultan router.js (RESTRICCION_ROL_PERMISO),
+// nav.js (aplicarPermisosVendedor) y stock.js (applyStockRoleRestrictions)
+// para decidir qué mostrar y qué bloquear — currentPermisosVendedor
+// nunca se lee directo fuera de este archivo.
+function puedeVerDashboard() {
+  return isAdmin() || (currentUserRole === 'vendedor' && !!currentPermisosVendedor.verDashboard);
+}
+
+function puedeVerForo() {
+  return isAdmin() || (currentUserRole === 'vendedor' && !!currentPermisosVendedor.verForo);
+}
+
+function puedeEditarStock() {
+  return isAdmin() || (currentUserRole === 'vendedor' && !!currentPermisosVendedor.editarStock);
 }
 
 // Cierra sesión en todos los proyectos donde login.html la abrió —

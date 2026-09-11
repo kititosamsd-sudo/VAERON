@@ -28,6 +28,7 @@ window.Configuracion = {
     cargarAlertaDashboard();
     cargarMonedaPrincipal();
     cargarFormatoNumero();
+    cargarPermisosVendedor();
   }
 };
 
@@ -677,6 +678,54 @@ function toggleAlertaDashboard(btn) {
       // Si falla el guardado, la vuelve a su estado anterior en vez
       // de dejar la UI mintiendo sobre lo que quedó guardado.
       btn.classList.toggle('active', !activa);
+    })
+    .finally(() => { btn.disabled = false; });
+}
+
+// ── Permisos del equipo (solo admin) ────────────────────────────
+// Qué puede hacer un vendedor de esta tienda además de lo básico —
+// persiste en tiendas/{tiendaId}/config/permisosVendedor (ver
+// getPermisosVendedor/setPermisosVendedor en firebase.js). Esta
+// tarjeta ni se carga si quien entró es vendedor (la tarjeta ya está
+// oculta en el HTML con admin-only-action, esto es la defensa extra
+// del lado de la lógica). Lo que de verdad aplica cada permiso son
+// puedeVerDashboard()/puedeVerForo()/puedeEditarStock() en
+// auth-guard.js — acá solo se pinta y se guarda el toggle.
+function cargarPermisosVendedor() {
+  if (typeof isAdmin === 'function' && !isAdmin()) return;
+  if (typeof getPermisosVendedor !== 'function') return;
+  getPermisosVendedor()
+    .then(permisos => {
+      pintarTogglePermisoVendedor('togglePermisoDashboard', permisos.verDashboard);
+      pintarTogglePermisoVendedor('togglePermisoForo', permisos.verForo);
+      pintarTogglePermisoVendedor('togglePermisoEditarStock', permisos.editarStock);
+    })
+    .catch(() => {});
+}
+
+function pintarTogglePermisoVendedor(id, activo) {
+  const btn = document.getElementById(id);
+  if (btn) btn.classList.toggle('active', !!activo);
+}
+
+function togglePermisoVendedor(campo, btn) {
+  if (!btn) return;
+  const activar = !btn.classList.contains('active');
+  btn.classList.toggle('active', activar);
+  btn.disabled = true;
+  const msg = document.getElementById('permisosVendedorMsg');
+  if (msg) msg.textContent = '';
+
+  getPermisosVendedor()
+    .then(actuales => setPermisosVendedor(Object.assign({}, actuales, { [campo]: activar })))
+    .then(() => {
+      if (msg) { msg.textContent = 'Guardado.'; msg.style.color = 'var(--green)'; }
+    })
+    .catch(err => {
+      // Si falla el guardado, la vuelve a su estado anterior en vez
+      // de dejar la UI mintiendo sobre lo que quedó guardado.
+      btn.classList.toggle('active', !activar);
+      if (msg) { msg.textContent = 'No se pudo guardar: ' + (err && err.message ? err.message : err); msg.style.color = 'var(--red)'; }
     })
     .finally(() => { btn.disabled = false; });
 }

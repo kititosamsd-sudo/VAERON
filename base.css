@@ -2201,11 +2201,27 @@ td { padding: 13px 18px; vertical-align: middle; }
 
 /* ─── Nav: "Registros" (gestión de cuentas) es exclusivo de admin ─── */
 .role-vendedor .nav-admin-only { display: none !important; }
+/* Dashboard y Foro: a diferencia de nav-admin-only (fijo), su
+   visibilidad para el vendedor depende de un permiso configurable
+   por el admin (Configuración → Permisos del equipo). El default acá
+   es oculto — igual que el comportamiento de siempre — y
+   aplicarPermisosVendedor() (nav.js) lo desoculta con JS (style.display)
+   cuando el admin lo habilitó. Sin !important a propósito: así el
+   style inline que pone aplicarPermisosVendedor() puede ganarle. */
+.role-vendedor .nav-perm-dashboard,
+.role-vendedor .nav-perm-foro { display: none; }
 
 /* ─── Acciones de escritura exclusivas de admin, fuera del sidebar
    (ej. Agregar/Editar/Eliminar/Importar en Stock, Nueva Nota, etc.).
    El vendedor solo ve/usa; el admin ve todo normal. ──────────────── */
 .role-vendedor .admin-only-action { display: none !important; }
+/* Igual que admin-only-action, pero SOLO para las acciones de Stock
+   que el admin puede habilitarle a un vendedor puntual (editar,
+   agregar, importar/exportar, selección múltiple) — ver
+   permisosVendedor.editarStock y applyStockRoleRestrictions() en
+   stock.js. Sin !important: ese mismo JS necesita poder revertir el
+   ocultamiento con style.display cuando el permiso está activo. */
+.role-vendedor .stock-edit-action { display: none; }
 
 /* ─── Nav: elementos exclusivos de plan Medio/Premium (no Básico) ─── */
 .plan-basico .nav-plan-pago { display: none !important; }

@@ -448,6 +448,42 @@ function watchAlmacenesConfig(callback) {
   refConfig.child('almacenesActivos').on('value', onChange);
 }
 
+// ── Permisos configurables del vendedor (Configuración → Permisos
+// del equipo, solo admin) ────────────────────────────────────────
+// Por defecto TODO en false: el vendedor sigue viendo exactamente lo
+// mismo de siempre (sin Dashboard, sin Foro, Stock de solo lectura)
+// hasta que el admin de la tienda decida abrir alguna puerta puntual
+// desde Configuración. Vive en el mismo nodo config/ que
+// almacenesConfig — mismo permiso que ya usan products/clients, así
+// que cualquier cuenta de la tienda puede LEERLO (el vendedor
+// necesita leerlo para saber qué se le habilitó); quién puede
+// ESCRIBIRLO de verdad lo deciden las reglas de Firebase del lado
+// del servidor, no este archivo — ver database.rules.json.
+const PERMISOS_VENDEDOR_DEFAULT = { verDashboard: false, verForo: false, editarStock: false };
+
+function getPermisosVendedor() {
+  return refConfig.child('permisosVendedor').once('value')
+    .then(snap => ({ ...PERMISOS_VENDEDOR_DEFAULT, ...(snap.val() || {}) }));
+}
+
+function setPermisosVendedor(permisos) {
+  const limpio = {};
+  Object.keys(PERMISOS_VENDEDOR_DEFAULT).forEach(key => {
+    limpio[key] = !!(permisos && permisos[key]);
+  });
+  return refConfig.update({ permisosVendedor: limpio }).then(() => limpio);
+}
+
+// Tiempo real: si el admin prende/apaga un permiso MIENTRAS el
+// vendedor ya tiene la app abierta, se entera de inmediato — mismo
+// patrón que watchAlmacenesConfig() de arriba (y que la vigilancia de
+// activo/suspendida en auth-guard.js).
+function watchPermisosVendedor(callback) {
+  refConfig.child('permisosVendedor').on('value', snap => {
+    callback({ ...PERMISOS_VENDEDOR_DEFAULT, ...(snap.val() || {}) });
+  });
+}
+
 // getTiendaInfo() la usa auth-guard.js para la tienda de la PROPIA
 // sesión (currentTiendaId) — siempre en el proyecto activo de esta
 // página (refTiendas = db.ref('tiendas') de arriba), nunca necesita
@@ -1438,6 +1474,7 @@ function stopRealtimeWatchers() {
   try { refProducts.off(); } catch (e) { /* sin tienda activa, nada que apagar */ }
   try { refClients.off(); } catch (e) { /* sin tienda activa, nada que apagar */ }
   try { refConfig.child('almacenesNombres').off(); refConfig.child('almacenesActivos').off(); } catch (e) { /* sin tienda activa, nada que apagar */ }
+  try { refConfig.child('permisosVendedor').off(); } catch (e) { /* sin tienda activa, nada que apagar */ }
   // Las queries incrementales de watchProducts/watchClients
   // (orderByChild('updatedAt').startAt(...)) son objetos de query
   // aparte del ref plano de arriba — un .off() en el ref plano no las

@@ -31,11 +31,54 @@ tiendas.
   contraseña reales), y un botón para **Suspender/Reactivar** cada
   tienda — pensado para cuando una tienda no paga la mensualidad.
 - **Cuenta de una tienda (admin/vendedor)**: entra con el correo y
-  contraseña que le creaste desde "Nueva tienda". Ve el Catálogo, su
-  Configuración y su Perfil — nunca la lista de otras tiendas.
+  contraseña que le creaste desde "Nueva tienda". Nunca ve la lista
+  de otras tiendas ni las secciones del súper-admin.
 - Si suspendés una tienda, a sus usuarios se les cierra la sesión al
   instante (estén o no con la app abierta) y no pueden volver a
   entrar hasta que la reactives.
+
+### Jerarquía de roles dentro de una tienda
+Cada tienda es dueña de su propia jerarquía — el admin de tienda no
+depende del súper-admin para dar de alta vendedores (ver
+`registros-logic.js`).
+
+- **Admin de tienda**: dominio total de su tienda — Dashboard, Stock,
+  Catálogo, Pedidos, Historial, Foro, Registros (alta y gestión de sus
+  vendedores), Configuración y Perfil.
+- **Vendedor**: opera dentro de los límites que puso el admin — Stock
+  (solo ver), Catálogo, Pedidos/Nota de pedido (crear notas, agregar
+  clientes de a uno), Historial, Configuración y Perfil. Sin Dashboard,
+  sin Foro, sin Registros, sin ninguna acción administrativa.
+
+Esto se resuelve en `auth-guard.js` (variable `currentUserRole`,
+`'superadmin' | 'admin' | 'vendedor'`, clase `role-<rol>` en
+`<html>`) y se oculta visualmente en `base.css` vía selectores como
+`.role-vendedor .nav-admin-only { display: none !important; }`.
+
+### Permisos configurables del equipo (real)
+Además de la jerarquía fija de arriba, el admin de cada tienda puede
+abrirle a sus vendedores tres puertas puntuales desde
+**Configuración → Tienda y cuenta → Permisos del equipo**:
+Ver Dashboard, Ver Foro y Editar Stock (agregar/editar/mover/eliminar
+productos — por defecto el vendedor solo puede ver el Stock).
+
+- Se guarda en `tiendas/{tiendaId}/config/permisosVendedor`
+  (`getPermisosVendedor()` / `setPermisosVendedor()` /
+  `watchPermisosVendedor()` en `firebase.js`), todo en `false` por
+  defecto — ninguna tienda cambia de comportamiento hasta que el
+  admin toque algo.
+- `auth-guard.js` expone `puedeVerDashboard()`, `puedeVerForo()` y
+  `puedeEditarStock()` — admin/súper-admin siempre pasan; el vendedor
+  solo si el permiso está activo.
+- El bloqueo REAL de rutas está en `router.js`
+  (`RESTRICCION_ROL_PERMISO`, en vez de la lista fija
+  `RESTRICCION_ROL` que usan el resto de páginas) — entrar a mano por
+  URL sigue sin servir si el permiso está apagado.
+- El menú (`nav.js`, función `aplicarPermisosVendedor()`) y las
+  acciones de Stock (`stock.js`, función
+  `applyStockRoleRestrictions()`) se actualizan en vivo: si el admin
+  prende o apaga un permiso mientras el vendedor ya tiene la app
+  abierta, se aplica al toque, sin recargar.
 
 **Estado del catálogo:** el catálogo (productos, clientes, notas)
 ya vive separado por tienda, bajo `/tiendas/{tiendaId}/products`,

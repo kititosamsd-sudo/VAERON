@@ -10,11 +10,11 @@
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="searchInput" placeholder="Buscar producto o código…" oninput="filterStock()">
       </div>
-      <button class="btn btn-ghost btn-select admin-only-action" id="btnSelectMode" onclick="toggleSelectionMode()" title="Seleccionar varios">
+      <button class="btn btn-ghost btn-select stock-edit-action" id="btnSelectMode" onclick="toggleSelectionMode()" title="Seleccionar varios">
         <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span id="selectModeLabel">Seleccionar</span>
       </button>
-      <div class="import-menu-wrap admin-only-action" id="importMenuWrap">
+      <div class="import-menu-wrap stock-edit-action" id="importMenuWrap">
         <button class="btn-import" id="btnImportMenu" onclick="toggleImportMenu(event)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Importar
@@ -45,7 +45,7 @@
 
       <!-- Import/export de UN almacén — solo visible con un almacén
            seleccionado (ver switchWarehouse en stock.js) -->
-      <button class="btn btn-ghost admin-only-action" id="btnImportWarehouse" style="display:none" onclick="openWarehouseImport()">
+      <button class="btn btn-ghost stock-edit-action" id="btnImportWarehouse" style="display:none" onclick="openWarehouseImport()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Importar cantidad
       </button>
@@ -54,7 +54,7 @@
         Exportar
       </button>
 
-      <button class="btn btn-primary btn-new-item admin-only-action" id="btnAddProductTop" onclick="openAddModal()">
+      <button class="btn btn-primary btn-new-item stock-edit-action" id="btnAddProductTop" onclick="openAddModal()">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Agregar producto
       </button>
@@ -65,7 +65,7 @@
        móvil (ver @media max-width:768px en base.css), donde ese
        botón fijo le comía espacio al encabezado. En escritorio
        queda oculto y se usa el botón de arriba, sin cambios. -->
-  <button class="fab-add admin-only-action" id="fabAddProduct" onclick="openAddModal()" title="Agregar producto">
+  <button class="fab-add stock-edit-action" id="fabAddProduct" onclick="openAddModal()" title="Agregar producto">
     <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
 
@@ -96,7 +96,7 @@
     </div>
 
     <!-- Barra de acciones masivas -->
-    <div class="bulk-bar admin-only-action" id="bulkBarStock">
+    <div class="bulk-bar stock-edit-action" id="bulkBarStock">
       <span class="bulk-count" id="bulkCountStock">0 seleccionados</span>
       <button class="btn-bulk-delete" onclick="deleteSelectedStock()">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
@@ -173,7 +173,7 @@
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           </div>
           <div>
-            <label class="btn btn-ghost btn-sm admin-only-action" for="editImageFile">Cambiar imagen</label>
+            <label class="btn btn-ghost btn-sm stock-edit-action" for="editImageFile">Cambiar imagen</label>
             <input type="file" id="editImageFile" accept="image/*" style="display:none" onchange="previewProductImage(this,'editImagePreview','edit')">
             <p style="font-size:11.5px;color:var(--text-3);margin-top:4px">JPG o PNG. Se sube automáticamente al elegirla.</p>
           </div>
@@ -206,10 +206,10 @@
       </div>
     </div>
     <div class="modal-footer" style="justify-content:space-between">
-      <button class="btn btn-ghost admin-only-action" id="btnDeleteProduct" style="color:var(--red);border-color:#FECACA" onclick="deleteCurrentProduct()">Eliminar producto</button>
+      <button class="btn btn-ghost stock-edit-action" id="btnDeleteProduct" style="color:var(--red);border-color:#FECACA" onclick="deleteCurrentProduct()">Eliminar producto</button>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" onclick="closeModal('editModal')">Cancelar</button>
-        <button class="btn btn-primary admin-only-action" onclick="saveStock()">Guardar cambios</button>
+        <button class="btn btn-primary stock-edit-action" onclick="saveStock()">Guardar cambios</button>
       </div>
     </div>
   </div>

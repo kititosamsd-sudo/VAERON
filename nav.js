@@ -349,3 +349,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+// ── Permisos del equipo (nav de Dashboard/Foro para vendedor) ──────
+// El bloqueo REAL de estas páginas lo hace router.js
+// (RESTRICCION_ROL_PERMISO, vía puedeVerDashboard()/puedeVerForo() en
+// auth-guard.js) — esto solo muestra u oculta el link del menú para
+// que coincida con lo que el vendedor de verdad puede abrir. Se llama
+// una vez apenas auth-guard.js confirma el rol, y de nuevo cada vez
+// que el admin cambia un permiso en vivo (ver watchPermisosVendedor()
+// en firebase.js, enganchado desde auth-guard.js).
+//
+// admin y súper-admin nunca pasan por acá con restricción real:
+// puedeVerDashboard()/puedeVerForo() les devuelven true siempre, así
+// que estos links quedan visibles para ellos sin tocar nada (siguen
+// controlados por las clases nav-admin-only / nav-superadmin-only de
+// siempre en base.css, que no cambian).
+function aplicarPermisosVendedor() {
+  if (typeof currentUserRole === 'undefined' || currentUserRole !== 'vendedor') return;
+
+  const puedeDashboard = typeof puedeVerDashboard === 'function' && puedeVerDashboard();
+  const puedeForo = typeof puedeVerForo === 'function' && puedeVerForo();
+
+  document.querySelectorAll('.nav-perm-dashboard').forEach(el => {
+    el.style.display = puedeDashboard ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-perm-foro').forEach(el => {
+    el.style.display = puedeForo ? '' : 'none';
+  });
+
+  // Si el vendedor está PARADO justo en una de estas páginas cuando
+  // el admin le retira el permiso en vivo, router.js ya lo saca en el
+  // próximo go() — pero si el admin se lo retira mientras el vendedor
+  // ni siquiera navegó ahí, esto alcanza con esconder el link.
+
+  // Stock: el botón "Editar"/checkbox de selección/importar/exportar
+  // dependen del mismo mecanismo de permisos — ver stock.js.
+  if (typeof applyStockRoleRestrictions === 'function') applyStockRoleRestrictions();
+}
