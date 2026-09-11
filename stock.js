@@ -229,6 +229,7 @@ function productCardHtml(p) {
   const currency = p.currency === 'USD' ? 'USD' : 'PEN';
   const escapedCode = escapeJsAttr(code);
   const isChecked = (typeof selectedStockCodes !== 'undefined' && selectedStockCodes.has(code)) ? 'checked' : '';
+  const esAdminVista = typeof isAdmin === 'function' && isAdmin();
   const editOnclick = `openEditStock('${escapedCode}')`;
   const stock = getDisplayStock(p);
   const stockBajo = stock <= 6;
@@ -251,14 +252,14 @@ function productCardHtml(p) {
         <span class="pc-qty-badge ${stockBajo ? 'stock-low' : 'stock-ok'}">${stock} und</span>
         <span class="pc-price">${fmtMoney(price, currency)}${precioMayorHtml}</span>
       </div>
-      <button class="btn-icon-edit" title="Editar" onclick="event.stopPropagation();${editOnclick}">
+      <button class="btn-icon-edit" title="${esAdminVista ? 'Editar' : 'Ver'}" onclick="event.stopPropagation();${editOnclick}">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
         </svg>
       </button>
-      ${multiAlmacenActivo ? `<button class="btn-icon-edit" title="Mover a otro almacén" onclick="event.stopPropagation();openMoveStock('${escapedCode}')">
+      ${(multiAlmacenActivo && esAdminVista) ? `<button class="btn-icon-edit" title="Mover a otro almacén" onclick="event.stopPropagation();openMoveStock('${escapedCode}')">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="16 3 21 3 21 8"/><line x1="21" y1="3" x2="10" y2="14"/>
           <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
@@ -278,6 +279,7 @@ function productRowHtml(p) {
   const escapedCode = escapeJsAttr(code);
   const isChecked = (typeof selectedStockCodes !== 'undefined' && selectedStockCodes.has(code)) ? 'checked' : '';
   const showCheckbox = typeof currentUserRole !== 'undefined' && currentUserRole !== 'vendedor';
+  const esAdminVista = typeof isAdmin === 'function' && isAdmin();
   const editOnclick = `openEditStock('${escapedCode}')`;
   const imgCellHtml = p.image
     ? `<div class="pt-img-thumb"><img src="${p.image}" alt="" onclick="openImageView('${escapeJsAttr(p.image)}','${escapeJsAttr(name)}','${escapedCode}')"></div>`
@@ -293,16 +295,16 @@ function productRowHtml(p) {
       <td class="pt-stock"${stockBajo ? ' style="color:var(--red);font-weight:600"' : ''}>${stock}${warehouseBreakdownHtml(p)}</td>
       <td class="pt-price">${fmtMoney(price, currency)}${precioMayorHtml}</td>
       <td>
-        <button class="btn btn-ghost btn-sm stock-edit-btn" title="Editar"
+        <button class="btn btn-ghost btn-sm stock-edit-btn" title="${esAdminVista ? 'Editar' : 'Ver'}"
           onclick="${editOnclick}">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
-          Editar
+          ${esAdminVista ? 'Editar' : 'Ver'}
         </button>
-        ${multiAlmacenActivo ? `<button class="btn btn-ghost btn-sm" title="Mover a otro almacén" onclick="openMoveStock('${escapedCode}')">
+        ${(multiAlmacenActivo && esAdminVista) ? `<button class="btn btn-ghost btn-sm" title="Mover a otro almacén" onclick="openMoveStock('${escapedCode}')">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 3 21 3 21 8"/><line x1="21" y1="3" x2="10" y2="14"/>
             <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
@@ -622,6 +624,7 @@ function resetImagePreview(previewId) {
 let monedaPrincipalCache = 'PEN';
 
 function openAddModal() {
+  if (!isAdmin()) return; // el vendedor no ve el botón, esto es por si acaso (ej. atajo de teclado)
   pendingImageData.add = '';
   resetImagePreview('addImagePreview');
   const currencyEl = document.getElementById('addCurrency');
@@ -684,6 +687,15 @@ function openEditStock(code) {
   } else {
     resetImagePreview('editImagePreview');
   }
+  // El vendedor puede abrir este modal para VER el detalle del
+  // producto (no hay otra forma de ver costo/descripción completos),
+  // pero no editar nada — los botones de guardar/eliminar ya están
+  // ocultos por CSS (.admin-only-action), y acá además se deshabilitan
+  // los campos para que quede claro que es solo lectura.
+  const soloLectura = !isAdmin();
+  document.querySelectorAll('#editModal input, #editModal select, #editModal textarea').forEach(el => {
+    el.disabled = soloLectura;
+  });
   openModal('editModal');
 }
 
@@ -696,6 +708,7 @@ function activeWarehouseIds() {
 let movingStockCode = '';
 
 function openMoveStock(code) {
+  if (!isAdmin()) return;
   const p = productsCache.find(x => x.code === code);
   if (!p) return;
   movingStockCode = code;
@@ -761,6 +774,7 @@ function confirmMoveStock() {
 }
 
 function saveStock() {
+  if (!isAdmin()) return; // defensa extra — el botón ya está oculto y el campo, deshabilitado
   const name  = document.getElementById('editName').value.trim();
   const price = parseFloat(document.getElementById('editPrice').value) || 0;
   // Costo y Precio mayor: campos opcionales según el plan (ver
@@ -829,6 +843,7 @@ function saveStock() {
 }
 
 function deleteCurrentProduct() {
+  if (!isAdmin()) return;
   if (!editingCode) return;
   if (!confirm(`¿Eliminar el producto ${editingCode}? Esta acción no se puede deshacer.`)) return;
   deleteProduct(editingCode)
@@ -973,6 +988,7 @@ async function exportWarehouseStock() {
 
 /* ── Agregar ── */
 function addProduct() {
+  if (!isAdmin()) return;
   const name  = document.getElementById('addName').value.trim();
   const code  = normalizeProductCode(document.getElementById('addCode').value);
   const stock = parseFloat(document.getElementById('addStock').value) || 0;
@@ -1063,8 +1079,8 @@ const stockSelection = createSelectionMode({
   }
 });
 
-function setSelectionMode(on) { stockSelection.set(on); }
-function toggleSelectionMode() { stockSelection.toggle(); }
+function setSelectionMode(on) { if (on && !isAdmin()) return; stockSelection.set(on); }
+function toggleSelectionMode() { if (!isAdmin()) return; stockSelection.toggle(); }
 
 // Un mismo producto puede tener checkbox en la tabla (desktop) y en la
 // tarjeta (mobile) a la vez; al marcar uno se sincroniza el otro.
@@ -1123,6 +1139,7 @@ function updateBulkStock() {
 
 /* ── Eliminar seleccionados / todo ── */
 function deleteSelectedStock() {
+  if (!isAdmin()) return;
   const count = selectedStockCodes.size;
   if (count === 0) return;
   if (!confirm(`¿Eliminar ${count} producto${count !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return;

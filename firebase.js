@@ -1695,7 +1695,14 @@ async function createVendorAccount(usuario, password, nombre, correo) {
     // directorio del coordinador, el login nunca sabría en qué
     // proyecto probar la contraseña de este vendedor y siempre
     // fallaría con "No existe esa cuenta", aunque la cuenta sí exista.
-    await registrarEnDirectorio(authEmail, proyectoActivo);
+    // Es "best effort" (no aborta la creación si falla): la cuenta ya
+    // quedó creada arriba, y updateVendorAccount() reintenta este
+    // mismo registro cada vez que se guarda una edición — así que si
+    // esto falla ahora (ej. sin conexión), se repara solo la próxima
+    // vez que el admin edite la cuenta.
+    await registrarEnDirectorio(authEmail, proyectoActivo).catch(err => {
+      console.warn('No se pudo registrar en el directorio (se reintentará al editar la cuenta):', err);
+    });
     await secondaryApp.auth().signOut();
     return uid;
   } finally {
@@ -1715,6 +1722,16 @@ async function updateVendorAccount(uid, usuario, passwordActual, nombre, correo,
   const authEmail = usernameToAuthEmail(usuario);
   const secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary-' + Date.now());
   try {
+    // Reintento silencioso del registro en el directorio (correo →
+    // proyecto). Repara cuentas de vendedor creadas antes de que esta
+    // entrada se pudiera escribir (ver comentario en createVendorAccount)
+    // y que por eso nunca pudieron iniciar sesión. Si ya estaba
+    // registrada correctamente, las reglas simplemente rechazan esta
+    // escritura de más (solo el súper-admin puede sobrescribir una
+    // entrada existente) — por eso va con .catch() y no interrumpe el
+    // guardado del resto de los cambios.
+    await registrarEnDirectorio(authEmail, proyectoActivo).catch(() => {});
+
     const updates = { nombre: nombre || usuario };
     if (correo !== undefined) updates.correo = correo || '';
 

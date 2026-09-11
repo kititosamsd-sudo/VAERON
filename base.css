@@ -2202,6 +2202,11 @@ td { padding: 13px 18px; vertical-align: middle; }
 /* ─── Nav: "Registros" (gestión de cuentas) es exclusivo de admin ─── */
 .role-vendedor .nav-admin-only { display: none !important; }
 
+/* ─── Acciones de escritura exclusivas de admin, fuera del sidebar
+   (ej. Agregar/Editar/Eliminar/Importar en Stock, Nueva Nota, etc.).
+   El vendedor solo ve/usa; el admin ve todo normal. ──────────────── */
+.role-vendedor .admin-only-action { display: none !important; }
+
 /* ─── Nav: elementos exclusivos de plan Medio/Premium (no Básico) ─── */
 .plan-basico .nav-plan-pago { display: none !important; }
 

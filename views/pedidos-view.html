@@ -10,11 +10,11 @@
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="searchInput" placeholder="RUC o razón social…" oninput="filterTable()">
       </div>
-      <button class="btn btn-ghost btn-select" id="btnSelectMode" onclick="toggleClienteSelectionMode()" title="Seleccionar varios">
+      <button class="btn btn-ghost btn-select admin-only-action" id="btnSelectMode" onclick="toggleClienteSelectionMode()" title="Seleccionar varios">
         <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span id="selectModeLabel">Seleccionar</span>
       </button>
-      <button class="btn-import" onclick="openImportClientes()">
+      <button class="btn-import admin-only-action" onclick="openImportClientes()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Importar
       </button>
@@ -39,7 +39,7 @@
 
   <div class="page-content">
     <!-- Barra de acciones masivas -->
-    <div class="bulk-bar" id="bulkBarClientes">
+    <div class="bulk-bar admin-only-action" id="bulkBarClientes">
       <span class="bulk-count" id="bulkCountClientes">0 seleccionados</span>
       <button class="btn-bulk-delete" onclick="deleteSelectedClientes()">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
@@ -110,7 +110,7 @@
       </div>
     </div>
     <div class="modal-footer" style="justify-content:space-between">
-      <button class="btn btn-ghost" id="btnDeleteClient" style="color:var(--red);border-color:#FECACA" onclick="deleteCurrentClient()">Eliminar cliente</button>
+      <button class="btn btn-ghost admin-only-action" id="btnDeleteClient" style="color:var(--red);border-color:#FECACA" onclick="deleteCurrentClient()">Eliminar cliente</button>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" onclick="closeEdit()">Cancelar</button>
         <button class="btn btn-primary" onclick="saveEdit()">Guardar cambios</button>

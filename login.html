@@ -182,6 +182,21 @@
   .btn-google:hover { border-color: var(--border-strong); background: var(--surface-2); }
   .btn-google svg { width: 18px; height: 18px; }
 
+  .login-mode-toggle {
+    display: flex; gap: 4px; padding: 4px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 24px;
+  }
+  .login-mode-btn {
+    flex: 1; border: none; background: transparent; cursor: pointer;
+    font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--text-2);
+    padding: 9px 10px; border-radius: 7px; transition: background 0.15s ease, color 0.15s ease;
+  }
+  .login-mode-btn.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .login-mode-btn:not(.active):hover { color: var(--ink); }
+
+  .login-forgot-hint { font-size: 13px; color: var(--text-3); }
+
   .login-footer-text { text-align: center; font-size: 13px; color: var(--text-2); margin-top: 26px; }
   .login-footer-text a { color: var(--accent); font-weight: 500; }
   .login-footer-text a:hover { text-decoration: underline; }
@@ -280,18 +295,26 @@ c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
       <h1 data-i18n="login.bienvenida">Bienvenido de nuevo</h1>
       <p class="login-sub" data-i18n="login.subtitulo">Inicia sesión para continuar</p>
 
+      <div class="login-mode-toggle" id="loginModeToggle" role="tablist">
+        <button type="button" class="login-mode-btn active" data-mode="admin" data-i18n="login.modoAdmin">Administrador</button>
+        <button type="button" class="login-mode-btn" data-mode="vendedor" data-i18n="login.modoVendedor">Vendedor</button>
+      </div>
+
       <div class="login-error" id="loginError"></div>
       <div class="login-info" id="loginInfo"></div>
 
       <form id="loginForm">
         <div class="form-field">
-          <label for="loginIdentifier" data-i18n="login.correo">Correo o usuario</label>
+          <label for="loginIdentifier" id="loginIdentifierLabel" data-i18n="login.correo">Correo o usuario</label>
           <div class="field-group">
             <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
             <!-- type="text" (no "email"): los vendedores inician sesión con
                  un "usuario" corto sin @, que el navegador rechazaría de
                  entrada si este campo exigiera formato de correo. Los
-                 admins siguen escribiendo su correo real con normalidad. -->
+                 admins siguen escribiendo su correo real con normalidad.
+                 El toggle de arriba solo cambia la etiqueta/placeholder —
+                 resolveAuthEmail() ya detecta solo con el '@' cuál es
+                 cuál, así que ambos modos entran por el mismo campo. -->
             <input type="text" id="loginIdentifier" placeholder="ejemplo@empresa.com o tu usuario" data-i18n-placeholder="login.correoPlaceholder" autocomplete="username" required>
           </div>
         </div>
@@ -313,6 +336,7 @@ c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
             <span data-i18n="login.recordarme">Recordarme</span>
           </label>
           <button type="button" class="login-forgot" id="forgotBtn" data-i18n="login.olvideClave">¿Olvidaste tu contraseña?</button>
+          <span class="login-forgot-hint" id="forgotHint" style="display:none" data-i18n="login.olvideClaveVendedor">Pide a tu administrador que la restablezca.</span>
         </div>
 
         <button type="submit" class="btn-login" id="loginSubmit">
@@ -339,6 +363,41 @@ c0 -4 64 -120 230 -415 136 -243 374 -664 428 -760 36 -63 85 -151 110 -195
   const infoEl       = document.getElementById('loginInfo');
   const submitBtn    = document.getElementById('loginSubmit');
   const forgotBtnEl  = document.getElementById('forgotBtn');
+
+  // ── Toggle "Administrador / Vendedor" ──────────────────────────
+  // Es puramente de presentación: el campo de abajo (loginIdentifier)
+  // siempre acepta tanto correo como usuario, y resolveAuthEmail() ya
+  // distingue uno de otro con solo mirar si trae '@'. Este toggle solo
+  // cambia la etiqueta/placeholder para que un vendedor no se quede
+  // mirando un campo que dice "Correo" y dude si puede escribir su
+  // usuario ahí — y esconde "¿Olvidaste tu contraseña?" en modo
+  // vendedor, porque ese flujo envía un correo de verdad y la mayoría
+  // de vendedores no tiene uno cargado (o no es el que revisan).
+  const modeToggleEl = document.getElementById('loginModeToggle');
+  const identifierLabelEl = document.getElementById('loginIdentifierLabel');
+  const forgotHintEl = document.getElementById('forgotHint');
+
+  function setLoginMode(modo) {
+    modeToggleEl.querySelectorAll('.login-mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === modo);
+    });
+    if (modo === 'vendedor') {
+      identifierLabelEl.textContent = t('login.usuario');
+      identifierEl.placeholder = t('login.usuarioPlaceholder');
+      forgotBtnEl.style.display = 'none';
+      forgotHintEl.style.display = '';
+    } else {
+      identifierLabelEl.textContent = t('login.correo');
+      identifierEl.placeholder = t('login.correoPlaceholder');
+      forgotBtnEl.style.display = '';
+      forgotHintEl.style.display = 'none';
+    }
+  }
+  modeToggleEl.addEventListener('click', e => {
+    const btn = e.target.closest('.login-mode-btn');
+    if (btn) setLoginMode(btn.dataset.mode);
+  });
+
 
   // Si volvimos aquí porque auth-guard.js cerró la sesión (cuenta
   // deshabilitada, sin perfil configurado, o no se pudo confirmar

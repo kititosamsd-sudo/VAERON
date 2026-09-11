@@ -111,6 +111,12 @@ function wireSelectableRow(el, selectionCtrl, onToggle) {
   });
 
   attachLongPress(el, () => {
+    // El modo selección (borrado masivo) es exclusivo de admin en
+    // ambas pantallas que reusan este módulo (Stock y Pedidos/clientes)
+    // — ver los botones "Seleccionar" ya ocultos para vendedor con
+    // .admin-only-action. Sin esto, un long-press seguía siendo una
+    // puerta trasera que activaba el modo igual.
+    if (typeof isAdmin === 'function' && !isAdmin()) return;
     const cb = getCb();
     if (!cb) return;
     selectionCtrl.set(true);

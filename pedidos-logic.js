@@ -268,8 +268,8 @@ document.addEventListener('keydown', e => {
 });
 
 // ── Modo selección / checkboxes ─────────────────────────
-function setClienteSelectionMode(on) { clientSelection.set(on); }
-function toggleClienteSelectionMode() { clientSelection.toggle(); }
+function setClienteSelectionMode(on) { if (on && !isAdmin()) return; clientSelection.set(on); }
+function toggleClienteSelectionMode() { if (!isAdmin()) return; clientSelection.toggle(); }
 
 function onClientCheckToggle(cb) {
   const ruc = cb.dataset.ruc;
@@ -317,6 +317,7 @@ function updateBulkClientes() {
 }
 
 function deleteSelectedClientes() {
+  if (!isAdmin()) return;
   const count = selectedClientRucs.size;
   if (count === 0) return;
   if (!confirm(`¿Eliminar ${count} cliente${count !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return;
@@ -331,6 +332,7 @@ function deleteSelectedClientes() {
 }
 
 function deleteAllClientes() {
+  if (!isAdmin()) return;
   const total = clientsCache.length;
   if (total === 0) return;
   if (!confirm(`¿Eliminar TODOS los ${total} clientes? Esta acción no se puede deshacer.`)) return;

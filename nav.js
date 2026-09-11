@@ -280,7 +280,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const isNative = window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform();
   if (!isNative || !Capacitor.Plugins || !Capacitor.Plugins.App) return;
 
-  const HOME_PAGE = () => (typeof currentUserRole !== 'undefined' && currentUserRole === 'superadmin') ? 'tiendas' : 'dashboard';
+  const HOME_PAGE = () => (window.Router && typeof currentUserRole !== 'undefined')
+    ? Router.paginaDeInicioParaRol(currentUserRole)
+    : 'dashboard';
   let lastBackPressAt = 0;
 
   function showExitHint() {

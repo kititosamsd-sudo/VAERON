@@ -38,6 +38,7 @@ var duplicateQueue      = []; // filas duplicadas: se omiten todas de una vez
 var MAX_DUP_CLIENTES_RENDER = 300;
 
 function openImportClientes() {
+  if (!isAdmin()) return;
   importRows = []; pendingNewClientes = []; duplicateQueue = [];
   var fi = document.getElementById('importClientesFile');
   if (fi) fi.value = '';
