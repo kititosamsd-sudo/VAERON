@@ -132,6 +132,25 @@ general.
   `configuracion-logic.js`), y también hay un botón manual "Volver a
   sincronizar productos" en la misma tarjeta de Configuración, por si
   hace falta repetirlo (ej. después de una importación masiva).
+- **Visor con zoom**: tocar la foto de un producto abre una vista
+  ampliada (pellizcar para zoom, arrastrar para mover, doble tap/clic
+  para alternar 1x↔2.5x, rueda del mouse en desktop) — todo con
+  Pointer Events + `touch-action:none`, sin librerías externas. Usa
+  la MISMA url que la miniatura (no hay una versión "grande" guardada
+  aparte), así que nunca pixela más de lo que la foto original ya
+  traía. Lógica al final del único `<script>` de
+  `catalogo-publico.html` — `abrirLightbox()`/`cerrarLightbox()`.
+
+### El visor de imagen del sistema (Stock/Catálogo) también hace zoom
+El modal `imageViewModal` (`openImageView()` en `stock.js`, compartido
+por Stock y Catálogo — no es el mismo visor del catálogo público de
+arriba) tiene el mismo mecanismo de pellizco/arrastre/doble tap/rueda
+del mouse. Como acá el `<img>` se RECREA cada vez que `router.js`
+cambia de vista (a diferencia del catálogo público, que es una sola
+página), `engancharZoomImageView()` usa un flag en el propio elemento
+(`dataset.zoomListo`) en vez de una variable global, para enganchar de
+nuevo en cada vista sin duplicar los listeners si se reabre varias
+veces sin cambiar de pantalla.
 
 ### RUC o DNI (real)
 El documento del cliente (Pedidos → Editar cliente) acepta RUC (11
@@ -287,6 +306,10 @@ esto es una base nueva, no un reemplazo con la misma cobertura.
   `router.js` (no solo el link del menú escondido): rol fijo,
   permiso configurable, página de inicio por rol, súper-admin fuera
   de las páginas de una tienda y viceversa.
+- `tests/image-zoom.test.js` — pellizco/doble tap/rueda del mouse en
+  el visor de imagen compartido de Stock/Catálogo (`imageViewModal`,
+  `stock.js`), y que reabrir con otra foto resetee el zoom sin
+  duplicar los listeners.
 - `tests/database-rules-shape.test.js` — chequeos estructurales de
   `database.rules.json` (JSON válido, que los nodos nuevos sigan
   exigiendo rol admin, que el candado de `config`/`catalogoPublico`

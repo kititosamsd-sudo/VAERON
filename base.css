@@ -405,6 +405,11 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
   display: flex;
   align-items: center;
   justify-content: center;
+  /* El <img> de adentro se puede escalar hasta 4x (ver
+     engancharZoomImageView() en stock.js) — sin esto, una imagen
+     ampliada se saldría del modal en vez de recortarse contra el
+     marco. */
+  overflow: hidden;
 }
 .image-view-frame img {
   max-width: 100%;
@@ -412,6 +417,14 @@ main.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; mi
   border-radius: var(--r-sm);
   object-fit: contain;
   display: block;
+  /* touch-action:none le pide al navegador que no haga ÉL su propio
+     pan/zoom nativo acá — lo maneja a mano engancharZoomImageView()
+     (pellizco + arrastre + doble tap, todo con Pointer Events),
+     igual que en catalogo-publico.html. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
 }
 
 /* ─── Autocompletado de Nueva Nota (cliente / producto) ────────

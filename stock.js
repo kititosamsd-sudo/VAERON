@@ -342,6 +342,132 @@ function openImageView(url, name, code) {
   const dl = document.getElementById('imageViewDownload');
   dl.href = cloudinaryDownloadUrl(url);
   openModal('imageViewModal');
+  // Pellizcar/arrastrar/doble tap — ver el IIFE más abajo
+  // (engancharZoomImageView/resetZoomImageView). Enganchar primero
+  // (por si esta es la primera vez que se abre en esta vista) y
+  // recién después resetear, para que una imagen anterior no quede
+  // ampliada cuando se abre una nueva.
+  if (typeof engancharZoomImageView === 'function') engancharZoomImageView();
+  if (typeof resetZoomImageView === 'function') resetZoomImageView();
+}
+
+// ── Zoom/pan del visor de imagen ────────────────────────────────
+// Stock y Catálogo comparten el mismo modal (imageViewModal, ver
+// openImageView() arriba) — mismo mecanismo que el visor del
+// catálogo público (catalogo-publico.html): Pointer Events +
+// touch-action:none (CSS, ver .image-view-frame img en base.css),
+// sin librerías externas. Pellizcar para zoom, arrastrar para mover
+// cuando está ampliada, doble tap/clic para alternar 1x↔2.5x, rueda
+// del mouse en desktop.
+//
+// A diferencia del catálogo público (una sola página, un solo
+// <img>), acá el <img id="imageViewImg"> se RECREA cada vez que
+// router.js cambia de vista (Stock ↔ Catálogo) — por eso
+// engancharZoomImageView() usa un flag en el propio elemento
+// (dataset.zoomListo) en vez de una variable global: así engancha de
+// nuevo en el elemento nuevo de cada vista, pero no dos veces
+// seguidas si openImageView() se llama de nuevo sin haber cambiado
+// de vista.
+let __zoomIV = { scale: 1, tx: 0, ty: 0 };
+const __zoomIVPointers = new Map();
+let __zoomIVPinchStartDist = 0, __zoomIVPinchStartScale = 1;
+let __zoomIVPanStart = null;
+let __zoomIVLastTapTime = 0, __zoomIVLastTapX = 0, __zoomIVLastTapY = 0;
+const ZOOM_IV_MIN = 1, ZOOM_IV_MAX = 4;
+
+function __zoomIVAplicar() {
+  const el = document.getElementById('imageViewImg');
+  if (el) el.style.transform = `translate(${__zoomIV.tx}px, ${__zoomIV.ty}px) scale(${__zoomIV.scale})`;
+}
+
+function resetZoomImageView() {
+  __zoomIV = { scale: 1, tx: 0, ty: 0 };
+  __zoomIVPointers.clear();
+  __zoomIVPanStart = null;
+  __zoomIVPinchStartDist = 0;
+  __zoomIVAplicar();
+}
+
+function __zoomIVDistancia(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function __zoomIVLimitarArrastre() {
+  const frame = document.getElementById('imageViewFrame');
+  if (!frame) return;
+  const rect = frame.getBoundingClientRect();
+  const maxX = (rect.width * (__zoomIV.scale - 1)) / 2 + rect.width * 0.15;
+  const maxY = (rect.height * (__zoomIV.scale - 1)) / 2 + rect.height * 0.15;
+  __zoomIV.tx = Math.min(maxX, Math.max(-maxX, __zoomIV.tx));
+  __zoomIV.ty = Math.min(maxY, Math.max(-maxY, __zoomIV.ty));
+}
+
+function engancharZoomImageView() {
+  const el = document.getElementById('imageViewImg');
+  if (!el || el.dataset.zoomListo) return; // ya enganchado en ESTE elemento — ver comentario grande arriba
+  el.dataset.zoomListo = '1';
+
+  el.addEventListener('pointerdown', e => {
+    el.setPointerCapture(e.pointerId);
+    __zoomIVPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (__zoomIVPointers.size === 1) {
+      __zoomIVPanStart = { x: e.clientX, y: e.clientY, tx: __zoomIV.tx, ty: __zoomIV.ty };
+      const ahora = Date.now();
+      const cerca = __zoomIVDistancia({ x: e.clientX, y: e.clientY }, { x: __zoomIVLastTapX, y: __zoomIVLastTapY }) < 30;
+      if (ahora - __zoomIVLastTapTime < 300 && cerca) {
+        __zoomIV.scale = __zoomIV.scale > 1 ? 1 : 2.5;
+        if (__zoomIV.scale === 1) { __zoomIV.tx = 0; __zoomIV.ty = 0; }
+        __zoomIVAplicar();
+        __zoomIVPanStart = null;
+      }
+      __zoomIVLastTapTime = ahora;
+      __zoomIVLastTapX = e.clientX;
+      __zoomIVLastTapY = e.clientY;
+    } else if (__zoomIVPointers.size === 2) {
+      const pts = Array.from(__zoomIVPointers.values());
+      __zoomIVPinchStartDist = __zoomIVDistancia(pts[0], pts[1]);
+      __zoomIVPinchStartScale = __zoomIV.scale;
+      __zoomIVPanStart = null;
+    }
+  });
+
+  el.addEventListener('pointermove', e => {
+    if (!__zoomIVPointers.has(e.pointerId)) return;
+    __zoomIVPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (__zoomIVPointers.size === 2 && __zoomIVPinchStartDist > 0) {
+      const pts = Array.from(__zoomIVPointers.values());
+      const dist = __zoomIVDistancia(pts[0], pts[1]);
+      __zoomIV.scale = Math.min(ZOOM_IV_MAX, Math.max(ZOOM_IV_MIN, __zoomIVPinchStartScale * (dist / __zoomIVPinchStartDist)));
+      __zoomIVLimitarArrastre();
+      __zoomIVAplicar();
+    } else if (__zoomIVPointers.size === 1 && __zoomIVPanStart && __zoomIV.scale > 1) {
+      __zoomIV.tx = __zoomIVPanStart.tx + (e.clientX - __zoomIVPanStart.x);
+      __zoomIV.ty = __zoomIVPanStart.ty + (e.clientY - __zoomIVPanStart.y);
+      __zoomIVLimitarArrastre();
+      __zoomIVAplicar();
+    }
+  });
+
+  function soltar(e) {
+    __zoomIVPointers.delete(e.pointerId);
+    if (__zoomIVPointers.size < 2) __zoomIVPinchStartDist = 0;
+    if (__zoomIVPointers.size === 0) __zoomIVPanStart = null;
+    if (__zoomIV.scale < ZOOM_IV_MIN + 0.01) resetZoomImageView();
+  }
+  el.addEventListener('pointerup', soltar);
+  el.addEventListener('pointercancel', soltar);
+
+  const frame = document.getElementById('imageViewFrame');
+  if (frame) {
+    frame.addEventListener('wheel', e => {
+      e.preventDefault();
+      __zoomIV.scale = Math.min(ZOOM_IV_MAX, Math.max(ZOOM_IV_MIN, __zoomIV.scale + (e.deltaY < 0 ? 0.3 : -0.3)));
+      __zoomIVLimitarArrastre();
+      __zoomIVAplicar();
+    }, { passive: false });
+  }
 }
 
 // "Compartir" (Medio/Premium) — ver aplicarCompartirImagenPorPlan()
