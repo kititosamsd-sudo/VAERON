@@ -92,8 +92,8 @@
     <div class="modal-footer ver-nota-footer">
       <button class="btn btn-ghost btn-sm" onclick="cerrarVerNotaHistorial()">Cerrar</button>
       <div class="ver-nota-acciones">
-        <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#FECACA" onclick="eliminarNotaHistorial()">Eliminar</button>
-        <button type="button" class="btn btn-ghost btn-sm" onclick="editarNotaHistorial()">Editar</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnEliminarNotaHistorial" style="color:var(--red);border-color:#FECACA" onclick="eliminarNotaHistorial()">Eliminar</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnEditarNotaHistorial" onclick="editarNotaHistorial()">Editar</button>
         <button type="button" class="btn btn-ghost btn-sm" onclick="compartirNotaHistorial()">Compartir</button>
         <div class="ver-nota-download-wrap">
           <button type="button" class="btn btn-primary btn-sm" onclick="toggleVerNotaDescargaMenu(event)">

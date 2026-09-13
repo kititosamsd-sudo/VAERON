@@ -194,6 +194,11 @@ const refProducts = scopedRef('products');
 const refClients  = scopedRef('clients');
 const refOrders   = scopedRef('orders');
 const refUsers    = scopedRef('usuarios');
+// Vitrina pública (Configuración → Catálogo público): espejo de SOLO
+// nombre/categoría/imagen de cada producto, sin precio ni stock — ver
+// mirrorCatalogoPublicoProducto() más abajo y catalogo-publico.html,
+// que es la única pantalla que la lee, y sin sesión iniciada.
+const refCatalogoPublico = scopedRef('catalogoPublico');
 // Contraseñas de vendedores en texto plano, separadas de /usuarios a
 // propósito. OJO: esto NO puede vivir en tiendas/{tid}/vendorSecrets
 // como cualquier otro nodo de scopedRef() — las reglas de Firebase
@@ -1048,7 +1053,9 @@ function refreshProductsNow() {
 // el servidor sigue siendo ese mismo, se aplica el cambio con
 // seguridad. Si cambió mientras tanto (alguien vendió o ajustó el
 // producto), se cancela y se avisa, en vez de pisarlo en silencio.
-function saveProduct(code, data, expectedStock, isNew) {
+// saveProduct() de verdad — ver el wrapper del mismo nombre más abajo,
+// que le agrega el espejo automático hacia el Catálogo público.
+function saveProductCore(code, data, expectedStock, isNew) {
   const { stock, ...restRaw } = data;
   // "updatedAt" es lo que permite a watchProducts (ver bloque de
   // caché arriba) pedir solo lo que cambió desde la última vez, en
@@ -1130,7 +1137,11 @@ function saveProduct(code, data, expectedStock, isNew) {
 //    creado con ese mismo código justo en ese instante;
 // 2) se mueve el dato real con un update() multi-ruta, que Firebase
 //    aplica de forma atómica (o se escriben ambas rutas, o ninguna).
-function renameProductCode(oldCode, newCode) {
+// renameProductCode() de verdad — ver el wrapper del mismo nombre más
+// abajo, que mueve también la entrada en el espejo del Catálogo
+// público (si no, el producto le quedaría "duplicado" ahí: la entrada
+// vieja con el código anterior nunca se borra sola).
+function renameProductCodeCore(oldCode, newCode) {
   const newRef = refProducts.child(newCode);
   return newRef.transaction(current => {
     if (current !== null && !current.deleted) return; // aborta: ya existe un producto activo con el código nuevo
@@ -1157,6 +1168,18 @@ function renameProductCode(oldCode, newCode) {
   });
 }
 
+// renameProductCode() de verdad: mueve también la entrada en el
+// espejo del Catálogo público — si no, el producto le quedaría
+// "duplicado" ahí, con la entrada vieja del código anterior sin
+// borrarse nunca sola.
+function renameProductCode(oldCode, newCode) {
+  return renameProductCodeCore(oldCode, newCode).then(result => {
+    refCatalogoPublico.child('productos').child(oldCode).remove().catch(() => {});
+    mirrorCatalogoPublicoProducto(newCode);
+    return result;
+  });
+}
+
 // Borrado FÍSICO real: el nodo se elimina de /products de verdad (ya
 // no queda nada "fantasma" visible en la consola de Firebase).
 //
@@ -1172,7 +1195,101 @@ function renameProductCode(oldCode, newCode) {
 // el nodo completo (sin depender de updatedAt), así que un borrado
 // real SÍ llega al instante a cualquier pantalla abierta en cualquier
 // dispositivo — sin necesidad del truco del borrado lógico.
+// deleteProduct() de verdad — ver el wrapper del mismo nombre más
+// abajo, que además saca el producto del espejo del Catálogo público.
+// ── Catálogo público (vitrina sin login) ────────────────────────
+// Un producto normal (/products) tiene precio, costo y stock — datos
+// que una tienda no quiere público. catalogoPublico/productos/{code}
+// es un espejo con SOLO nombre/categoría/imagen, para que
+// catalogo-publico.html pueda leerlo sin sesión (con
+// ".read": "...activo === true" en database.rules.json) sin exponer
+// nada más. Se actualiza solo — nadie tiene que tocarlo a mano — cada
+// vez que saveProduct()/deleteProduct() (los wrappers de abajo)
+// terminan de verdad.
+//
+// Fire-and-forget a propósito (.catch(() => {}) al final, nunca
+// propaga el error): si falla el espejo, el producto real ya se
+// guardó bien iguales — no tiene sentido que la venta o la edición de
+// stock fallen por un problema en la vitrina pública, que es
+// secundaria.
+// Versión que SÍ devuelve la promesa de verdad — mirrorCatalogoPublicoProducto()
+// (la que llaman saveProduct/deleteProduct/renameProductCode) es
+// fire-and-forget A PROPÓSITO (ver el comentario grande unas líneas
+// abajo), pero sincronizarCatalogoPublico() sí necesita saber cuándo
+// termina cada uno para poder avisar "listo" de verdad en vez de
+// mentir.
+function mirrorCatalogoPublicoProductoAsync(code) {
+  return refProducts.child(code).once('value').then(snap => {
+    const p = snap.val();
+    if (!p || p.deleted) {
+      return refCatalogoPublico.child('productos').child(code).remove();
+    }
+    return refCatalogoPublico.child('productos').child(code).set({
+      nombre: p.name || '',
+      categoria: p.category || '',
+      imagen: p.image || ''
+    });
+  });
+}
+
+function mirrorCatalogoPublicoProducto(code) {
+  mirrorCatalogoPublicoProductoAsync(code).catch(() => {});
+}
+
+// Backfill: espeja TODOS los productos existentes de una sola vez.
+// mirrorCatalogoPublicoProducto() (arriba) solo actúa sobre un
+// producto cada vez que se guarda/edita/borra DE ACÁ EN ADELANTE —
+// un producto que ya existía ANTES de activar el catálogo público no
+// tiene ninguna entrada en catalogoPublico/productos hasta que
+// alguien lo vuelva a guardar (o corra esto). Sin esta función, una
+// tienda con productos viejos activa el catálogo y ve "0 productos"
+// aunque el Stock esté lleno — pensada para el botón "Volver a
+// sincronizar" en Configuración, y se llama sola la primera vez que
+// se activa el catálogo (ver toggleCatalogoPublicoActivo() en
+// configuracion-logic.js).
+function sincronizarCatalogoPublico() {
+  return refProducts.once('value').then(snap => {
+    const codigos = [];
+    snap.forEach(child => { codigos.push(child.key); return false; });
+    return Promise.all(codigos.map(mirrorCatalogoPublicoProductoAsync));
+  });
+}
+
+function saveProduct(code, data, expectedStock, isNew) {
+  return saveProductCore(code, data, expectedStock, isNew).then(result => {
+    mirrorCatalogoPublicoProducto(code);
+    return result;
+  });
+}
+
 function deleteProduct(code) {
+  return deleteProductCore(code).then(result => {
+    refCatalogoPublico.child('productos').child(code).remove().catch(() => {});
+    return result;
+  });
+}
+
+// Configuración de la vitrina (Configuración → Catálogo público, solo
+// admin): si está activa, el nombre que ve el cliente final y el
+// WhatsApp de contacto. Todo en tiendas/{tiendaId}/catalogoPublico —
+// mismo nodo que el espejo de productos de arriba, pero estas tres
+// claves puntuales (ver reglas en database.rules.json).
+function getCatalogoPublicoConfig() {
+  return refCatalogoPublico.once('value').then(snap => {
+    const v = snap.val() || {};
+    return { activo: !!v.activo, nombreTienda: v.nombreTienda || '', whatsapp: v.whatsapp || '' };
+  });
+}
+
+function setCatalogoPublicoConfig(config) {
+  return refCatalogoPublico.update({
+    activo: !!config.activo,
+    nombreTienda: config.nombreTienda || '',
+    whatsapp: config.whatsapp || ''
+  });
+}
+
+function deleteProductCore(code) {
   try {
     return refProducts.child(code).remove();
   } catch (err) {
@@ -1520,6 +1637,24 @@ function updateOrder(id, data) {
 // Irreversible: no hay papelera ni soft-delete.
 function deleteOrder(id) {
   return refOrders.child(id).remove();
+}
+
+// Lectura puntual de todos los pedidos — sin listener persistente, a
+// diferencia de watchOrders() más abajo. Pensada para la ficha de
+// cliente (Ver → historial de compras, en pedidos-logic.js): abrir
+// esa ficha no debería "robarle" el listener en vivo a quien esté
+// parado en Historial (watchOrders hace refOrders.off() + .on() de
+// nuevo cada vez que se llama, así que dos llamados compitiendo por
+// el mismo callback pisarían al primero).
+function getOrders() {
+  return refOrders.once('value').then(snap => {
+    const list = [];
+    snap.forEach(child => {
+      list.push({ id: child.key, ...child.val() });
+      return false;
+    });
+    return list;
+  });
 }
 
 // Historial de notas — lista completa, en vivo. No usa

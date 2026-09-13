@@ -391,6 +391,20 @@ function puedeEditarStock() {
   return isAdmin() || (currentUserRole === 'vendedor' && !!currentPermisosVendedor.editarStock);
 }
 
+// Editar/eliminar un pedido en Historial: el admin siempre puede;
+// un vendedor SOLO si el pedido es el que él mismo creó
+// (nota.vendedorUid === su propio uid) — no es un permiso
+// configurable como los de arriba, es una regla fija que además
+// exige database.rules.json del lado del servidor (ver
+// tiendas/$tiendaId/orders/$orderId ahí: "data.child('vendedorUid').val()
+// === auth.uid" para cualquier cuenta que no sea admin). Esta función
+// solo evita mostrarle a un vendedor un botón que el servidor le va a
+// rechazar igual — ver historial-logic.js.
+function puedeEditarPedido(nota) {
+  if (isAdmin()) return true;
+  return currentUserRole === 'vendedor' && !!nota && nota.vendedorUid === currentUserUid;
+}
+
 // Cierra sesión en todos los proyectos donde login.html la abrió —
 // para una cuenta de tienda es solo uno, pero el súper-admin queda
 // conectado a varios a la vez (ver ADONAY_ACTIVE_PROJECTS_KEY en

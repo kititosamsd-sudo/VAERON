@@ -101,6 +101,21 @@
         </div>
       </div>
 
+      <!-- Próximos cumpleaños: mismo gate de plan que la tarjeta
+           "Clientes registrados" (dashClientCard) — sin datos de
+           clientes (Básico), no tiene sentido este panel tampoco.
+           Arranca oculto; dashboard-logic.js lo muestra solo si
+           aplicarVisibilidadClientes() habilita /clients. -->
+      <div class="dash-panel" id="dashBirthdaysPanel" style="display:none">
+        <div class="dash-panel-header">
+          <h2>Próximos cumpleaños</h2>
+          <a href="#pedidos" class="dash-panel-link">Ver clientes</a>
+        </div>
+        <div id="dashBirthdaysList" class="dash-list">
+          <p class="dash-empty">Cargando…</p>
+        </div>
+      </div>
+
       <!-- Rentabilidad: solo planes Medio/Premium (los que ven costo en
            Stock — mismo limitePlan('campoCosto') de plan-limits.js, no
            un flag nuevo). Básico no ve costo en ningún lado de la app,

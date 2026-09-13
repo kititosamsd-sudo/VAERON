@@ -712,6 +712,63 @@ window.Dashboard = (function () {
     if (elClients) elClients.textContent = clients.length.toLocaleString(formatoNumeroActivo());
   }
 
+  // ── Próximos cumpleaños ──────────────────────────────────────
+  // Ventana fija de 14 días — a diferencia del umbral de Stock bajo
+  // (configurable desde Configuración), esto no tiene un ajuste
+  // propio todavía; 14 días alcanza para que el vendedor tenga
+  // tiempo de llamar o escribirle al cliente antes de la fecha.
+  const VENTANA_CUMPLEANOS_DIAS = 14;
+  const MESES_CUMPLE = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+  // Cuántos días faltan desde HOY hasta el próximo cumpleaños de esa
+  // persona — si ya pasó este año, calcula para el año que viene
+  // (por eso el "+ 365 si da negativo"). No usa el año de nacimiento
+  // para nada: cumpleDia/cumpleMes es TODO lo que se guarda (ver
+  // saveClient() en firebase.js), a propósito, para no pedir un dato
+  // más sensible del que hace falta.
+  function diasHastaProximoCumple(dia, mes, hoy) {
+    const anioActual = hoy.getFullYear();
+    let proximo = new Date(anioActual, mes - 1, dia);
+    // Comparación por fecha calendario (sin horas) — "hoy" cuenta
+    // como 0 días, no como "ya pasó".
+    const hoySinHora = new Date(anioActual, hoy.getMonth(), hoy.getDate());
+    if (proximo < hoySinHora) proximo = new Date(anioActual + 1, mes - 1, dia);
+    return Math.round((proximo - hoySinHora) / 86400000);
+  }
+
+  function renderUpcomingBirthdays(clients) {
+    const panel = document.getElementById('dashBirthdaysPanel');
+    const list = document.getElementById('dashBirthdaysList');
+    if (!panel || !list) return;
+    panel.style.display = '';
+
+    const hoy = new Date();
+    const proximos = clients
+      .filter(c => c.cumpleDia && c.cumpleMes)
+      .map(c => ({ cliente: c, dias: diasHastaProximoCumple(Number(c.cumpleDia), Number(c.cumpleMes), hoy) }))
+      .filter(x => x.dias <= VENTANA_CUMPLEANOS_DIAS)
+      .sort((a, b) => a.dias - b.dias)
+      .slice(0, 6);
+
+    if (proximos.length === 0) {
+      list.classList.remove('dash-list-2col');
+      list.innerHTML = '<p class="dash-empty">Ningún cliente cumple años en los próximos 14 días.</p>';
+      return;
+    }
+    list.classList.toggle('dash-list-2col', proximos.length > 1);
+    list.innerHTML = proximos.map(({ cliente, dias }) => {
+      const cuando = dias === 0 ? 'Hoy' : dias === 1 ? 'Mañana' : `En ${dias} días`;
+      return `
+        <div class="dash-row">
+          <div class="dash-row-main">
+            <div class="dash-row-title">${escapeHtml(cliente.nombre || cliente.ruc || '')}</div>
+            <div class="dash-row-meta">${cliente.cumpleDia} de ${MESES_CUMPLE[cliente.cumpleMes - 1]}</div>
+          </div>
+          <div class="dash-row-value">${cuando}</div>
+        </div>`;
+    }).join('');
+  }
+
   // Muestra/oculta la tarjeta "Clientes registrados" según el plan —
   // mismo criterio que ya oculta Pedidos/Registros del sidebar (ver
   // limitePlan('pedidosDisponible') en plan-limits.js). Se llama antes
@@ -961,6 +1018,7 @@ window.Dashboard = (function () {
       if (aplicarVisibilidadClientes()) {
         watchClients(clients => {
           renderClientStats(clients || []);
+          renderUpcomingBirthdays(clients || []);
         });
       }
     } catch (err) {

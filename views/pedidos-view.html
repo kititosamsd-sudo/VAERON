@@ -8,7 +8,7 @@
     <div class="topbar-actions">
       <div class="search-wrap">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="searchInput" placeholder="RUC o razón social…" oninput="filterTable()">
+        <input type="text" id="searchInput" placeholder="RUC, DNI o razón social…" oninput="filterTable()">
       </div>
       <button class="btn btn-ghost btn-select admin-only-action" id="btnSelectMode" onclick="toggleClienteSelectionMode()" title="Seleccionar varios">
         <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -56,7 +56,7 @@
         <thead>
           <tr>
             <th class="col-check"><input type="checkbox" class="row-checkbox" id="checkAllClientes" onchange="toggleAllClientes(this)"></th>
-            <th class="col-ruc">RUC</th>
+            <th class="col-ruc">RUC/DNI</th>
             <th>Cliente</th>
             <th class="col-city">Ciudad</th>
             <th class="col-acts">Acciones</th>
@@ -88,7 +88,7 @@
     <div class="modal-body">
       <div class="modal-detail-row" id="editCurrentInfo">
         <div class="modal-detail-item">
-          <div class="modal-detail-label">RUC actual</div>
+          <div class="modal-detail-label">Documento actual</div>
           <div class="modal-detail-value" id="editCurrentRuc">—</div>
         </div>
         <div class="modal-detail-item">
@@ -97,8 +97,8 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">RUC</label>
-        <input class="form-input text-mono" id="editRuc" type="text" maxlength="11" placeholder="20xxxxxxxxx">
+        <label class="form-label">RUC / DNI</label>
+        <input class="form-input text-mono" id="editRuc" type="text" maxlength="11" placeholder="RUC: 20xxxxxxxxx · DNI: 8 dígitos">
       </div>
       <div class="form-group">
         <label class="form-label">Razón social</label>
@@ -108,6 +108,39 @@
         <label class="form-label">Ciudad <span style="color:var(--text-3);font-weight:400;text-transform:none">(opcional)</span></label>
         <input class="form-input" id="editCiudad" type="text">
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Teléfono <span style="color:var(--text-3);font-weight:400;text-transform:none">(opcional)</span></label>
+          <input class="form-input text-mono" id="editTelefono" type="tel" placeholder="987 654 321">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correo <span style="color:var(--text-3);font-weight:400;text-transform:none">(opcional)</span></label>
+          <input class="form-input" id="editCorreo" type="email" placeholder="cliente@correo.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cumpleaños <span style="color:var(--text-3);font-weight:400;text-transform:none">(opcional — sin año, solo para recordarlo)</span></label>
+        <div class="form-row">
+          <select class="form-input" id="editCumpleDia">
+            <option value="">Día</option>
+          </select>
+          <select class="form-input" id="editCumpleMes">
+            <option value="">Mes</option>
+            <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+            <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+            <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Le interesa <span style="color:var(--text-3);font-weight:400;text-transform:none">(opcional)</span></label>
+        <input class="form-input" id="editInteres" type="text" placeholder="Ej: busca un amplificador para su banda">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas <span style="color:var(--text-3);font-weight:400;text-transform:none">(opcional, solo para tu equipo)</span></label>
+        <textarea class="form-input" id="editNotas" rows="2" style="resize:vertical" placeholder="Cualquier detalle que te sirva para el próximo seguimiento"></textarea>
+      </div>
     </div>
     <div class="modal-footer" style="justify-content:space-between">
       <button class="btn btn-ghost admin-only-action" id="btnDeleteClient" style="color:var(--red);border-color:#FECACA" onclick="deleteCurrentClient()">Eliminar cliente</button>
@@ -115,6 +148,64 @@
         <button class="btn btn-ghost" onclick="closeEdit()">Cancelar</button>
         <button class="btn btn-primary" onclick="saveEdit()">Guardar cambios</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Ficha de cliente (CRM) — solo lectura, además del
+     historial de compras real (ver openClientDetail() en
+     pedidos-logic.js, que trae los pedidos con getOrders() en
+     firebase.js). Disponible para admin y vendedor por igual, a
+     diferencia de Editar: ver el historial y los datos de contacto
+     no cambia nada, así que no hace falta restringirlo. ── -->
+<div class="modal-overlay" id="clientDetailModal" onclick="outsideCloseClientDetail(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2 id="clientDetailNombre">Cliente</h2>
+        <p style="font-family:var(--font-mono);font-size:12px;color:var(--text-3);margin-top:3px" id="clientDetailRuc"></p>
+      </div>
+      <button class="modal-close" onclick="closeClientDetail()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-detail-row" id="clientDetailContacto">
+        <div class="modal-detail-item">
+          <div class="modal-detail-label">Ciudad</div>
+          <div class="modal-detail-value" id="clientDetailCiudad">—</div>
+        </div>
+        <div class="modal-detail-item">
+          <div class="modal-detail-label">Teléfono</div>
+          <div class="modal-detail-value" id="clientDetailTelefono">—</div>
+        </div>
+        <div class="modal-detail-item">
+          <div class="modal-detail-label">Correo</div>
+          <div class="modal-detail-value" id="clientDetailCorreo">—</div>
+        </div>
+        <div class="modal-detail-item">
+          <div class="modal-detail-label">Cumpleaños</div>
+          <div class="modal-detail-value" id="clientDetailCumple">—</div>
+        </div>
+      </div>
+      <div class="form-group" id="clientDetailInteresGroup" style="display:none">
+        <label class="form-label">Le interesa</label>
+        <p style="font-size:13px;margin:0" id="clientDetailInteres"></p>
+      </div>
+      <div class="form-group" id="clientDetailNotasGroup" style="display:none">
+        <label class="form-label">Notas</label>
+        <p style="font-size:13px;margin:0;white-space:pre-wrap" id="clientDetailNotas"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Historial de compras</label>
+        <div id="clientDetailHistorial" style="display:flex;flex-direction:column;gap:6px">
+          <p style="font-size:12.5px;color:var(--text-3);margin:0">Cargando…</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeClientDetail()">Cerrar</button>
+      <button class="btn btn-primary" onclick="Router.go('nueva-nota', {params:{clienteRuc: clientDetailRucActual}})">Crear nota</button>
     </div>
   </div>
 </div>

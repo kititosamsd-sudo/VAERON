@@ -29,6 +29,7 @@ window.Configuracion = {
     cargarMonedaPrincipal();
     cargarFormatoNumero();
     cargarPermisosVendedor();
+    cargarCatalogoPublico();
   }
 };
 
@@ -728,4 +729,119 @@ function togglePermisoVendedor(campo, btn) {
       if (msg) { msg.textContent = 'No se pudo guardar: ' + (err && err.message ? err.message : err); msg.style.color = 'var(--red)'; }
     })
     .finally(() => { btn.disabled = false; });
+}
+
+// ── Catálogo público (solo admin) ───────────────────────────────
+// Vitrina sin login: nombre/foto de cada producto, nunca precio ni
+// stock (el espejo real vive en tiendas/{tiendaId}/catalogoPublico,
+// armado solo por mirrorCatalogoPublicoProducto() en firebase.js
+// cada vez que se guarda/borra un producto — acá solo se prende/
+// apaga y se edita el nombre público + WhatsApp de contacto).
+function calcularLinkCatalogoPublico() {
+  if (typeof currentTiendaId === 'undefined' || !currentTiendaId) return '';
+  try {
+    const proyecto = (typeof proyectoActivo !== 'undefined' && proyectoActivo) ? proyectoActivo : '';
+    return new URL(
+      'catalogo-publico.html?proyecto=' + encodeURIComponent(proyecto) + '&tienda=' + encodeURIComponent(currentTiendaId),
+      location.href
+    ).href;
+  } catch (e) {
+    return '';
+  }
+}
+
+function cargarCatalogoPublico() {
+  if (typeof isAdmin === 'function' && !isAdmin()) return;
+  if (typeof getCatalogoPublicoConfig !== 'function') return;
+
+  const linkInput = document.getElementById('catalogoPublicoLink');
+  if (linkInput) linkInput.value = calcularLinkCatalogoPublico();
+
+  getCatalogoPublicoConfig()
+    .then(cfg => {
+      const toggle = document.getElementById('toggleCatalogoPublico');
+      if (toggle) toggle.classList.toggle('active', !!cfg.activo);
+      const nombreInput = document.getElementById('cpNombreTienda');
+      if (nombreInput) nombreInput.value = cfg.nombreTienda || (typeof currentTiendaNombre === 'string' ? currentTiendaNombre : '');
+      const waInput = document.getElementById('cpWhatsapp');
+      if (waInput) waInput.value = cfg.whatsapp || '';
+    })
+    .catch(() => {});
+}
+
+function toggleCatalogoPublicoActivo(btn) {
+  if (!btn) return;
+  const activar = !btn.classList.contains('active');
+  btn.classList.toggle('active', activar);
+  btn.disabled = true;
+
+  getCatalogoPublicoConfig()
+    .then(actual => setCatalogoPublicoConfig(Object.assign({}, actual, { activo: activar })).then(() => actual))
+    .then(actualAntes => {
+      // Backfill automático la PRIMERA vez que se activa (antes no
+      // estaba prendido) — sincronizarCatalogoPublico() espeja de una
+      // los productos que ya existían antes de esta función (ver el
+      // comentario grande en firebase.js). Sin esto, activar el
+      // catálogo en una tienda con productos viejos muestra "0
+      // productos" hasta que alguien los vuelva a guardar uno por uno.
+      if (activar && !actualAntes.activo && typeof sincronizarCatalogoPublico === 'function') {
+        sincronizarCatalogoPublico().catch(() => {});
+      }
+    })
+    .catch(err => {
+      btn.classList.toggle('active', !activar); // revierte si falló
+      alert('No se pudo guardar: ' + (err && err.message ? err.message : err));
+    })
+    .finally(() => { btn.disabled = false; });
+}
+
+// Botón "Volver a sincronizar productos" — mismo backfill de arriba,
+// pero a pedido explícito (ej. el admin importó productos en bloque
+// después de activar el catálogo, o algo quedó desincronizado).
+function sincronizarCatalogoPublicoManual(btn) {
+  const msg = document.getElementById('catalogoPublicoMsg');
+  if (btn) btn.disabled = true;
+  if (msg) { msg.textContent = 'Sincronizando…'; msg.style.color = 'var(--text-3)'; }
+
+  sincronizarCatalogoPublico()
+    .then(() => {
+      if (msg) { msg.textContent = 'Listo — tus productos ya deberían verse en el catálogo.'; msg.style.color = 'var(--green)'; }
+    })
+    .catch(err => {
+      if (msg) { msg.textContent = 'No se pudo sincronizar: ' + (err && err.message ? err.message : err); msg.style.color = 'var(--red)'; }
+    })
+    .finally(() => { if (btn) btn.disabled = false; });
+}
+
+function guardarCatalogoPublicoDatos() {
+  const nombreTienda = document.getElementById('cpNombreTienda').value.trim();
+  // Solo dígitos: WhatsApp los quiere así (código de país + número,
+  // sin espacios ni +), y evita que un formato raro rompa el link de
+  // "wa.me/..." en catalogo-publico.html.
+  const whatsapp = document.getElementById('cpWhatsapp').value.trim().replace(/\D/g, '');
+  const msg = document.getElementById('catalogoPublicoMsg');
+  if (msg) msg.textContent = '';
+
+  getCatalogoPublicoConfig()
+    .then(actual => setCatalogoPublicoConfig(Object.assign({}, actual, { nombreTienda, whatsapp })))
+    .then(() => {
+      if (msg) { msg.textContent = 'Guardado.'; msg.style.color = 'var(--green)'; }
+    })
+    .catch(err => {
+      if (msg) { msg.textContent = 'No se pudo guardar: ' + (err && err.message ? err.message : err); msg.style.color = 'var(--red)'; }
+    });
+}
+
+function copiarLinkCatalogoPublico() {
+  const input = document.getElementById('catalogoPublicoLink');
+  const msg = document.getElementById('catalogoPublicoMsg');
+  if (!input || !input.value) return;
+  input.select();
+  const fallback = () => { try { document.execCommand('copy'); } catch (e) { /* nada más que hacer */ } };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(input.value).catch(fallback);
+  } else {
+    fallback();
+  }
+  if (msg) { msg.textContent = 'Link copiado.'; msg.style.color = 'var(--green)'; }
 }

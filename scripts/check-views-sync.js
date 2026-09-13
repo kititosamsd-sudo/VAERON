@@ -71,37 +71,50 @@ function extractEmbeddedViews(routerSrc) {
   return eval('(' + objLiteral + ')');
 }
 
-const routerSrc = fs.readFileSync(ROUTER_PATH, 'utf8');
-const embedded = extractEmbeddedViews(routerSrc);
+// Exportado para que tests/views-sync.test.js reuse EXACTAMENTE este
+// mismo parser en vez de mantener una segunda copia — dos parsers
+// del mismo router.js que un día se desincronizan entre sí sería un
+// chiste bastante malo para un script que existe justo para detectar
+// desincronizaciones.
+module.exports = { ROOT, ROUTER_PATH, FILES, extractEmbeddedViews };
 
-let allSynced = true;
+// Correrlo directo (`node scripts/check-views-sync.js`) sigue
+// funcionando exactamente igual que antes — esto solo se salta
+// cuando otro archivo hace require() de este módulo (ver
+// tests/views-sync.test.js).
+if (require.main === module) {
+  const routerSrc = fs.readFileSync(ROUTER_PATH, 'utf8');
+  const embedded = extractEmbeddedViews(routerSrc);
 
-for (const [key, relPath] of Object.entries(FILES)) {
-  const filePath = path.join(ROOT, relPath);
-  const fileContent = fs.readFileSync(filePath, 'utf8');
-  const routerContent = embedded[key];
+  let allSynced = true;
 
-  if (routerContent === undefined) {
-    console.error(`✗ router.js no tiene una entrada VIEWS_HTML["${key}"] para ${relPath}`);
-    allSynced = false;
-    continue;
+  for (const [key, relPath] of Object.entries(FILES)) {
+    const filePath = path.join(ROOT, relPath);
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    const routerContent = embedded[key];
+
+    if (routerContent === undefined) {
+      console.error(`✗ router.js no tiene una entrada VIEWS_HTML["${key}"] para ${relPath}`);
+      allSynced = false;
+      continue;
+    }
+
+    if (fileContent !== routerContent) {
+      console.error(`✗ DESINCRONIZADO: ${relPath} es distinto de lo que router.js realmente usa.`);
+      console.error(`  → La versión que corre en la app está en router.js (VIEWS_HTML["${key}"]).`);
+      console.error(`  → Copia ese contenido a ${relPath}, o si el cambio bueno está en ${relPath},`);
+      console.error(`    cópialo dentro de router.js. Luego vuelve a correr este script.`);
+      allSynced = false;
+    } else {
+      console.log(`✓ ${relPath} coincide con router.js`);
+    }
   }
 
-  if (fileContent !== routerContent) {
-    console.error(`✗ DESINCRONIZADO: ${relPath} es distinto de lo que router.js realmente usa.`);
-    console.error(`  → La versión que corre en la app está en router.js (VIEWS_HTML["${key}"]).`);
-    console.error(`  → Copia ese contenido a ${relPath}, o si el cambio bueno está en ${relPath},`);
-    console.error(`    cópialo dentro de router.js. Luego vuelve a correr este script.`);
-    allSynced = false;
+  if (!allSynced) {
+    console.error('\nNo subas así a producción: al menos una vista quedó desactualizada.');
+    process.exit(1);
   } else {
-    console.log(`✓ ${relPath} coincide con router.js`);
+    console.log('\nTodo sincronizado. Listo para producción.');
+    process.exit(0);
   }
-}
-
-if (!allSynced) {
-  console.error('\nNo subas así a producción: al menos una vista quedó desactualizada.');
-  process.exit(1);
-} else {
-  console.log('\nTodo sincronizado. Listo para producción.');
-  process.exit(0);
 }

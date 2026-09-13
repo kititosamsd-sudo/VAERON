@@ -114,6 +114,17 @@ function abrirVerNotaHistorial(id) {
   document.getElementById('verNotaTotales').innerHTML = totalesHtml;
 
   document.getElementById('verNotaDescargaMenu').classList.remove('open');
+
+  // Editar/Eliminar: el admin siempre los ve; un vendedor solo si el
+  // pedido es el que él mismo creó — ver puedeEditarPedido() en
+  // auth-guard.js (y su explicación de por qué no alcanza con
+  // ocultar el botón: el servidor también lo exige).
+  const puedeEditar = typeof puedeEditarPedido === 'function' && puedeEditarPedido(n);
+  const btnEditar = document.getElementById('btnEditarNotaHistorial');
+  const btnEliminar = document.getElementById('btnEliminarNotaHistorial');
+  if (btnEditar) btnEditar.style.display = puedeEditar ? '' : 'none';
+  if (btnEliminar) btnEliminar.style.display = puedeEditar ? '' : 'none';
+
   document.getElementById('historialVerOverlay').classList.add('open');
 }
 
@@ -144,6 +155,7 @@ function editarNotaHistorial() {
   if (!verNotaActualId) return;
   const n = historialNotasCache.find(x => x.id === verNotaActualId);
   if (!n) return;
+  if (typeof puedeEditarPedido === 'function' && !puedeEditarPedido(n)) return; // el botón ya está oculto, esto es por si acaso
   const id = verNotaActualId; // guardarlo ANTES de cerrar el modal, que limpia verNotaActualId
   cerrarVerNotaHistorial();
   Router.go('nueva-nota', { params: { editId: id, editNota: n } });
@@ -153,6 +165,7 @@ function editarNotaHistorial() {
 function eliminarNotaHistorial() {
   if (!verNotaActualId) return;
   const n = historialNotasCache.find(x => x.id === verNotaActualId);
+  if (typeof puedeEditarPedido === 'function' && !puedeEditarPedido(n)) return; // el botón ya está oculto, esto es por si acaso
   const numeroTexto = n ? (n.numeroFormateado || String(n.numero || '')) : 'esta nota';
   if (!confirm(`¿Eliminar la nota ${numeroTexto}? Esta acción no se puede deshacer.`)) return;
 

@@ -239,6 +239,56 @@
             </div>
           </div>
 
+          <!-- Catálogo público (real, solo admin) — vitrina sin login
+               con nombre/foto de cada producto, SIN precio ni stock
+               (ver mirrorCatalogoPublicoProducto() en firebase.js).
+               El link solo funciona si "activo" está prendido — ver
+               catalogo-publico.html y la regla .read de
+               catalogoPublico en database.rules.json. -->
+          <div class="cfg-group admin-only-action" id="configCardCatalogoPublico">
+            <div class="cfg-group-heading"><span class="cfg-chip-dot green"></span>Catálogo público</div>
+            <p class="cfg-row-sub" style="margin:-4px 0 0">Una página para que cualquiera vea tus productos sin entrar a VAERON — sin precios, solo nombre y foto.</p>
+            <div class="cfg-card">
+              <div class="cfg-row">
+                <div class="cfg-row-left">
+                  <span class="cfg-row-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+                  <div class="cfg-row-text">
+                    <div class="cfg-row-label">Activar catálogo público</div>
+                    <div class="cfg-row-sub">Mientras esté apagado, el link no muestra nada</div>
+                  </div>
+                </div>
+                <div class="cfg-row-right">
+                  <button type="button" class="toggle-switch" id="toggleCatalogoPublico" onclick="toggleCatalogoPublicoActivo(this)" aria-label="Activar catálogo público">
+                    <span class="toggle-knob"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="cfg-card" id="catalogoPublicoDatos" style="margin-top:10px">
+              <div class="cfg-row" style="flex-direction:column;align-items:stretch;gap:10px">
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Nombre que ve el cliente</label>
+                  <input class="form-input" id="cpNombreTienda" type="text" placeholder="Ej: Instrumentos del Sur">
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">WhatsApp de contacto <span style="color:var(--text-3);font-weight:400;text-transform:none">(con código de país, solo números)</span></label>
+                  <input class="form-input text-mono" id="cpWhatsapp" type="tel" placeholder="51987654321">
+                </div>
+                <button class="btn btn-primary" style="align-self:flex-start" onclick="guardarCatalogoPublicoDatos()">Guardar</button>
+              </div>
+            </div>
+            <div class="settings-card-footer">
+              <p style="font-size:12px;color:var(--text-3);margin:0 0 8px">Link para compartir:</p>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <input class="form-input text-mono" id="catalogoPublicoLink" type="text" readonly style="flex:1;min-width:180px;font-size:12px" onclick="this.select()">
+                <button class="btn btn-ghost" onclick="copiarLinkCatalogoPublico()">Copiar</button>
+              </div>
+              <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="sincronizarCatalogoPublicoManual(this)">Volver a sincronizar productos</button>
+              <p style="font-size:11.5px;color:var(--text-3);margin:4px 0 0">Usalo si activaste el catálogo y tus productos no aparecen — sincroniza los que ya tenías cargados antes.</p>
+              <p id="catalogoPublicoMsg" class="settings-msg"></p>
+            </div>
+          </div>
+
           <!-- Logo de la tienda (real) — la fila entera se oculta cuando
                el plan no lo incluye (ver aplicarBloqueoPorPlan() en
                configuracion-logic.js): en Básico esta función no existe

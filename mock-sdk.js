@@ -94,7 +94,20 @@
     if (value && typeof value === 'object') {
       if (value['.sv'] === 'timestamp') return Date.now();
       const out = {};
-      Object.keys(value).forEach(k => { out[k] = resolveServerValues(value[k]); });
+      Object.keys(value).forEach(k => {
+        // Firebase real NUNCA guarda null — no importa si llega por
+        // set() o por update(), a cualquier profundidad: escribir
+        // null en una clave siempre equivale a borrarla. Antes esto
+        // solo se manejaba en update() (unas líneas abajo, con
+        // "if (v === null) delete merged[k]") y a nivel de la ruta
+        // completa en setNode() — pero un objeto anidado con un
+        // campo en null pasado a .set() (ej. saveClient() en
+        // firebase.js, con teléfono/correo/notas opcionales en null)
+        // se guardaba tal cual, con el null adentro, en vez de
+        // omitir esa clave como haría el servidor real.
+        const resuelto = resolveServerValues(value[k]);
+        if (resuelto !== null && resuelto !== undefined) out[k] = resuelto;
+      });
       return out;
     }
     return value;
@@ -267,10 +280,20 @@
           if (result === undefined) {
             return { committed: false, snapshot: makeSnapshot(ref.key, current) };
           }
-          setNode(root, path, result);
+          // Antes: setNode(root, path, result) directo — a
+          // diferencia de set()/update() (unas líneas arriba), acá
+          // NO se pasaba por resolveServerValues(). El síntoma:
+          // cualquier escritura por transaction() que incluyera
+          // firebase.database.ServerValue.TIMESTAMP (ej. saveProduct()
+          // en firebase.js, cuando el producto trae "stock") quedaba
+          // guardada como el objeto sentinel {".sv":"timestamp"} tal
+          // cual, en vez de resolverse a un número real — el modo
+          // demo mentía en ese campo puntual.
+          const resuelto = resolveServerValues(result);
+          setNode(root, path, resuelto);
           saveDB(ns, root);
           fireListeners(ns, path);
-          return { committed: true, snapshot: makeSnapshot(ref.key, result) };
+          return { committed: true, snapshot: makeSnapshot(ref.key, resuelto) };
         });
       },
       on(event, cb, errCb) {
