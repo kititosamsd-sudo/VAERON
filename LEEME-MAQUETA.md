@@ -132,6 +132,48 @@ general.
   `configuracion-logic.js`), y también hay un botón manual "Volver a
   sincronizar productos" en la misma tarjeta de Configuración, por si
   hace falta repetirlo (ej. después de una importación masiva).
+- **Categorías y orden**: chips de categoría (solo aparecen si hay más
+  de una) + selector "Más reciente"/"Nombre A-Z"
+  (`ordenarYFiltrar()`). El espejo ahora también guarda
+  `actualizadoEn` (copia del `updatedAt` del producto real) para
+  poder ordenar por más reciente.
+- **Código QR**: se dibuja entero en el navegador (librería `qrcodejs`
+  vía CDN, ver `<script>` en `app.html`) — el link nunca sale de la
+  máquina de quien está en Configuración para generarlo. Botón
+  "Descargar QR" en la misma tarjeta.
+- **Vista previa en WhatsApp (Open Graph)**: tags estáticas en el
+  `<head>` de `catalogo-publico.html` — a propósito NO dinámicas por
+  tienda: el bot que arma la vista previa (WhatsApp, etc.) lee el
+  HTML crudo sin correr JavaScript, así que escribir el nombre real
+  de la tienda ahí con JS (como hace el resto de la página) no le
+  llegaría a ese bot. Personalizarlo de verdad por tienda necesitaría
+  que esta página se genere del lado del servidor — no es el caso
+  hoy (ver el comentario grande en el propio `<head>`).
+- **"Preguntar" con la foto real (cuando el navegador lo permite)**:
+  WhatsApp no tiene NINGUNA forma de recibir una imagen adjunta a
+  través de un link `wa.me` (esa API solo acepta texto) — eso no es
+  un bug de acá, es un límite de WhatsApp. `preguntarPorProducto()`
+  intenta primero el selector nativo de "Compartir" del celular (Web
+  Share API con archivos), que sí puede adjuntar la foto de verdad;
+  si el navegador no lo soporta o algo falla en el camino (CORS, la
+  persona cancela el selector), cae al link de texto de siempre, con
+  la url de la foto incluida en el mensaje.
+- **Disponible / Agotado (automático, sin tocar nada a mano)**: el
+  espejo guarda `disponible` (`stock > 0`), nunca la cantidad exacta.
+  Se recalcula solo cada vez que el stock TOTAL de un producto cambia
+  por cualquier camino — venta (`decrementStock`), ajuste manual
+  (`saveProduct`), o cualquiera de las funciones de almacén que tocan
+  el total (`addStock`, `updateWarehouseStock`, `setWarehouseStock`,
+  `addWarehouseStock` — todas envueltas igual que `saveProduct`/
+  `deleteProduct`, ver el comentario grande junto a
+  `mirrorCatalogoPublicoProductoAsync()` en `firebase.js`).
+  `moveWarehouseStock` (mover entre almacenes del mismo producto) NO
+  dispara el espejo a propósito: no cambia el total, así que
+  "disponible" no tiene por qué recalcularse ahí. En el catálogo
+  público, un producto agotado se muestra igual (con una etiqueta
+  "Agotado" y la foto atenuada) — nunca se oculta, porque alguien
+  puede querer preguntar cuándo va a haber de nuevo (el botón cambia
+  a "Consultar" con un mensaje distinto para ese caso).
 - **Visor con zoom**: tocar la foto de un producto abre una vista
   ampliada (pellizcar para zoom, arrastrar para mover, doble tap/clic
   para alternar 1x↔2.5x, rueda del mouse en desktop) — todo con

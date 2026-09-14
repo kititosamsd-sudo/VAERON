@@ -34,7 +34,7 @@ function esperarEspejo() {
   return new Promise(resolve => setTimeout(resolve, 0));
 }
 
-test('saveProduct() crea el espejo con solo nombre/categoría/imagen — nunca precio, costo ni stock', async () => {
+test('saveProduct() crea el espejo con nombre/categoría/imagen/actualizadoEn — nunca precio, costo ni stock', async () => {
   const window = nuevoEntorno();
   await window.saveProduct('P001', {
     name: 'Guitarra Acústica', category: 'cuerdas', image: 'https://x/img.jpg',
@@ -43,7 +43,13 @@ test('saveProduct() crea el espejo con solo nombre/categoría/imagen — nunca p
   await esperarEspejo();
 
   const espejo = await leerEspejo(window, 'P001');
-  assert.deepEqual(espejo, { nombre: 'Guitarra Acústica', categoria: 'cuerdas', imagen: 'https://x/img.jpg' });
+  assert.equal(espejo.nombre, 'Guitarra Acústica');
+  assert.equal(espejo.categoria, 'cuerdas');
+  assert.equal(espejo.imagen, 'https://x/img.jpg');
+  // actualizadoEn es el updatedAt del producto real, copiado tal
+  // cual — lo usa catalogo-publico.html para el orden "Más
+  // reciente" (ver ordenarYFiltrar()).
+  assert.equal(typeof espejo.actualizadoEn, 'number');
   assert.equal('price' in espejo, false, 'el espejo no debe tener precio');
   assert.equal('cost' in espejo, false, 'el espejo no debe tener costo');
   assert.equal('stock' in espejo, false, 'el espejo no debe tener stock');
@@ -139,4 +145,69 @@ test('sincronizarCatalogoPublico() no espeja productos borrados (deleted: true)'
 test('sincronizarCatalogoPublico() con la tienda sin productos todavía no falla, solo no hace nada', async () => {
   const window = nuevoEntorno();
   await assert.doesNotReject(() => window.sincronizarCatalogoPublico());
+});
+
+test('disponible se calcula del stock real: true si hay, false si está en 0', async () => {
+  const window = nuevoEntorno();
+  await window.saveProduct('P010', { name: 'Con stock', category: 'x', price: 10, stock: 5 }, undefined, true);
+  await window.saveProduct('P011', { name: 'Sin stock', category: 'x', price: 10, stock: 0 }, undefined, true);
+  await esperarEspejo();
+
+  assert.equal((await leerEspejo(window, 'P010')).disponible, true);
+  assert.equal((await leerEspejo(window, 'P011')).disponible, false);
+});
+
+test('una venta (decrementStock) que deja el stock en 0 actualiza "disponible" solo, sin tocar el producto a mano', async () => {
+  const window = nuevoEntorno();
+  await window.saveProduct('P012', { name: 'Última unidad', category: 'x', price: 50, stock: 1 }, undefined, true);
+  await esperarEspejo();
+  assert.equal((await leerEspejo(window, 'P012')).disponible, true);
+
+  await window.decrementStock([{ code: 'P012', qty: 1 }]);
+  await esperarEspejo();
+
+  assert.equal((await leerEspejo(window, 'P012')).disponible, false, 'tras vender la última unidad, debería quedar agotado');
+});
+
+test('si una venta con varios productos falla a mitad de camino (y se revierte), "disponible" no queda mal', async () => {
+  const window = nuevoEntorno();
+  await window.saveProduct('P013', { name: 'Con poco stock', category: 'x', price: 20, stock: 1 }, undefined, true);
+  await window.saveProduct('P014', { name: 'Sin stock suficiente', category: 'x', price: 20, stock: 0 }, undefined, true);
+  await esperarEspejo();
+
+  await assert.rejects(() => window.decrementStock([
+    { code: 'P013', qty: 1 },
+    { code: 'P014', qty: 1 } // este no tiene stock — toda la venta debe revertirse
+  ]));
+  await esperarEspejo();
+
+  // P013 se descontó y se revirtió (addStockWithRetry) — debería
+  // seguir disponible, como si la venta nunca hubiera pasado.
+  assert.equal((await leerEspejo(window, 'P013')).disponible, true);
+});
+
+test('sumar stock por almacén (addWarehouseStock) marca disponible de nuevo un producto agotado', async () => {
+  const window = nuevoEntorno();
+  await window.saveProduct('P015', { name: 'Reponiendo', category: 'x', price: 30, stock: 0 }, undefined, true);
+  await esperarEspejo();
+  assert.equal((await leerEspejo(window, 'P015')).disponible, false);
+
+  await window.addWarehouseStock('P015', 'alm1', 10);
+  await esperarEspejo();
+
+  assert.equal((await leerEspejo(window, 'P015')).disponible, true);
+});
+
+test('moveWarehouseStock (mover entre almacenes) no cambia el total, así que no debería tocar disponible', async () => {
+  const window = nuevoEntorno();
+  await window.saveProduct('P016', { name: 'Movido de almacén', category: 'x', price: 15, stock: 5 }, undefined, true);
+  await esperarEspejo();
+  const antes = await leerEspejo(window, 'P016');
+
+  await window.moveWarehouseStock('P016', 'alm1', 'alm2', 2);
+  await esperarEspejo();
+
+  const despues = await leerEspejo(window, 'P016');
+  assert.equal(despues.disponible, antes.disponible, true);
+  assert.equal(despues.disponible, true);
 });

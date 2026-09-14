@@ -755,7 +755,9 @@ function cargarCatalogoPublico() {
   if (typeof getCatalogoPublicoConfig !== 'function') return;
 
   const linkInput = document.getElementById('catalogoPublicoLink');
-  if (linkInput) linkInput.value = calcularLinkCatalogoPublico();
+  const link = calcularLinkCatalogoPublico();
+  if (linkInput) linkInput.value = link;
+  pintarQRCatalogoPublico(link);
 
   getCatalogoPublicoConfig()
     .then(cfg => {
@@ -767,6 +769,28 @@ function cargarCatalogoPublico() {
       if (waInput) waInput.value = cfg.whatsapp || '';
     })
     .catch(() => {});
+}
+
+// QR del link para compartir — librería qrcodejs (ver <script> en
+// app.html), sin backend ni imagen generada por un servicio externo:
+// se dibuja entero en el navegador de quien está mirando
+// Configuración, así el link de la tienda nunca sale de acá para
+// generarlo.
+function pintarQRCatalogoPublico(link) {
+  const cont = document.getElementById('catalogoPublicoQR');
+  if (!cont || typeof QRCode === 'undefined' || !link) return;
+  cont.innerHTML = ''; // qrcodejs no tiene "actualizar", hay que vaciar y volver a crear
+  new QRCode(cont, { text: link, width: 112, height: 112, colorDark: '#000000', colorLight: '#ffffff' });
+}
+
+function descargarQRCatalogoPublico() {
+  const cont = document.getElementById('catalogoPublicoQR');
+  const canvas = cont ? cont.querySelector('canvas') : null;
+  if (!canvas) return; // sin link válido todavía no hay QR dibujado
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'catalogo-qr.png';
+  a.click();
 }
 
 function toggleCatalogoPublicoActivo(btn) {

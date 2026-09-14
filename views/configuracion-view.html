@@ -283,6 +283,13 @@
                 <input class="form-input text-mono" id="catalogoPublicoLink" type="text" readonly style="flex:1;min-width:180px;font-size:12px" onclick="this.select()">
                 <button class="btn btn-ghost" onclick="copiarLinkCatalogoPublico()">Copiar</button>
               </div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+                <div id="catalogoPublicoQR" style="width:120px;height:120px;background:#fff;border:1px solid var(--border);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0"></div>
+                <div>
+                  <p style="font-size:12px;color:var(--text-3);margin:0 0 6px">Código QR del catálogo — para imprimir y pegar en el local.</p>
+                  <button class="btn btn-ghost btn-sm" onclick="descargarQRCatalogoPublico()">Descargar QR</button>
+                </div>
+              </div>
               <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="sincronizarCatalogoPublicoManual(this)">Volver a sincronizar productos</button>
               <p style="font-size:11.5px;color:var(--text-3);margin:4px 0 0">Usalo si activaste el catálogo y tus productos no aparecen — sincroniza los que ya tenías cargados antes.</p>
               <p id="catalogoPublicoMsg" class="settings-msg"></p>

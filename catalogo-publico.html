@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Catálogo</title>
+<!-- Open Graph: lo que WhatsApp/Facebook/etc. muestran como vista
+     previa al pegar el link. OJO — esto es ESTÁTICO a propósito, no
+     dinámico por tienda: el bot que arma esa vista previa (ej. el
+     de WhatsApp) lee el HTML crudo, SIN correr JavaScript — así que
+     escribir el nombre real de la tienda o su foto acá con JS (como
+     hace el resto de esta página) no serviría de nada, esos bots
+     nunca lo verían. Personalizarlo de verdad (que cada tienda
+     tenga su propia foto/nombre en la vista previa) necesitaría que
+     esta página se genere del lado del servidor en vez de ser un
+     archivo HTML fijo — no es el caso hoy. -->
+<meta property="og:title" content="Catálogo">
+<meta property="og:description" content="Mirá los productos disponibles.">
+<meta property="og:type" content="website">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="variables.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -79,6 +92,51 @@
     color: var(--text-1);
   }
   .cp-search:focus { outline: 2px solid var(--accent-border); }
+  .cp-toolbar {
+    max-width: 720px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .cp-cats {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    flex: 1;
+    scrollbar-width: none;
+  }
+  .cp-cats::-webkit-scrollbar { display: none; }
+  .cp-cat-chip {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .cp-cat-chip.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+  .cp-sort {
+    flex-shrink: 0;
+    padding: 7px 10px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-2);
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+  }
   .cp-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -99,9 +157,24 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    position: relative;
   }
   .cp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .cp-thumb svg { width: 34px; height: 34px; stroke: var(--text-3); fill: none; stroke-width: 1.5; }
+  .cp-agotado-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(20,20,20,0.85);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+  .cp-item.agotado .cp-thumb img { opacity: 0.45; filter: grayscale(40%); }
   .cp-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
   .cp-cat { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.03em; }
   .cp-name { font-size: 13.5px; font-weight: 600; color: var(--text-1); line-height: 1.3; }
@@ -116,9 +189,11 @@
     border: 1px solid var(--border);
     background: var(--surface-2);
     color: var(--text-2);
+    font-family: var(--font-ui);
     font-size: 12px;
     font-weight: 600;
     text-decoration: none;
+    cursor: pointer;
   }
   .cp-ask svg { width: 14px; height: 14px; }
   .cp-ask:hover { background: var(--green-bg); color: var(--green); border-color: var(--green); }
@@ -232,6 +307,13 @@
 
 <div class="cp-wrap">
   <input class="cp-search" id="cpSearchInput" type="text" placeholder="Buscar producto…" oninput="filtrarCatalogoPublico()" style="display:none">
+  <div class="cp-toolbar" id="cpToolbar" style="display:none">
+    <div class="cp-cats" id="cpCats"></div>
+    <select class="cp-sort" id="cpSortSelect" onchange="filtrarCatalogoPublico()">
+      <option value="reciente">Más reciente</option>
+      <option value="nombre">Nombre A-Z</option>
+    </select>
+  </div>
   <div id="cpContenido">
     <p class="cp-loading">Cargando catálogo…</p>
   </div>
@@ -297,13 +379,30 @@ if (!paramProyecto || !paramTienda || !FIREBASE_PROJECTS[paramProyecto]) {
       }
 
       document.getElementById('cpNombre').textContent = data.nombreTienda || 'Catálogo';
+      // El título de la pestaña y las meta tags Open Graph sí se
+      // pueden actualizar acá con JS (a diferencia de lo que ve un
+      // bot de vista previa como el de WhatsApp, ver el comentario
+      // grande en <head> sobre por qué esas SÍ quedan estáticas) —
+      // esto ayuda a quien ya tiene la página abierta y cambia de
+      // pestaña, nada más.
+      if (data.nombreTienda) {
+        document.title = data.nombreTienda + ' · Catálogo';
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) ogTitle.setAttribute('content', data.nombreTienda + ' · Catálogo');
+      }
 
       const productosObj = data.productos || {};
       cpProductos = Object.keys(productosObj).map(code => ({
         code,
         nombre: productosObj[code].nombre || '',
         categoria: productosObj[code].categoria || 'Sin categoría',
-        imagen: productosObj[code].imagen || ''
+        imagen: productosObj[code].imagen || '',
+        actualizadoEn: productosObj[code].actualizadoEn || 0,
+        // Productos que quedaron espejados ANTES de este campo (ver
+        // sincronizarCatalogoPublico() en firebase.js) no lo tienen
+        // todavía — default true para no marcarlos "agotado" por
+        // error hasta que se vuelvan a sincronizar.
+        disponible: productosObj[code].disponible !== false
       })).filter(p => p.nombre);
 
       document.getElementById('cpSubtitulo').textContent =
@@ -322,11 +421,52 @@ if (!paramProyecto || !paramTienda || !FIREBASE_PROJECTS[paramProyecto]) {
         document.getElementById('cpSearchInput').style.display = 'block';
       }
 
-      renderCatalogoPublico(cpProductos, cpWhatsapp);
+      poblarCategoriasPublico(cpProductos);
+      renderCatalogoPublico(ordenarYFiltrar(cpProductos), cpWhatsapp);
     })
     .catch(() => {
       mostrarError('Esta tienda todavía no activó su catálogo público.');
     });
+}
+
+let cpCategoriaActiva = 'todas';
+
+function poblarCategoriasPublico(lista) {
+  // Solo vale la pena mostrar el filtro de categorías si hay más de
+  // una — con una sola, el chip "Todas" no le sirve a nadie.
+  const categorias = Array.from(new Set(lista.map(p => p.categoria))).sort((a, b) => a.localeCompare(b));
+  if (categorias.length < 2) return;
+
+  document.getElementById('cpToolbar').style.display = 'flex';
+  const cats = document.getElementById('cpCats');
+  const chip = (valor, etiqueta) =>
+    `<button type="button" class="cp-cat-chip${valor === cpCategoriaActiva ? ' active' : ''}" onclick="elegirCategoriaPublico(${JSON.stringify(valor).replace(/"/g, '&quot;')})">${escapeHtmlPublico(etiqueta)}</button>`;
+  cats.innerHTML = chip('todas', 'Todas') + categorias.map(c => chip(c, c)).join('');
+}
+
+function elegirCategoriaPublico(categoria) {
+  cpCategoriaActiva = categoria;
+  document.querySelectorAll('.cp-cat-chip').forEach(el => {
+    el.classList.toggle('active', el.textContent === (categoria === 'todas' ? 'Todas' : categoria));
+  });
+  filtrarCatalogoPublico();
+}
+
+function ordenarYFiltrar(lista) {
+  const q = (document.getElementById('cpSearchInput').value || '').trim().toLowerCase();
+  const orden = document.getElementById('cpSortSelect') ? document.getElementById('cpSortSelect').value : 'reciente';
+
+  let filtrado = lista;
+  if (cpCategoriaActiva !== 'todas') filtrado = filtrado.filter(p => p.categoria === cpCategoriaActiva);
+  if (q) filtrado = filtrado.filter(p => p.nombre.toLowerCase().includes(q));
+
+  filtrado = [...filtrado];
+  if (orden === 'nombre') {
+    filtrado.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  } else {
+    filtrado.sort((a, b) => b.actualizadoEn - a.actualizadoEn);
+  }
+  return filtrado;
 }
 
 function escapeHtmlPublico(str) {
@@ -367,16 +507,22 @@ function itemHtmlPublico(p, whatsapp) {
     ? ` onclick="abrirLightbox(${toOnclickArg(p.imagen)}, ${toOnclickArg(p.nombre)})" style="cursor:zoom-in"`
     : '';
 
+  // "disponible" se recalcula solo cada vez que cambia el stock real
+  // (ver mirrorCatalogoPublicoProducto() en firebase.js) — acá nunca
+  // se oculta el producto agotado, solo se marca: alguien puede
+  // seguir queriendo preguntar cuándo va a haber de nuevo.
+  const badge = p.disponible ? '' : '<span class="cp-agotado-badge">Agotado</span>';
+
   const askBtn = whatsapp
-    ? `<a class="cp-ask" target="_blank" rel="noopener" href="https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent('Hola, quería consultar por: ' + p.nombre)}">
+    ? `<button type="button" class="cp-ask" onclick="preguntarPorProducto(${toOnclickArg(p.nombre)}, ${toOnclickArg(p.imagen)}, ${p.disponible ? 'true' : 'false'})">
          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.69.44 3.34 1.28 4.79L2 22l5.44-1.43a9.9 9.9 0 0 0 4.6 1.17h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.87 9.87 0 0 0 12.04 2"/></svg>
-         Preguntar
-       </a>`
+         ${p.disponible ? 'Preguntar' : 'Consultar'}
+       </button>`
     : '';
 
   return `
-    <div class="cp-item" data-nombre="${escapeHtmlPublico(p.nombre.toLowerCase())}">
-      <div class="cp-thumb"${thumbClick}>${thumb}</div>
+    <div class="cp-item${p.disponible ? '' : ' agotado'}" data-nombre="${escapeHtmlPublico(p.nombre.toLowerCase())}">
+      <div class="cp-thumb"${thumbClick}>${thumb}${badge}</div>
       <div class="cp-body">
         <span class="cp-cat">${escapeHtmlPublico(p.categoria)}</span>
         <span class="cp-name">${escapeHtmlPublico(p.nombre)}</span>
@@ -386,9 +532,44 @@ function itemHtmlPublico(p, whatsapp) {
 }
 
 function filtrarCatalogoPublico() {
-  const q = document.getElementById('cpSearchInput').value.trim().toLowerCase();
-  const filtrado = q ? cpProductos.filter(p => p.nombre.toLowerCase().includes(q)) : cpProductos;
-  renderCatalogoPublico(filtrado, cpWhatsapp);
+  renderCatalogoPublico(ordenarYFiltrar(cpProductos), cpWhatsapp);
+}
+
+// ── "Preguntar" por un producto puntual ─────────────────────────
+// WhatsApp NO tiene ninguna forma de recibir una imagen adjunta a
+// través de un link wa.me — esa API solo acepta texto (?text=...).
+// Adjuntar la foto de VERDAD solo es posible pasando por el selector
+// nativo de "Compartir" del celular (Web Share API con archivos),
+// que sí puede mandar una imagen real a WhatsApp — a costa de
+// mostrarle a la persona el selector de apps en vez de abrir
+// WhatsApp directo. Si el navegador no lo soporta (la mayoría de
+// desktop, algunos Android viejos) o algo falla en el camino (CORS,
+// la persona cancela el selector), cae al link de texto de siempre,
+// con la url de la foto incluida como parte del mensaje — así, aunque
+// no sea un adjunto real, quien lo reciba puede tocarla y verla.
+async function preguntarPorProducto(nombre, imagenUrl, disponible) {
+  const mensaje = disponible
+    ? 'Hola, quería consultar por: ' + nombre
+    : 'Hola, vi que "' + nombre + '" está agotado — ¿saben cuándo van a tener más?';
+
+  if (imagenUrl && navigator.share && navigator.canShare) {
+    try {
+      const resp = await fetch(imagenUrl);
+      const blob = await resp.blob();
+      const archivo = new File([blob], 'producto.jpg', { type: blob.type || 'image/jpeg' });
+      if (navigator.canShare({ files: [archivo] })) {
+        await navigator.share({ files: [archivo], text: mensaje });
+        return;
+      }
+    } catch (e) {
+      // Sigue con el link de texto de abajo — cancelar el selector
+      // también entra por acá (no es un error real), así que no hace
+      // falta avisarle nada a la persona.
+    }
+  }
+
+  const textoConFoto = mensaje + (imagenUrl ? '\n' + imagenUrl : '');
+  window.open('https://wa.me/' + cpWhatsapp.replace(/\D/g, '') + '?text=' + encodeURIComponent(textoConFoto), '_blank');
 }
 
 // ── Visor con zoom — pellizcar (mobile), rueda (desktop), doble

@@ -1227,7 +1227,19 @@ function mirrorCatalogoPublicoProductoAsync(code) {
     return refCatalogoPublico.child('productos').child(code).set({
       nombre: p.name || '',
       categoria: p.category || '',
-      imagen: p.image || ''
+      imagen: p.image || '',
+      // Para el filtro "Más reciente" en catalogo-publico.html — el
+      // producto real ya trae su propio updatedAt (lo pone
+      // saveProduct()), así que no hace falta un timestamp nuevo acá,
+      // solo copiarlo.
+      actualizadoEn: p.updatedAt || null,
+      // Se recalcula SOLO — cada vez que el stock cambia (venta,
+      // ajuste, carga, lo que sea), pasa por saveProduct() → el
+      // wrapper de acá abajo → este mismo espejo. Nadie tiene que
+      // entrar producto por producto a marcarlo "agotado" a mano.
+      // Solo el true/false, nunca la cantidad real — eso sigue sin
+      // mostrarse en el catálogo público, a propósito.
+      disponible: (p.stock || 0) > 0
     });
   });
 }
@@ -1327,7 +1339,11 @@ function deleteProductCore(code) {
 // "/stock" recrearía el nodo desde cero con SOLO stock y updatedAt —
 // un producto fantasma sin nombre ni precio. Con esta comprobación,
 // en ese caso se avisa con un error claro en vez de recrear algo roto.
-function addStock(code, qty) {
+// addStock() de verdad — ver el wrapper del mismo nombre más abajo,
+// que también actualiza "disponible" en el catálogo público (esta
+// función cambia el /stock TOTAL, así que si el catálogo público
+// está activo, el estado agotado/disponible tiene que recalcularse).
+function addStockCore(code, qty) {
   const productRef = refProducts.child(code);
   return productRef.once('value').then(snap => {
     if (!snap.exists()) {
@@ -1342,6 +1358,13 @@ function addStock(code, qty) {
     // cambio en la próxima carga sin tener que rebajar todo /products.
     const touch = productRef.update({ updatedAt: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
     return stockUpdate.then(result => touch.then(() => result));
+  });
+}
+
+function addStock(code, qty) {
+  return addStockCore(code, qty).then(result => {
+    mirrorCatalogoPublicoProducto(code);
+    return result;
   });
 }
 
@@ -1423,6 +1446,10 @@ async function decrementStock(items) {
     // Ahora, si algo falla, se revierte (con reintentos, y avisando
     // fuerte si aun así no se puede) lo que sí se había descontado,
     // para que la operación sea todo-o-nada de verdad.
+    //
+    // addStockWithRetry() ya dispara el espejo solo (pasa por
+    // addStock(), que es el wrapper) — así que la reversión de acá
+    // también deja "disponible" bien actualizado sin nada extra.
     await Promise.all(succeeded.map(r => addStockWithRetry(r.code, r.qty)));
 
     const err = new Error(
@@ -1432,6 +1459,11 @@ async function decrementStock(items) {
     err.failedItems = failed;
     throw err;
   }
+  // Todo-o-nada: recién si TODOS los productos del pedido se
+  // descontaron con éxito (nadie se revirtió), se actualiza
+  // "disponible" en el catálogo público para cada uno — el momento
+  // exacto en que un producto puede haberse quedado en 0.
+  succeeded.forEach(r => mirrorCatalogoPublicoProducto(r.code));
   return results;
 }
 
@@ -1455,7 +1487,8 @@ const WAREHOUSES = ALMACENES_IDS.map(id => ({ id, label: ALMACENES_DEFAULT_NOMBR
 // el modal) para no pisar un cambio que haya llegado mientras tanto,
 // y ajusta el total /stock por la misma diferencia para que el
 // invariante "stock == suma de almacenes" nunca se rompa.
-function updateWarehouseStock(code, whId, newQty, expectedQty) {
+// updateWarehouseStock() de verdad — ver el wrapper más abajo.
+function updateWarehouseStockCore(code, whId, newQty, expectedQty) {
   const productRef = refProducts.child(code);
   const before = expectedQty || 0;
   return productRef.child('almacenes').child(whId).transaction(current => {
@@ -1474,6 +1507,13 @@ function updateWarehouseStock(code, whId, newQty, expectedQty) {
   });
 }
 
+function updateWarehouseStock(code, whId, newQty, expectedQty) {
+  return updateWarehouseStockCore(code, whId, newQty, expectedQty).then(result => {
+    mirrorCatalogoPublicoProducto(code);
+    return result;
+  });
+}
+
 // Reemplaza (no suma) la cantidad de UN almacén de un producto.
 // Usado por la importación GENERAL ("Importar todo", modo que
 // reemplaza el stock en vez de sumarlo) cuando la persona eligió a
@@ -1484,7 +1524,8 @@ function updateWarehouseStock(code, whId, newQty, expectedQty) {
 // igual que ya hace "Importar todo" con el total, gana lo último
 // importado. Mantiene el invariante stock == suma(almacenes) ajustando
 // /stock por la diferencia, igual que updateWarehouseStock.
-function setWarehouseStock(code, whId, newQty, beforeQty) {
+// setWarehouseStock() de verdad — ver el wrapper más abajo.
+function setWarehouseStockCore(code, whId, newQty, beforeQty) {
   const productRef = refProducts.child(code);
   const before = beforeQty || 0;
   return productRef.child('almacenes').child(whId).transaction(() => newQty)
@@ -1495,11 +1536,19 @@ function setWarehouseStock(code, whId, newQty, beforeQty) {
     });
 }
 
+function setWarehouseStock(code, whId, newQty, beforeQty) {
+  return setWarehouseStockCore(code, whId, newQty, beforeQty).then(result => {
+    mirrorCatalogoPublicoProducto(code);
+    return result;
+  });
+}
+
 // Suma qty a un almacén de un producto (usado por la importación de
 // cantidad por almacén). Igual que addStock, pero además del total
 // /stock, suma también en /almacenes/{whId} — ambos por transacción,
 // así que dos importaciones/ediciones al mismo tiempo no se pisan.
-function addWarehouseStock(code, whId, qty) {
+// addWarehouseStock() de verdad — ver el wrapper más abajo.
+function addWarehouseStockCore(code, whId, qty) {
   const productRef = refProducts.child(code);
   return productRef.once('value').then(snap => {
     if (!snap.exists()) {
@@ -1511,6 +1560,13 @@ function addWarehouseStock(code, whId, qty) {
     const stockUpdate = productRef.child('stock').transaction(current => (current || 0) + qty);
     const touch = productRef.update({ updatedAt: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
     return Promise.all([almUpdate, stockUpdate, touch]);
+  });
+}
+
+function addWarehouseStock(code, whId, qty) {
+  return addWarehouseStockCore(code, whId, qty).then(result => {
+    mirrorCatalogoPublicoProducto(code);
+    return result;
   });
 }
 
