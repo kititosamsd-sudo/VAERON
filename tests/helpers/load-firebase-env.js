@@ -43,7 +43,16 @@ function readFile(relPath) {
 // navegador, no un capricho de jsdom). Concatenarlos es la forma más
 // simple de reproducir exactamente cómo los carga app.html/login.html
 // (un <script src="..."> por archivo, todos en el mismo documento).
-function crearEntornoFirebase() {
+// Builder compartido: arma UN SOLO <script> con mock-sdk + firebase-
+// projects + firebase.js + lo que cada harness necesite además, todo
+// concatenado (ver el comentario grande de arriba sobre por qué tiene
+// que ser un solo <script> y no uno por archivo). `archivosExtra` son
+// rutas relativas al proyecto (ej. ['selection.js', 'stock.js']),
+// `trailerExtra` son líneas de JS crudo que se agregan al final,
+// mismo patrón que los setters de abajo (__setTiendaId, etc.) — usalo
+// para exponer más `const`/`let` que el archivo extra necesite tocar
+// desde el test.
+function crearEntornoBase(archivosExtra, trailerExtra, preStubs) {
   const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
     url: 'http://localhost/',
     runScripts: 'dangerously',
@@ -52,10 +61,18 @@ function crearEntornoFirebase() {
   const { window } = dom;
   const document = window.document;
 
+  // Tienen que quedar seteados ANTES de crear el <script> de abajo:
+  // pedidos-logic.js/stock.js usan `authReady` en su propio nivel de
+  // módulo (authReady.then(() => {...}), no adentro de una función) —
+  // si se define recién DESPUÉS de que el script ya corrió, ya es
+  // tarde, esa línea ya tiró ReferenceError.
+  Object.assign(window, preStubs || {});
+
   const codigo = [
     readFile('mock-sdk.js'),
     readFile('firebase-projects.js'),
     readFile('firebase.js'),
+    ...(archivosExtra || []).map(readFile),
     // Trailer: db/refProducts/refClients/refOrders/refCatalogoPublico
     // son `const` en firebase.js — visibles acá porque este trailer
     // es parte del MISMO <script>, pero invisibles desde fuera si no
@@ -73,7 +90,12 @@ function crearEntornoFirebase() {
     // cosas distintas). Este setter, en cambio, sí lo cambia: está
     // definido DENTRO del mismo <script>, así que closurea sobre el
     // currentTiendaId real.
-    'window.__setTiendaId = function (id) { currentTiendaId = id; };'
+    'window.__setTiendaId = function (id) { currentTiendaId = id; };',
+    // proyectoActivo es otro `const` de firebase.js en la misma
+    // situación — calcularLinkCatalogoPublico() (configuracion-logic.js)
+    // lo necesita para armar el link real.
+    'window.__proyectoActivo = function () { return proyectoActivo; };',
+    ...(trailerExtra || [])
   ].join('\n;\n');
 
   const script = document.createElement('script');
@@ -81,6 +103,10 @@ function crearEntornoFirebase() {
   document.body.appendChild(script);
 
   return window;
+}
+
+function crearEntornoFirebase() {
+  return crearEntornoBase();
 }
 
 // Deja el entorno listo como si fuera la cuenta de una tienda
@@ -93,16 +119,6 @@ function prepararTienda(window, tiendaId) {
   window.__setTiendaId(tiendaId);
 }
 
-// Igual que crearEntornoFirebase(), pero además carga pedidos-logic.js
-// y el HTML REAL de views/pedidos-view.html en el documento — para
-// probar funciones que sí tocan el DOM (saveEdit, openNewClient,
-// openEdit...), no solo la capa de datos de firebase.js.
-//
-// Por qué el HTML real y no un fragmento armado a mano para el test:
-// así, si alguien cambia un id en views/pedidos-view.html (ej.
-// "editTelefono") y se olvida de actualizar pedidos-logic.js (o al
-// revés), el test se rompe — que es exactamente lo que tiene que
-// pasar. Un HTML de prueba separado no detectaría ese desajuste.
 // Levanta router.js solo (sin firebase.js ni ningún módulo de
 // página) para probar RESTRICCION_ROL/RESTRICCION_ROL_PERMISO — lo
 // único que go() necesita de verdad del entorno es #viewRoot en el
@@ -133,42 +149,52 @@ function crearEntornoRouter() {
   return window;
 }
 
+// Igual que crearEntornoFirebase(), pero además carga pedidos-logic.js
+// y el HTML REAL de views/pedidos-view.html en el documento — para
+// probar funciones que sí tocan el DOM (saveEdit, openNewClient,
+// openEdit...), no solo la capa de datos de firebase.js.
+//
+// Por qué el HTML real y no un fragmento armado a mano para el test:
+// así, si alguien cambia un id en views/pedidos-view.html (ej.
+// "editTelefono") y se olvida de actualizar pedidos-logic.js (o al
+// revés), el test se rompe — que es exactamente lo que tiene que
+// pasar. Un HTML de prueba separado no detectaría ese desajuste.
 function crearEntornoPedidos() {
-  const window = crearEntornoFirebase();
+  const window = crearEntornoBase(
+    [
+      'selection.js',
+      // pedidos-logic.js usa fmtPrice() (para el historial de compras
+      // en la ficha de cliente) pero esa función vive en stock.js, no
+      // en este archivo — se carga acá por la misma razón que
+      // selection.js.
+      'stock.js',
+      'pedidos-logic.js'
+    ],
+    [
+      // clientsCache es `let` en pedidos-logic.js — mismo problema que
+      // currentTiendaId en firebase.js: un setter definido DENTRO del
+      // mismo <script> closurea sobre el real.
+      'window.__setClientsCache = function (arr) { clientsCache = arr; };'
+    ],
+    {
+      // pedidos-logic.js usa `authReady` en su propio nivel de módulo
+      // (authReady.then(() => {...})) — normalmente lo define
+      // auth-guard.js, que estos tests no cargan (ver el comentario
+      // grande al inicio del archivo). Una Promise de Node (no hace
+      // falta que sea window.Promise) funciona bien acá: lo único que
+      // pedidos-logic.js le hace es .then(), y eso funciona igual
+      // entre realms distintos.
+      authReady: Promise.resolve(),
+      // Mismo motivo: currentUserRole también lo define normalmente
+      // auth-guard.js. Default 'admin' porque es el caso más común a
+      // probar (Editar cliente, etc. son admin-only) — un test que
+      // necesite simular un vendedor puede pisar
+      // window.currentUserRole = 'vendedor' antes de llamar a la
+      // función que esté probando.
+      currentUserRole: 'admin'
+    }
+  );
   const document = window.document;
-
-  // pedidos-logic.js espera `authReady` como un global ya resuelto
-  // (normalmente lo define auth-guard.js, que estos tests no cargan —
-  // ver el porqué en el comentario grande al inicio del archivo).
-  // Se define ANTES del <script> de abajo porque pedidos-logic.js lo
-  // usa en su propio nivel de módulo (authReady.then(() => {...})),
-  // no adentro de una función.
-  window.authReady = window.Promise.resolve();
-  // Mismo motivo: currentUserRole también lo define normalmente
-  // auth-guard.js. Default 'admin' porque es el caso más común a
-  // probar (Editar cliente, etc. son admin-only) — un test que
-  // necesite simular un vendedor puede pisar
-  // window.currentUserRole = 'vendedor' antes de llamar a la función
-  // que esté probando.
-  window.currentUserRole = 'admin';
-
-  const codigo = [
-    readFile('selection.js'),
-    // pedidos-logic.js usa fmtPrice() (para el historial de compras
-    // en la ficha de cliente) pero esa función vive en stock.js, no
-    // en este archivo — se carga acá por la misma razón que
-    // selection.js arriba.
-    readFile('stock.js'),
-    readFile('pedidos-logic.js'),
-    // clientsCache es `let` en pedidos-logic.js — mismo problema que
-    // currentTiendaId en firebase.js (ver arriba): un setter definido
-    // ACÁ, dentro del mismo <script>, closurea sobre el real.
-    'window.__setClientsCache = function (arr) { clientsCache = arr; };'
-  ].join('\n;\n');
-
-  const script = document.createElement('script');
-  script.textContent = codigo;
-  document.body.appendChild(script);
 
   // El HTML real de la vista — modales de editar/ver cliente,
   // importar, y la tabla. Se inserta DESPUÉS del script de lógica
@@ -178,12 +204,72 @@ function crearEntornoPedidos() {
   // al cargar, solo declara funciones.
   document.body.insertAdjacentHTML('beforeend', readFile('views/pedidos-view.html'));
 
-  // jsdom implementa window.alert() como no-op pero tira un warning
-  // "Not implemented" por cada llamado — lo reemplazamos por un
-  // stub silencioso que además guarda los mensajes, para poder
-  // afirmar sobre ellos en los tests (ver window.__alerts).
   window.__alerts = [];
   window.alert = (msg) => { window.__alerts.push(msg); };
+
+  return window;
+}
+
+// Igual que crearEntornoPedidos(), pero para Configuración —
+// configuracion-logic.js + el HTML real de views/configuracion-view.html.
+// Solo pensado para probar la tarjeta "Catálogo público" y "Permisos
+// del equipo" puntualmente (llamando a sus funciones directo, ej.
+// cargarCatalogoPublico()), no window.Configuracion.init() completo —
+// ese init() también carga tasa de cambio, logo, almacenes, etc., que
+// no hace falta stubear para lo que estos tests cubren. No necesita
+// authReady en preStubs: configuracion-logic.js no lo usa a nivel de
+// módulo (solo adentro de window.Configuracion.init(), que estos
+// tests no llaman).
+function crearEntornoConfiguracion() {
+  const window = crearEntornoBase(['configuracion-logic.js'], null, {
+    currentUserRole: 'admin',
+    currentTiendaNombre: 'Tienda de prueba'
+  });
+  const document = window.document;
+
+  // isAdmin() normalmente vive en auth-guard.js — cargarCatalogoPublico()/
+  // cargarPermisosVendedor() lo usan para no cargar esas tarjetas si
+  // quien entró es vendedor.
+  window.isAdmin = function () { return window.currentUserRole === 'admin' || window.currentUserRole === 'superadmin'; };
+  // QRCode viene de una librería externa por CDN (qrcodejs, ver
+  // <script> en app.html) que no se baja acá — stub mínimo que hace
+  // lo mismo que la real para lo que estos tests necesitan: meter un
+  // <canvas> dentro del contenedor que le pasan.
+  window.QRCode = function (contenedor) {
+    const canvas = document.createElement('canvas');
+    contenedor.appendChild(canvas);
+  };
+
+  document.body.insertAdjacentHTML('beforeend', readFile('views/configuracion-view.html'));
+
+  return window;
+}
+
+// Igual que crearEntornoPedidos(), pero para Stock — selection.js +
+// stock.js + el HTML real de views/stock-view.html.
+function crearEntornoStock() {
+  const window = crearEntornoBase(
+    ['selection.js', 'stock.js'],
+    [
+      // productsCache es `let` en stock.js — mismo patrón que
+      // clientsCache en pedidos-logic.js: un setter DENTRO del mismo
+      // <script> closurea sobre el real.
+      'window.__setProductsCache = function (arr) { productsCache = arr; };'
+    ],
+    {
+      authReady: Promise.resolve(),
+      currentUserRole: 'admin',
+      // puedeEditarStock() normalmente vive en auth-guard.js — default
+      // "true" (como si fuera admin, o un vendedor con el permiso
+      // activado) porque es el caso más común a probar; un test que
+      // necesite simular al vendedor SIN el permiso puede pisar
+      // window.puedeEditarStock = () => false.
+      puedeEditarStock: () => true
+    }
+  );
+  const document = window.document;
+
+  document.body.insertAdjacentHTML('beforeend', readFile('views/stock-view.html'));
 
   return window;
 }
@@ -201,4 +287,7 @@ function normalizar(valor) {
   return valor === null || valor === undefined ? valor : JSON.parse(JSON.stringify(valor));
 }
 
-module.exports = { crearEntornoFirebase, prepararTienda, crearEntornoPedidos, crearEntornoRouter, normalizar };
+module.exports = {
+  crearEntornoFirebase, prepararTienda, crearEntornoPedidos, crearEntornoRouter,
+  crearEntornoConfiguracion, crearEntornoStock, normalizar
+};

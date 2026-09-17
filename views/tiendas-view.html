@@ -72,6 +72,20 @@
         <input class="form-input" id="tiendaNombre" type="text" placeholder="Ej: Guitarrería Central">
       </div>
       <div class="form-group">
+        <label class="form-label">Rubro</label>
+        <!-- Opciones fijas acá a mano — deben coincidir con
+             RUBROS_DISPONIBLES en firebase-projects.js (la fuente de
+             verdad real; esto es solo el <select>, no hay forma de
+             generarlo dinámico sin un motor de plantillas). -->
+        <select class="form-input" id="tiendaRubro">
+          <option value="instrumentos">Instrumentos musicales</option>
+          <option value="farmacia">Farmacia</option>
+          <option value="ferreteria">Ferretería</option>
+          <option value="importadora">Importadora</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label class="form-label">Nombre del administrador</label>
         <input class="form-input" id="tiendaAdminNombre" type="text" placeholder="Ej: Carlos Pérez">
       </div>
@@ -114,6 +128,16 @@
       <div class="form-group">
         <label class="form-label">Nombre de la tienda / empresa</label>
         <input class="form-input" id="editTiendaNombre" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rubro</label>
+        <select class="form-input" id="editTiendaRubro">
+          <option value="instrumentos">Instrumentos musicales</option>
+          <option value="farmacia">Farmacia</option>
+          <option value="ferreteria">Ferretería</option>
+          <option value="importadora">Importadora</option>
+          <option value="otro">Otro</option>
+        </select>
       </div>
       <div class="form-group">
         <label class="form-label">Teléfono</label>

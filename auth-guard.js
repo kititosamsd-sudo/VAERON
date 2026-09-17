@@ -114,6 +114,11 @@ let currentTiendaPlan = null;
 // Foro para firmar publicaciones como "Guitarras Lima" en vez de
 // "Juan Pérez": la tienda publica, no el empleado.
 let currentTiendaNombre = null;
+// Rubro de la tienda (tiendas/{tiendaId}/info/rubro) — base del
+// sistema multi-rubro. Hoy solo lo usa el Foro para decidir qué
+// categorías mostrar (ver foroCategorias() en foro-logic.js);
+// RUBROS_DISPONIBLES/rubroDeTienda() viven en firebase-projects.js.
+let currentTiendaRubro = 'instrumentos';
 // Permisos configurables que el admin de la tienda le da a sus
 // vendedores desde Configuración → Permisos del equipo (ver
 // getPermisosVendedor/setPermisosVendedor/watchPermisosVendedor en
@@ -214,6 +219,7 @@ const authReady = new Promise(resolve => {
       }
       perfil = perfilTienda;
       currentTiendaPlan = (tiendaInfo && tiendaInfo.plan) || 'basico';
+      currentTiendaRubro = (typeof rubroDeTienda === 'function') ? rubroDeTienda(tiendaInfo) : 'instrumentos';
       currentTiendaNombre = (tiendaInfo && tiendaInfo.nombre) || currentUserName;
 
       // Permisos del equipo (ver arriba) — se cargan acá, ANTES de

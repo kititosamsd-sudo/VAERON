@@ -344,3 +344,29 @@ async function elegirProyectoConEspacio() {
     `Agrega un proyecto nuevo en FIREBASE_PROJECTS (firebase-projects.js) antes de crear otra tienda.`
   );
 }
+
+// ── Rubros disponibles ───────────────────────────────────────────
+// Base del sistema multi-rubro: qué tipo de negocio es cada tienda.
+// Hoy determina las categorías por defecto del Foro
+// (FORO_CATEGORIAS_POR_RUBRO en foro-logic.js) — más adelante,
+// también qué campos personalizados de producto tiene sentido
+// ofrecerle (fecha de vencimiento para farmacia, unidad de medida
+// para ferretería, etc.), pero eso todavía no está construido.
+// 'instrumentos' es el rubro original de VAERON — toda tienda vieja
+// sin este campo cae ahí (ver rubroDeTienda() más abajo).
+const RUBROS_DISPONIBLES = {
+  instrumentos: 'Instrumentos musicales',
+  farmacia: 'Farmacia',
+  ferreteria: 'Ferretería',
+  importadora: 'Importadora',
+  otro: 'Otro'
+};
+
+// Cualquier tienda, tenga o no el campo rubro guardado todavía
+// (tiendas creadas antes de que este campo existiera) — nunca
+// undefined, para no tener que repetir el fallback en cada lugar que
+// lo usa.
+function rubroDeTienda(infoTienda) {
+  const r = infoTienda && infoTienda.rubro;
+  return (r && RUBROS_DISPONIBLES[r]) ? r : 'instrumentos';
+}

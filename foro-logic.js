@@ -37,20 +37,61 @@
 // proyecto donde ya tiene sesión.
 // =========================================================
 
-const FORO_CATEGORIAS = [
-  { id: 'instrumentos', nombre: 'Instrumentos' },
-  { id: 'accesorios', nombre: 'Accesorios' },
-  { id: 'repuestos', nombre: 'Repuestos y reparación' },
-  { id: 'audio', nombre: 'Amplificación y sonido' },
-  { id: 'otros', nombre: 'Otros' },
-];
+// Categorías del Foro por rubro — antes esto era un único array fijo
+// pensado solo para tiendas de instrumentos musicales; con VAERON
+// apuntando a más rubros (ver RUBROS_DISPONIBLES en
+// firebase-projects.js), no tiene sentido que una ferretería publique
+// en "Amplificación y sonido". Cada tienda ve el set de su propio
+// rubro — nunca los de otro.
+const FORO_CATEGORIAS_POR_RUBRO = {
+  instrumentos: [
+    { id: 'instrumentos', nombre: 'Instrumentos' },
+    { id: 'accesorios', nombre: 'Accesorios' },
+    { id: 'repuestos', nombre: 'Repuestos y reparación' },
+    { id: 'audio', nombre: 'Amplificación y sonido' },
+    { id: 'otros', nombre: 'Otros' },
+  ],
+  farmacia: [
+    { id: 'medicamentos', nombre: 'Medicamentos' },
+    { id: 'cuidado-personal', nombre: 'Cuidado personal' },
+    { id: 'insumos-medicos', nombre: 'Insumos médicos' },
+    { id: 'otros', nombre: 'Otros' },
+  ],
+  ferreteria: [
+    { id: 'herramientas', nombre: 'Herramientas' },
+    { id: 'materiales', nombre: 'Materiales de construcción' },
+    { id: 'electricidad-plomeria', nombre: 'Electricidad y plomería' },
+    { id: 'otros', nombre: 'Otros' },
+  ],
+  importadora: [
+    { id: 'electronica', nombre: 'Electrónica' },
+    { id: 'hogar', nombre: 'Hogar' },
+    { id: 'ropa-accesorios', nombre: 'Ropa y accesorios' },
+    { id: 'otros', nombre: 'Otros' },
+  ],
+  otro: [
+    { id: 'general', nombre: 'General' },
+    { id: 'otros', nombre: 'Otros' },
+  ],
+};
+
+// currentTiendaRubro lo fija auth-guard.js al iniciar sesión (ver
+// tiendaInfo.rubro ahí) — 'instrumentos' de respaldo si por lo que
+// sea todavía no está definido (ej. este archivo se carga en algún
+// contexto que no pasó por el login normal).
+function foroCategorias() {
+  const rubro = (typeof currentTiendaRubro === 'string' && FORO_CATEGORIAS_POR_RUBRO[currentTiendaRubro])
+    ? currentTiendaRubro
+    : 'instrumentos';
+  return FORO_CATEGORIAS_POR_RUBRO[rubro];
+}
 
 // Cache en memoria de la última carga — evita re-pedir a los 3
 // proyectos cada vez que se cambia de categoría en la misma visita.
 let foroPublicacionesCache = [];
 
 function foroCategoriaNombre(id) {
-  const cat = FORO_CATEGORIAS.find(c => c.id === id);
+  const cat = foroCategorias().find(c => c.id === id);
   return cat ? cat.nombre : id;
 }
 
@@ -84,7 +125,7 @@ function publicarEnForo({ categoria, tipo, titulo, descripcion, precio }) {
   const tit = (titulo || '').trim();
   const desc = (descripcion || '').trim();
   if (!tit) return Promise.reject(new Error('Ponle un título a la publicación.'));
-  if (!FORO_CATEGORIAS.some(c => c.id === categoria)) return Promise.reject(new Error('Elige una categoría válida.'));
+  if (!foroCategorias().some(c => c.id === categoria)) return Promise.reject(new Error('Elige una categoría válida.'));
   if (tipo !== 'vendo' && tipo !== 'busco') return Promise.reject(new Error('Elige si es \"Vendo\" o \"Busco\".'));
 
   const post = {
@@ -150,7 +191,7 @@ function montarTabsCategoriaForo() {
   if (!cont) return;
   // El botón "Todas" ya está fijo en el HTML — se agregan los demás.
   cont.querySelectorAll('.warehouse-tab[data-cat]:not([data-cat=""])').forEach(el => el.remove());
-  FORO_CATEGORIAS.forEach(cat => {
+  foroCategorias().forEach(cat => {
     const btn = document.createElement('button');
     btn.className = 'warehouse-tab';
     btn.dataset.cat = cat.id;
@@ -163,7 +204,7 @@ function montarTabsCategoriaForo() {
 function montarSelectCategoriaForo() {
   const sel = document.getElementById('foroCategoria');
   if (!sel || sel.options.length) return; // ya montado (el modal se reutiliza)
-  FORO_CATEGORIAS.forEach(cat => {
+  foroCategorias().forEach(cat => {
     const opt = document.createElement('option');
     opt.value = cat.id;
     opt.textContent = cat.nombre;

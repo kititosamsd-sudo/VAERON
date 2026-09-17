@@ -352,6 +352,43 @@ esto es una base nueva, no un reemplazo con la misma cobertura.
   el visor de imagen compartido de Stock/Catálogo (`imageViewModal`,
   `stock.js`), y que reabrir con otra foto resetee el zoom sin
   duplicar los listeners.
+- `tests/configuracion-catalogo-dom.test.js` — tarjetas "Catálogo
+  público" y "Permisos del equipo" en `configuracion-logic.js`, sobre
+  el HTML real (activar, guardar, QR, revertir si falla).
+- `tests/stock-permisos-dom.test.js` — permisos de edición en
+  `stock.js` sobre el HTML real: abrir "Agregar producto", crear un
+  producto, código duplicado, `applyStockRoleRestrictions()`,
+  botones de importar/exportar por almacén.
+
+### Suite de reglas contra el Emulador real (`rules-emulator/`)
+A diferencia de todo lo de arriba (que prueba la LÓGICA de la app
+contra `mock-sdk.js`, un mock local), esto corre `database.rules.json`
+de verdad contra el **Emulador de Firebase** — el mismo motor de
+reglas que usa producción, no una aproximación.
+
+- **No vive dentro de `tests/`** a propósito: `node --test` (sin
+  argumentos, lo que corre `npm test`) recorre automáticamente
+  CUALQUIER archivo dentro de una carpeta llamada `test`/`tests` —
+  sin importar el nombre del archivo — así que si esto viviera ahí,
+  `npm test` intentaría correrlo también y fallaría (no hay Emulador
+  levantado). Por eso vive en `/rules-emulator/database-rules.js`,
+  fuera de esa carpeta.
+- Se corre aparte: `npm run test:rules` (levanta el Emulador, corre
+  la suite, lo apaga solo) o `npm run emulators` en una terminal +
+  correrlo a mano en otra, para ir iterando.
+- Usa `@firebase/rules-unit-testing` (librería oficial) — cubre
+  `permisosVendedor`, `catalogoPublico` (lectura pública solo con
+  `activo === true`, escritura admin-only, que un `update()` genérico
+  no cuele un cambio) y `orders` (que un vendedor solo edite sus
+  propios pedidos).
+- **Importante**: el Emulador necesita bajar un `.jar` de
+  `storage.googleapis.com` la primera vez — no se pudo instalar ni
+  correr dentro del sandbox donde se armó esto (ese dominio no está
+  en la lista de permitidos ahí). La suite está escrita, con la API
+  de `@firebase/rules-unit-testing` verificada contra los tipos
+  TypeScript del paquete instalado, pero **nunca se corrió de
+  verdad** — hace falta correrla una vez en una máquina con internet
+  normal antes de confiar en que efectivamente pasa.
 - `tests/database-rules-shape.test.js` — chequeos estructurales de
   `database.rules.json` (JSON válido, que los nodos nuevos sigan
   exigiendo rol admin, que el candado de `config`/`catalogoPublico`
@@ -366,4 +403,26 @@ demo): `transaction()` no resolvía `ServerValue.TIMESTAMP`, y `.set()`
 no limpiaba campos anidados en `null` (Firebase real trata `null`
 como "borrar esa clave" en cualquier tipo de escritura) — los dos ya
 están corregidos.
+
+### Multi-rubro — fase 1 (Rubro + Foro dinámico)
+VAERON ya no es solo para tiendas de instrumentos musicales.
+`RUBROS_DISPONIBLES` (`firebase-projects.js`): instrumentos, farmacia,
+ferretería, importadora, otro.
+
+- Campo **Rubro** al crear una tienda (Tiendas → Nueva tienda, solo
+  súper-admin) y editable después (Tiendas → Editar). Se guarda en
+  `tiendas/{tiendaId}/info.rubro`; toda tienda vieja sin este campo
+  cae en `'instrumentos'` (`rubroDeTienda()`, nunca `undefined`).
+  `currentTiendaRubro` (`auth-guard.js`) lo carga al iniciar sesión,
+  igual que `currentTiendaPlan`.
+- **Categorías del Foro por rubro**: antes eran un único array fijo
+  pensado solo para instrumentos — ahora `FORO_CATEGORIAS_POR_RUBRO`
+  (`foro-logic.js`) tiene un set por rubro, y `foroCategorias()`
+  elige el de `currentTiendaRubro` (con `'instrumentos'` de
+  respaldo si el valor guardado no es válido). Una ferretería ya no
+  ve "Amplificación y sonido" como categoría.
+- **Lo que falta** (no construido todavía): campos personalizados por
+  producto según el rubro (fecha de vencimiento para farmacia, unidad
+  de medida para ferretería, etc.) — es la pieza más grande del
+  multi-rubro y queda pendiente para otra sesión.
 

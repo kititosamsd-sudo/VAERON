@@ -553,6 +553,7 @@ async function listarTiendas() {
         tiendaId: child.key,
         proyecto: proyectoKey,
         nombre: info.nombre || '(sin nombre)',
+        rubro: (typeof rubroDeTienda === 'function') ? rubroDeTienda(info) : (info.rubro || 'instrumentos'),
         telefono: info.telefono || '',
         ciudad: info.ciudad || '',
         direccion: info.direccion || '',
@@ -634,6 +635,12 @@ async function crearTienda(nombreTienda, nombreAdmin, correoAdmin, password, dat
     if (contacto.telefono) infoTienda.telefono = contacto.telefono;
     if (contacto.ciudad) infoTienda.ciudad = contacto.ciudad;
     if (contacto.direccion) infoTienda.direccion = contacto.direccion;
+    // Rubro: base para categorías de Foro y (más adelante) campos
+    // personalizados por producto según el tipo de negocio — ver
+    // RUBROS_DISPONIBLES en firebase-projects.js. 'instrumentos' por
+    // defecto porque es el rubro original de VAERON — una tienda
+    // vieja sin este campo también cae ahí (ver rubroDeTienda()).
+    infoTienda.rubro = contacto.rubro || 'instrumentos';
 
     await projectRefTiendas.child(tiendaId).child('info').set(infoTienda);
     await projectRefTiendas.child(tiendaId).child('usuarios').child(uid).set({
@@ -684,6 +691,7 @@ async function editarTienda(tiendaId, data, proyecto) {
   if (data.telefono !== undefined) updates.telefono = data.telefono;
   if (data.ciudad !== undefined) updates.ciudad = data.ciudad;
   if (data.direccion !== undefined) updates.direccion = data.direccion;
+  if (data.rubro !== undefined) updates.rubro = data.rubro;
   const projectDb = await getProjectDbListo(proyecto);
   return projectDb.ref('tiendas').child(tiendaId).child('info').update(updates).then(() => {
     registrarEvento('tienda_editada', 'Actualizó los datos de la tienda', tiendaId);

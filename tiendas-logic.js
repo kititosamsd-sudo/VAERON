@@ -48,7 +48,7 @@ async function renderTiendas() {
     const proyectoLabel = (FIREBASE_PROJECTS[t.proyecto] && FIREBASE_PROJECTS[t.proyecto].label) || t.proyecto;
     return `
       <tr>
-        <td data-label="Tienda"><span><strong>${escapeHtml(t.nombre)}</strong><br><span class="badge-proyecto">${escapeHtml(proyectoLabel)}</span></span></td>
+        <td data-label="Tienda"><span><strong>${escapeHtml(t.nombre)}</strong><br><span class="badge-proyecto">${escapeHtml(proyectoLabel)}</span> <span class="badge-proyecto">${escapeHtml(RUBROS_DISPONIBLES[t.rubro] || t.rubro)}</span></span></td>
         <td data-label="Contacto">${escapeHtml(contacto)}</td>
         <td data-label="Usuarios">${t.totalUsuarios}</td>
         <td data-label="Alta">${fmtFecha(t.creadoEn)}</td>
@@ -104,6 +104,7 @@ function openEditTienda(tiendaId) {
   document.getElementById('tiendaEditError').style.display = 'none';
   document.getElementById('tiendaResetPasswordMsg').textContent = '';
   document.getElementById('editTiendaNombre').value = t.nombre || '';
+  document.getElementById('editTiendaRubro').value = (typeof rubroDeTienda === 'function') ? rubroDeTienda(t) : (t.rubro || 'instrumentos');
   document.getElementById('editTiendaTelefono').value = t.telefono || '';
   document.getElementById('editTiendaCiudad').value = t.ciudad || '';
   document.getElementById('editTiendaDireccion').value = t.direccion || '';
@@ -116,6 +117,7 @@ async function guardarEdicionTienda() {
   if (!editingTiendaId) return;
   const t = tiendasCache.find(x => x.tiendaId === editingTiendaId);
   const nombre = document.getElementById('editTiendaNombre').value.trim();
+  const rubro = document.getElementById('editTiendaRubro').value;
   const telefono = document.getElementById('editTiendaTelefono').value.trim();
   const ciudad = document.getElementById('editTiendaCiudad').value.trim();
   const direccion = document.getElementById('editTiendaDireccion').value.trim();
@@ -132,7 +134,7 @@ async function guardarEdicionTienda() {
   btn.disabled = true;
   btn.textContent = 'Guardando…';
   try {
-    await editarTienda(editingTiendaId, { nombre, telefono, ciudad, direccion }, t.proyecto);
+    await editarTienda(editingTiendaId, { nombre, rubro, telefono, ciudad, direccion }, t.proyecto);
     if (t && t.adminUid && adminNombre && adminNombre !== t.adminNombre) {
       await editarAdminNombre(editingTiendaId, t.adminUid, adminNombre, t.proyecto);
     }
@@ -178,6 +180,7 @@ async function enviarResetPasswordTiendaForm() {
 
 async function crearTiendaDesdeForm() {
   const nombreTienda = document.getElementById('tiendaNombre').value.trim();
+  const rubro        = document.getElementById('tiendaRubro').value;
   const nombreAdmin  = document.getElementById('tiendaAdminNombre').value.trim();
   const correoAdmin  = document.getElementById('tiendaAdminCorreo').value.trim();
   const password     = document.getElementById('tiendaAdminPassword').value;
@@ -200,9 +203,10 @@ async function crearTiendaDesdeForm() {
   btn.disabled = true;
   btn.textContent = 'Creando…';
   try {
-    await crearTienda(nombreTienda, nombreAdmin, correoAdmin, password, {});
+    await crearTienda(nombreTienda, nombreAdmin, correoAdmin, password, { rubro });
     closeModal('tiendaModal');
     document.getElementById('tiendaNombre').value = '';
+    document.getElementById('tiendaRubro').value = 'instrumentos';
     document.getElementById('tiendaAdminNombre').value = '';
     document.getElementById('tiendaAdminCorreo').value = '';
     document.getElementById('tiendaAdminPassword').value = '';
