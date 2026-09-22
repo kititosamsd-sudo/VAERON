@@ -94,3 +94,36 @@ test('catalogoPublico/productos: cualquier cuenta de la tienda puede actualizar 
   assert.ok(nodo['.write'].includes('newData.exists()'));
   assert.ok(nodo['.write'].includes("rol').val() === 'admin'"));
 });
+
+test('catalogoPublico/analitica: lectura solo para el admin de esa tienda (nunca pública, a diferencia del resto de catalogoPublico)', () => {
+  const reglas = cargarReglas();
+  const nodo = reglas.rules.tiendas.$tiendaId.catalogoPublico.analitica;
+  assert.ok(nodo, 'falta tiendas/$tiendaId/catalogoPublico/analitica');
+  assert.ok(nodo['.read'].includes("rol').val() === 'admin'"));
+  assert.ok(!nodo['.read'].includes("activo"), 'a diferencia del resto de catalogoPublico, esto NO debería depender de "activo" — es privado siempre, activo o no');
+});
+
+test('catalogoPublico/analitica: visitas/consultas se pueden escribir SIN estar logueado (son públicas de escribir, cualquiera que mire el catálogo)', () => {
+  const reglas = cargarReglas();
+  const { visitas, consultas } = reglas.rules.tiendas.$tiendaId.catalogoPublico.analitica;
+  assert.ok(visitas, 'falta el nodo visitas');
+  assert.ok(consultas && consultas.$code, 'falta el nodo consultas/$code');
+  assert.ok(!visitas['.write'].includes('auth != null'), 'visitas debería poder escribirse sin sesión iniciada');
+  assert.ok(!consultas.$code['.write'].includes('auth != null'), 'consultas debería poder escribirse sin sesión iniciada');
+});
+
+test('catalogoPublico/analitica: solo deja incrementar de a 1, nunca saltar ni resetear el contador', () => {
+  const reglas = cargarReglas();
+  const { visitas, consultas } = reglas.rules.tiendas.$tiendaId.catalogoPublico.analitica;
+  [visitas, consultas.$code].forEach(nodo => {
+    assert.ok(nodo['.write'].includes('data.val() + 1'), 'debería exigir exactamente el valor anterior + 1');
+  });
+});
+
+test('catalogoPublico/analitica: no se puede escribir si el catálogo está desactivado', () => {
+  const reglas = cargarReglas();
+  const { visitas, consultas } = reglas.rules.tiendas.$tiendaId.catalogoPublico.analitica;
+  [visitas, consultas.$code].forEach(nodo => {
+    assert.ok(nodo['.write'].includes("child('activo').val() === true"));
+  });
+});

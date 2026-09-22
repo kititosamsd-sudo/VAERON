@@ -87,6 +87,34 @@
         <div id="chartCategoriesLegend" class="dash-legend"></div>
       </div>
 
+      <!-- Ventas de los últimos 30 días y Producto más vendido —
+           ambos dependen de /orders (Pedidos), así que van ocultos
+           en Básico igual que la tarjeta de clientes: sin Pedidos
+           disponible en ese plan, no hay ventas que graficar (ver
+           aplicarVisibilidadClientes() en dashboard-logic.js, mismo
+           gate que ya usaba clientes/cumpleaños). Arrancan ocultos;
+           renderSalesChart()/renderTopProductsPanel() los muestran
+           solo si corresponde. -->
+      <div class="dash-panel dash-panel-chart" id="dashSalesPanel" style="display:none">
+        <div class="dash-panel-header">
+          <h2>Ventas de los últimos 30 días</h2>
+          <span class="dash-panel-metric" id="dashSalesTotal30d">—</span>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chartVentas30d"></canvas>
+        </div>
+      </div>
+
+      <div class="dash-panel" id="dashTopProductsPanel" style="display:none">
+        <div class="dash-panel-header">
+          <h2>Producto más vendido</h2>
+          <span class="dash-panel-metric">Últimos 30 días</span>
+        </div>
+        <div id="dashTopProductsList" class="dash-list">
+          <p class="dash-empty">Cargando…</p>
+        </div>
+      </div>
+
     </div>
 
     <div class="dash-grid">

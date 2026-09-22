@@ -124,3 +124,33 @@ test('togglePermisoVendedor() prende un permiso puntual sin tocar los otros dos'
   assert.equal(cfg.verDashboard, false);
   assert.equal(cfg.verForo, false);
 });
+
+test('cargarAnaliticaCatalogoPublico() muestra las visitas totales y el top de productos más consultados, con nombre', async () => {
+  const window = nuevoEntorno();
+  await window.refCatalogoPublico.update({
+    'analitica/visitas': 42,
+    'analitica/consultas/P1': 5,
+    'analitica/consultas/P2': 9,
+    'productos/P1': { nombre: 'Guitarra', categoria: 'x', imagen: '' },
+    'productos/P2': { nombre: 'Bajo', categoria: 'x', imagen: '' }
+  });
+
+  window.cargarAnaliticaCatalogoPublico();
+  await esperar();
+
+  const d = window.document;
+  assert.equal(d.getElementById('catalogoPublicoVisitas').textContent, '42');
+  const html = d.getElementById('catalogoPublicoTopConsultas').innerHTML;
+  assert.match(html, /9 × Bajo/);
+  assert.match(html, /5 × Guitarra/);
+  assert.ok(html.indexOf('Bajo') < html.indexOf('Guitarra'), 'Bajo (9 consultas) debería listarse antes que Guitarra (5)');
+});
+
+test('cargarAnaliticaCatalogoPublico() sin ninguna consulta todavía muestra el mensaje vacío, no un error', async () => {
+  const window = nuevoEntorno();
+  window.cargarAnaliticaCatalogoPublico();
+  await esperar();
+
+  assert.equal(window.document.getElementById('catalogoPublicoVisitas').textContent, '0');
+  assert.match(window.document.getElementById('catalogoPublicoTopConsultas').innerHTML, /Todavía no hay consultas/);
+});

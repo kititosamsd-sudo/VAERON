@@ -174,6 +174,41 @@ general.
   "Agotado" y la foto atenuada) — nunca se oculta, porque alguien
   puede querer preguntar cuándo va a haber de nuevo (el botón cambia
   a "Consultar" con un mensaje distinto para ese caso).
+- **Link a un producto puntual** (`?producto=P001`, agregado al
+  mismo link del catálogo): botón "compartir" en cada tarjeta
+  (`compartirProducto()`) arma ese link (Web Share si está
+  disponible, si no copia al portapapeles). Al abrirlo, si el
+  producto tiene foto se abre el visor de zoom directo; si no tiene,
+  hace scroll hasta su tarjeta y la resalta un momento
+  (`.cp-item-resaltado`). Un código que ya no existe no rompe nada,
+  el catálogo carga normal.
+- **Favoritos** (corazón en cada tarjeta, sin cuenta ni login) —
+  guardados en `localStorage`, con clave `vaeron_favoritos_{tiendaId}`
+  (separados por tienda: mirar el catálogo de dos tiendas distintas
+  desde el mismo celular no mezcla sus favoritos). Toggle "Ver solo
+  favoritos" en la barra de herramientas.
+- **Analítica** (visitas totales + consultas por producto, sin
+  nombres ni datos personales — solo números): cada carga de página
+  exitosa suma 1 a `catalogoPublico/analitica/visitas`, cada
+  "Preguntar"/"Consultar" suma 1 a
+  `catalogoPublico/analitica/consultas/{code}` — ambos con
+  `.transaction()` (no un `.set()`), porque dos visitas casi
+  simultáneas no se pueden leer-y-sumar por separado sin pisarse.
+  La regla de Firebase exige que cada escritura sea EXACTAMENTE
+  `anterior + 1` (nunca saltos ni resets) y solo si el catálogo está
+  activo — ver el nodo `analitica` en `database.rules.json`, con
+  lectura restringida al admin de esa tienda (nunca pública, a
+  diferencia del resto de `catalogoPublico`). Se ve en Configuración
+  → Catálogo público → Analítica (`cargarAnaliticaCatalogoPublico()`
+  en `configuracion-logic.js`), con el top 5 de productos más
+  consultados con nombre (cruzando con el espejo de productos, sin
+  tocar `/products` directo).
+
+De paso encontré otro bug real en `mock-sdk.js`: `.update()` no
+soportaba claves con `/` (los "multi-path update" reales de Firebase,
+ej. `update({'analitica/visitas': 1})`) — las guardaba como un campo
+de nombre literal rarísimo en vez de escribir en la ruta anidada.
+Ya corregido.
 - **Visor con zoom**: tocar la foto de un producto abre una vista
   ampliada (pellizcar para zoom, arrastrar para mover, doble tap/clic
   para alternar 1x↔2.5x, rueda del mouse en desktop) — todo con
@@ -425,4 +460,19 @@ ferretería, importadora, otro.
   producto según el rubro (fecha de vencimiento para farmacia, unidad
   de medida para ferretería, etc.) — es la pieza más grande del
   multi-rubro y queda pendiente para otra sesión.
+
+### Dashboard: Ventas de los últimos 30 días + Producto más vendido
+Antes el Dashboard tenía gráficos de STOCK (categorías, ABC, salud de
+inventario) pero ninguno de VENTAS. Nuevo en `dashboard-logic.js`:
+`renderSalesChart()` (línea, últimos 30 días, con relleno) y
+`renderTopProductsPanel()` (top 5 por cantidad vendida) — ambos leen
+`/orders` con una lectura puntual (`getOrders()`, no un listener en
+vivo: no hace falta que se actualicen al segundo de cada venta).
+Mismo gate de plan que la tarjeta de clientes/cumpleaños
+(`aplicarVisibilidadClientes()` — sin Pedidos en Básico, no hay
+ventas que mostrar). "Producto más vendido" suma cantidades del
+mismo código a través de TODOS los pedidos del período, y un pedido
+con varios productos distintos aporta a cada uno (mismo tipo de
+bug que ya había corregido antes en `decrementStock()` — acá lo cubre
+un test explícito).
 

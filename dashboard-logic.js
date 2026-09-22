@@ -39,6 +39,7 @@ window.Dashboard = (function () {
   const CATEGORY_COLORS = ['#1A46C4', '#2F7DFF', '#A9682E', '#4A5568', '#7D93B8', '#C98B4A'];
   const WAREHOUSE_COLORS = ['#1A46C4', '#2F7DFF', '#A9682E', '#4A5568', '#7D93B8', '#C98B4A'];
   const CATEGORY_OTHER_COLOR = '#8991A0'; // "otros" siempre gris acero neutro, nunca compite con una categoría real
+  let salesChart = null;
 
   // Antes esto bajaba Chart.js desde cdnjs.cloudflare.com en vivo.
   // El problema: en varios entornos de desarrollo/red corporativa ese
@@ -940,6 +941,126 @@ window.Dashboard = (function () {
   // hacía parpadear también el gráfico de ventas sin motivo. Ahora
   // cada fuente de datos solo repinta los gráficos que realmente
   // dependen de ella.
+  // ── Ventas de los últimos 30 días ────────────────────────────
+  // A diferencia de todos los gráficos de arriba (que leen
+  // productsCache/latestProducts, ya en memoria por los listeners de
+  // Stock), este y el de "Producto más vendido" son los primeros que
+  // necesitan /orders — se piden una sola vez con getOrders() (ver
+  // init() más abajo), no con un listener en vivo: no hace falta que
+  // el Dashboard se actualice al segundo exacto de cada venta, con
+  // que se vea al entrar/recargar alcanza.
+  function buildSalesChartData(orders) {
+    const hoy = new Date();
+    const dias = [];
+    // 30 casillas, de más vieja a más nueva, aunque ese día no haya
+    // tenido ninguna venta — así el gráfico siempre tiene la misma
+    // forma (una línea plana en $0 los días sin ventas, no un hueco).
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - i);
+      dias.push({ clave: d.toISOString().slice(0, 10), etiqueta: `${d.getDate()}/${d.getMonth() + 1}`, total: 0 });
+    }
+    const porClave = {};
+    dias.forEach(d => { porClave[d.clave] = d; });
+
+    const desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 29).getTime();
+    orders.forEach(o => {
+      if (!o.creadoEn || o.creadoEn < desde) return;
+      const clave = new Date(o.creadoEn).toISOString().slice(0, 10);
+      if (porClave[clave]) porClave[clave].total += Number(o.total) || 0;
+    });
+
+    return {
+      labels: dias.map(d => d.etiqueta),
+      totales: dias.map(d => d.total),
+      granTotal: dias.reduce((s, d) => s + d.total, 0)
+    };
+  }
+
+  function renderSalesChart(orders) {
+    const panel = document.getElementById('dashSalesPanel');
+    const canvas = document.getElementById('chartVentas30d');
+    if (!panel || !canvas || !window.Chart) return;
+    panel.style.display = '';
+
+    const { labels, totales, granTotal } = buildSalesChartData(orders);
+    const totalEl = document.getElementById('dashSalesTotal30d');
+    if (totalEl) totalEl.textContent = 'S/ ' + granTotal.toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 });
+
+    if (salesChart) { salesChart.destroy(); salesChart = null; }
+    salesChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: totales,
+          borderColor: CATEGORY_COLORS[0],
+          backgroundColor: CATEGORY_COLORS[1] + '22', // relleno suave bajo la línea, mismo azul con alpha
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => 'S/ ' + Number(ctx.raw).toLocaleString(formatoNumeroActivo(), { maximumFractionDigits: 0 }) } }
+        },
+        scales: {
+          x: { ticks: { maxTicksLimit: 8 }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { callback: v => 'S/ ' + v } }
+        }
+      }
+    });
+  }
+
+  // ── Producto más vendido ─────────────────────────────────────
+  // Suma cantidades por código de producto en TODOS los items de
+  // TODOS los pedidos de los últimos 30 días — un pedido con 3
+  // productos distintos aporta a 3 productos, no a 1.
+  function buildTopProductsData(orders) {
+    const hoy = new Date();
+    const desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 29).getTime();
+    const porCodigo = {};
+
+    orders.forEach(o => {
+      if (!o.creadoEn || o.creadoEn < desde) return;
+      (o.items || []).forEach(item => {
+        const codigo = item.codigo || item.code;
+        if (!codigo) return;
+        if (!porCodigo[codigo]) porCodigo[codigo] = { codigo, nombre: item.nombre || item.name || codigo, cantidad: 0 };
+        porCodigo[codigo].cantidad += Number(item.cantidad || item.qty) || 0;
+      });
+    });
+
+    return Object.values(porCodigo).sort((a, b) => b.cantidad - a.cantidad).slice(0, 5);
+  }
+
+  function renderTopProductsPanel(orders) {
+    const panel = document.getElementById('dashTopProductsPanel');
+    const list = document.getElementById('dashTopProductsList');
+    if (!panel || !list) return;
+    panel.style.display = '';
+
+    const top = buildTopProductsData(orders);
+    if (!top.length) {
+      list.innerHTML = '<p class="dash-empty">Todavía no hay ventas en los últimos 30 días.</p>';
+      return;
+    }
+    const maxCantidad = top[0].cantidad;
+    list.innerHTML = top.map(p => `
+      <div class="dash-row">
+        <div class="dash-row-main">
+          <div class="dash-row-title">${escapeHtml(p.nombre)}</div>
+          <div class="dash-mini-bar-track"><div class="dash-mini-bar-fill" style="width:${maxCantidad ? (p.cantidad / maxCantidad) * 100 : 0}%"></div></div>
+        </div>
+        <div class="dash-row-value">${p.cantidad.toLocaleString(formatoNumeroActivo())} u.</div>
+      </div>
+    `).join('');
+  }
+
   function renderProductCharts() {
     // El panel de almacenes ya no depende de Chart.js (ver
     // renderWarehousePanel) — se pinta de inmediato, sin esperar a
@@ -1020,6 +1141,22 @@ window.Dashboard = (function () {
           renderClientStats(clients || []);
           renderUpcomingBirthdays(clients || []);
         });
+
+        // Ventas de los últimos 30 días + Producto más vendido —
+        // lectura puntual (no un listener en vivo, ver el comentario
+        // grande junto a buildSalesChartData()). loadChartJs() ya
+        // corre en paralelo para el gráfico de categorías; si todavía
+        // no terminó para cuando lleguen los pedidos, renderSalesChart()
+        // se sale sola (chequea window.Chart) — se vuelve a intentar
+        // la próxima vez que el Dashboard se recargue.
+        if (typeof getOrders === 'function') {
+          getOrders()
+            .then(orders => {
+              loadChartJs().then(() => renderSalesChart(orders || [])).catch(() => {});
+              renderTopProductsPanel(orders || []);
+            })
+            .catch(() => {});
+        }
       }
     } catch (err) {
       console.warn('[Dashboard] No se pudo iniciar la escucha de datos:', err.message);

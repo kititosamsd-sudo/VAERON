@@ -758,6 +758,7 @@ function cargarCatalogoPublico() {
   const link = calcularLinkCatalogoPublico();
   if (linkInput) linkInput.value = link;
   pintarQRCatalogoPublico(link);
+  cargarAnaliticaCatalogoPublico();
 
   getCatalogoPublicoConfig()
     .then(cfg => {
@@ -791,6 +792,46 @@ function descargarQRCatalogoPublico() {
   a.href = canvas.toDataURL('image/png');
   a.download = 'catalogo-qr.png';
   a.click();
+}
+
+// ── Analítica del catálogo público (solo admin) ─────────────────
+// Los números los suben visitantes SIN login (ver
+// registrarVisitaCatalogoPublico()/registrarConsultaProducto() en
+// catalogo-publico.html) — acá solo se leen y se les pone nombre
+// (analitica/consultas solo guarda código + cantidad, el nombre
+// bonito sale del espejo catalogoPublico/productos, no hace falta
+// tocar /products directo para esto).
+function cargarAnaliticaCatalogoPublico() {
+  if (typeof isAdmin === 'function' && !isAdmin()) return;
+  if (typeof getAnaliticaCatalogoPublico !== 'function') return;
+
+  Promise.all([getAnaliticaCatalogoPublico(), getCatalogoPublicoProductosMirror()])
+    .then(([analitica, productosMirror]) => {
+      const visitasEl = document.getElementById('catalogoPublicoVisitas');
+      if (visitasEl) visitasEl.textContent = analitica.visitas.toLocaleString('es-PE');
+
+      const top = Object.keys(analitica.consultas)
+        .map(code => ({ code, cantidad: analitica.consultas[code], nombre: (productosMirror[code] && productosMirror[code].nombre) || code }))
+        .sort((a, b) => b.cantidad - a.cantidad)
+        .slice(0, 5);
+
+      const cont = document.getElementById('catalogoPublicoTopConsultas');
+      if (!cont) return;
+      if (!top.length) {
+        cont.innerHTML = '<p style="font-size:12px;color:var(--text-3);margin:0">Todavía no hay consultas registradas.</p>';
+        return;
+      }
+      cont.innerHTML = '<p style="font-size:12px;color:var(--text-3);margin:0 0 4px">Más consultados:</p>' +
+        top.map(p => `<p style="font-size:13px;margin:0 0 2px">${p.cantidad} × ${escapeHtml(p.nombre)}</p>`).join('');
+    })
+    .catch(() => {});
+}
+
+// Pequeño helper aparte, no expuesto en firebase.js — solo lo usa
+// esta pantalla, para no ensuciar la capa de datos con algo que
+// nadie más necesita.
+function getCatalogoPublicoProductosMirror() {
+  return refCatalogoPublico.child('productos').once('value').then(snap => snap.val() || {});
 }
 
 function toggleCatalogoPublicoActivo(btn) {

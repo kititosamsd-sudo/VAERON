@@ -294,6 +294,18 @@
               <p style="font-size:11.5px;color:var(--text-3);margin:4px 0 0">Usalo si activaste el catálogo y tus productos no aparecen — sincroniza los que ya tenías cargados antes.</p>
               <p id="catalogoPublicoMsg" class="settings-msg"></p>
             </div>
+
+            <!-- Analítica: nadie más que el admin la ve — ver el
+                 .read distinto de analitica en database.rules.json,
+                 privado siempre, a diferencia del resto de
+                 catalogoPublico. -->
+            <div class="cfg-card" id="catalogoPublicoAnalitica" style="margin-top:10px">
+              <div class="cfg-row" style="flex-direction:column;align-items:stretch;gap:8px">
+                <div class="cfg-row-label" style="font-size:12px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.03em">Analítica</div>
+                <p style="font-size:13px;margin:0">Visitas totales: <strong id="catalogoPublicoVisitas">—</strong></p>
+                <div id="catalogoPublicoTopConsultas"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Logo de la tienda (real) — la fila entera se oculta cuando

@@ -274,6 +274,32 @@ function crearEntornoStock() {
   return window;
 }
 
+// Igual que crearEntornoPedidos(), pero para Dashboard —
+// plan-limits.js + dashboard-logic.js + el HTML real de
+// views/dashboard-view.html. Ojo: buildSalesChartData()/
+// buildTopProductsData() son privadas al closure de
+// window.Dashboard (nunca se devuelven en el "return {...}" del
+// final) — no hay forma de llamarlas sueltas desde un test. Por eso
+// estos tests pasan por window.Dashboard.init() de verdad (con
+// getOrders/watchProducts/watchClients ya disponibles por venir de
+// firebase.js) y verifican el resultado en el DOM, no llamando a las
+// funciones internas directo.
+function crearEntornoDashboard() {
+  const window = crearEntornoBase(['plan-limits.js', 'dashboard-logic.js'], null, {
+    // currentTiendaPlan normalmente lo define auth-guard.js — acá
+    // limitePlan() (plan-limits.js) lo necesita para decidir qué
+    // panel mostrar. 'premium' porque destraba todo — un test que
+    // quiera probar un plan más limitado puede pisar
+    // window.currentTiendaPlan antes de llamar a Dashboard.init().
+    currentTiendaPlan: 'premium'
+  });
+  const document = window.document;
+
+  document.body.insertAdjacentHTML('beforeend', readFile('views/dashboard-view.html'));
+
+  return window;
+}
+
 // Los valores que devuelven las funciones de firebase.js (snap.val(),
 // getPermisosVendedor(), getOrders()...) son objetos/arrays del realm
 // de jsdom — su Object.prototype/Array.prototype NO es el mismo que
@@ -289,5 +315,5 @@ function normalizar(valor) {
 
 module.exports = {
   crearEntornoFirebase, prepararTienda, crearEntornoPedidos, crearEntornoRouter,
-  crearEntornoConfiguracion, crearEntornoStock, normalizar
+  crearEntornoConfiguracion, crearEntornoStock, crearEntornoDashboard, normalizar
 };

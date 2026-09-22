@@ -241,14 +241,21 @@
       update(obj) {
         return Promise.resolve().then(() => {
           const root = loadDB(ns);
-          const current = getNode(root, path) || {};
-          const merged = (typeof current === 'object' && current !== null) ? Object.assign({}, current) : {};
+          // Firebase real deja que una clave de update() tenga "/" —
+          // eso es un "multi-path update": cada clave así apunta a
+          // una ruta ANIDADA relativa a este ref, no a un campo
+          // llamado literalmente "analitica/visitas". Antes esto
+          // guardaba `merged['analitica/visitas'] = 1` como un campo
+          // de nombre rarísimo en vez de escribir en
+          // .../analitica/visitas — cualquier código que use
+          // update() con rutas (ver configuracion-logic.js,
+          // getAnaliticaCatalogoPublico() en firebase.js) quedaba
+          // guardando basura en el modo demo.
           Object.keys(obj).forEach(k => {
+            const partes = path.concat(k.split('/').filter(Boolean));
             const v = obj[k];
-            if (v === null) delete merged[k];
-            else merged[k] = resolveServerValues(v);
+            setNode(root, partes, v === null ? null : resolveServerValues(v));
           });
-          setNode(root, path, merged);
           saveDB(ns, root);
           fireListeners(ns, path);
         });

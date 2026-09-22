@@ -195,3 +195,39 @@ test('orders: el admin SÍ puede editar el pedido de cualquier vendedor', async 
     comoAdmin().ref(`tiendas/${TIENDA}/orders/o3`).update({ total: 50, subtotal: 50 })
   );
 });
+
+// ── catalogoPublico/analitica ────────────────────────────────────
+test('analitica: alguien SIN login puede incrementar visitas de a 1, si el catálogo está activo', async () => {
+  await sembrarCuentas(TIENDA);
+  await testEnv.withSecurityRulesDisabled(async context => {
+    await context.database().ref(`tiendas/${TIENDA}/catalogoPublico/activo`).set(true);
+  });
+  await assertSucceeds(sinLogin().ref(`tiendas/${TIENDA}/catalogoPublico/analitica/visitas`).set(1));
+});
+
+test('analitica: no se puede saltar el contador (poner 5 cuando iba en 1)', async () => {
+  await sembrarCuentas(TIENDA);
+  await testEnv.withSecurityRulesDisabled(async context => {
+    await context.database().ref(`tiendas/${TIENDA}/catalogoPublico`).update({ activo: true, 'analitica/visitas': 1 });
+  });
+  await assertFails(sinLogin().ref(`tiendas/${TIENDA}/catalogoPublico/analitica/visitas`).set(5));
+  await assertSucceeds(sinLogin().ref(`tiendas/${TIENDA}/catalogoPublico/analitica/visitas`).set(2));
+});
+
+test('analitica: no se puede escribir si el catálogo está desactivado', async () => {
+  await sembrarCuentas(TIENDA);
+  await testEnv.withSecurityRulesDisabled(async context => {
+    await context.database().ref(`tiendas/${TIENDA}/catalogoPublico/activo`).set(false);
+  });
+  await assertFails(sinLogin().ref(`tiendas/${TIENDA}/catalogoPublico/analitica/visitas`).set(1));
+});
+
+test('analitica: solo el admin de la tienda puede LEER las estadísticas — ni un vendedor, ni nadie sin login', async () => {
+  await sembrarCuentas(TIENDA);
+  await testEnv.withSecurityRulesDisabled(async context => {
+    await context.database().ref(`tiendas/${TIENDA}/catalogoPublico`).update({ activo: true, 'analitica/visitas': 10 });
+  });
+  await assertSucceeds(comoAdmin().ref(`tiendas/${TIENDA}/catalogoPublico/analitica`).once('value'));
+  await assertFails(comoVendedor().ref(`tiendas/${TIENDA}/catalogoPublico/analitica`).once('value'));
+  await assertFails(sinLogin().ref(`tiendas/${TIENDA}/catalogoPublico/analitica`).once('value'));
+});

@@ -1309,6 +1309,19 @@ function setCatalogoPublicoConfig(config) {
   });
 }
 
+// Analítica del catálogo público (Configuración → Catálogo público,
+// solo admin — ver el .read de analitica en database.rules.json,
+// distinto del resto de catalogoPublico: acá NUNCA es público, ni
+// con el catálogo activo). Los números los suben visitantes sin
+// login (catalogo-publico.html, ver registrarVisitaCatalogoPublico()/
+// registrarConsultaProducto() ahí) — acá solo se leen.
+function getAnaliticaCatalogoPublico() {
+  return refCatalogoPublico.child('analitica').once('value').then(snap => {
+    const v = snap.val() || {};
+    return { visitas: v.visitas || 0, consultas: v.consultas || {} };
+  });
+}
+
 function deleteProductCore(code) {
   try {
     return refProducts.child(code).remove();

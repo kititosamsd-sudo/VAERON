@@ -21,7 +21,7 @@ function crearEntornoCatalogoPublico() {
   const conInline = html
     .replace(
       /<script src="https:\/\/www.gstatic.com\/firebasejs\/10.12.2\/firebase-app-compat.js"><\/script>\n<script src="https:\/\/www.gstatic.com\/firebasejs\/10.12.2\/firebase-database-compat.js"><\/script>/,
-      '<script>window.firebase = { initializeApp: () => ({ database: () => ({ ref: () => ({ once: () => Promise.resolve({ val: () => ({ activo:true, nombreTienda:"x", whatsapp:"51987654321", productos:{} }) }) }) }) }) };</script>'
+      '<script>window.firebase = { initializeApp: () => ({ database: () => ({ ref: () => ({ once: () => Promise.resolve({ val: () => ({ activo:true, nombreTienda:"x", whatsapp:"51987654321", productos:{} }) }), transaction: (fn) => Promise.resolve({ committed: true, snapshot: { val: () => fn(0) } }) }) }) }) };</script>'
     )
     .replace(/<script src="firebase-projects.js"><\/script>/, '<script>' + fs.readFileSync(path.join(ROOT, 'firebase-projects.js'), 'utf8') + '</script>');
 
@@ -43,7 +43,7 @@ test('sin Web Share disponible, cae al link de WhatsApp con la foto incluida com
   let abierto = null;
   window.open = url => { abierto = url; };
 
-  await window.preguntarPorProducto('Guitarra Acústica', 'https://ejemplo.com/foto.jpg', true);
+  await window.preguntarPorProducto('P1', 'Guitarra Acústica', 'https://ejemplo.com/foto.jpg', true);
 
   assert.ok(abierto, 'debería haber llamado a window.open');
   assert.match(abierto, /^https:\/\/wa\.me\/51987654321\?text=/);
@@ -61,7 +61,7 @@ test('con Web Share + archivos soportado, comparte la foto real en vez de abrir 
   window.navigator.share = async data => { compartido = data; };
   window.navigator.canShare = () => true;
 
-  await window.preguntarPorProducto('Bajo eléctrico', 'https://ejemplo.com/bajo.jpg', true);
+  await window.preguntarPorProducto('P2', 'Bajo eléctrico', 'https://ejemplo.com/bajo.jpg', true);
 
   assert.equal(abierto, null, 'no debería haber abierto el link de WhatsApp');
   assert.ok(compartido, 'debería haber llamado a navigator.share');
@@ -78,7 +78,7 @@ test('con Web Share disponible pero canShare() rechazando archivos, cae al link 
   window.navigator.share = async () => { throw new Error('no debería llamarse'); };
   window.navigator.canShare = () => false;
 
-  await window.preguntarPorProducto('Platillo', 'https://ejemplo.com/platillo.jpg', true);
+  await window.preguntarPorProducto('P3', 'Platillo', 'https://ejemplo.com/platillo.jpg', true);
 
   assert.ok(abierto, 'debería haber caído al link de WhatsApp');
 });
@@ -93,7 +93,7 @@ test('si navigator.share() falla o la persona cancela el selector, cae al link e
   window.navigator.canShare = () => true;
   window.navigator.share = async () => { throw new Error('AbortError: el usuario canceló'); };
 
-  await window.preguntarPorProducto('Micrófono', 'https://ejemplo.com/mic.jpg', true);
+  await window.preguntarPorProducto('P4', 'Micrófono', 'https://ejemplo.com/mic.jpg', true);
 
   assert.ok(abierto, 'debería caer al link en vez de dejar la promesa rechazada sin manejar');
 });
@@ -107,7 +107,7 @@ test('sin foto de referencia, nunca intenta Web Share — va directo al link de 
   window.navigator.share = async () => { seLlamoShare = true; };
   window.navigator.canShare = () => true;
 
-  await window.preguntarPorProducto('Producto sin foto', '', true);
+  await window.preguntarPorProducto('P5', 'Producto sin foto', '', true);
 
   assert.equal(seLlamoShare, false);
   assert.ok(abierto);
@@ -121,7 +121,7 @@ test('cuando el producto está agotado (disponible=false), el mensaje pregunta p
   let abierto = null;
   window.open = url => { abierto = url; };
 
-  await window.preguntarPorProducto('Bajo eléctrico', '', false);
+  await window.preguntarPorProducto('P2', 'Bajo eléctrico', '', false);
 
   assert.ok(abierto);
   assert.match(decodeURIComponent(abierto), /agotado/i);

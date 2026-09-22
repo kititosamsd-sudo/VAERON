@@ -73,6 +73,17 @@
             "$code": {
               ".write": "auth != null && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId && (newData.exists() || root.child('cuentas').child(auth.uid).child('rol').val() === 'admin')"
             }
+          },
+          "analitica": {
+            ".read": "auth != null && (auth.token.email === 'vaeronspa@gmail.com' || (root.child('cuentas').child(auth.uid).child('rol').val() === 'admin' && root.child('cuentas').child(auth.uid).child('tiendaId').val() === $tiendaId))",
+            "visitas": {
+              ".write": "root.child('tiendas').child($tiendaId).child('catalogoPublico').child('activo').val() === true && newData.isNumber() && (!data.exists() ? newData.val() === 1 : newData.val() === data.val() + 1)"
+            },
+            "consultas": {
+              "$code": {
+                ".write": "root.child('tiendas').child($tiendaId).child('catalogoPublico').child('activo').val() === true && newData.isNumber() && (!data.exists() ? newData.val() === 1 : newData.val() === data.val() + 1)"
+              }
+            }
           }
         }
       }
